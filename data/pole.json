@@ -161,6 +161,11 @@
       "typ": "string|number",
       "vzdy": false,
       "popis": "Den, kdy zdroj PŘES NOC ZMĚNIL TVAR DAT a nabídky se proto nespárovaly se včerejškem (YYYY-MM-DD; po přenesení do dalších dní zůstává jako 1). Takové nabídky nejsou nové — jen je nejde poznat jako tytéž, co tu byly včera. Web je proto nepočítá mezi „nově přidané“ a neposílá na ně upozornění: jinak by jedna změna u zdroje poslala stovky falešných hlášení a opakovala je tolik dní, kolik má okno novinek."
+    },
+    "f": {
+      "typ": "string",
+      "vzdy": false,
+      "popis": "Název souboru hlavní fotky nabídky, bez cesty — třeba „1076264-1792345838-foto-1.jpg“. Celá adresa v datech není schválně: měří 130 znaků a u 3 161 nabídek by tenhle soubor, který si stahuje úvodní stránka, narostl o 410 kB. Adresu z toho názvu složí js/fotka.js (jedno místo pro web, sestavení i robota). Fotka leží na serveru toho zdroje a jen se předává prohlížeči návštěvníka — nikam se nekopíruje."
     }
   }
 }

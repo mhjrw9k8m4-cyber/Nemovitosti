@@ -43,8 +43,17 @@ const stranky = readdirSync(KOREN)
 pravda(`výpisy se generují (${stranky.length} stránek)`, stranky.length >= 50,
   `stránek s výpisem: ${stranky.length}`);
 
-let polozek = 0, bezFoto = 0, bezLazy = 0, bezRozmeru = 0, cizich = 0, vicDlazdic = 0;
-const spatnyPin = [];
+let polozek = 0, bezFoto = 0, bezLazy = 0, bezRozmeru = 0, vicDlazdic = 0;
+const spatnyPin = [], pinNaFotce = [];
+/* Hostitelé se NEOPISUJÍ do zkoušky. Od 8. 11. 2026 jsou náhledy dva
+   druhy — letecká dlaždice od Esri a u nabídek z Bezrealitek fotka
+   z jejich inzerátu — a další zdroj fotek přibude. Zkouška proto
+   posbírá adresy, které v HTML opravdu jsou, a ptá se jen na jedno:
+   jmenují je zásady soukromí? Hostitel natvrdo v testu by znamenal,
+   že nový zdroj fotek buď zkoušku rozbije, nebo (po dopsání do testu)
+   proklouzne bez zmínky v zásadách — a to je přesně to, co se stát
+   nesmí: prohlížeč návštěvníka na ten server opravdu jde. */
+const hostitele = new Map();
 const ukazky = [];
 for (const { f, t } of stranky) {
   const kusy = t.split('<div class="okr-item">').slice(1);
@@ -60,11 +69,20 @@ for (const { f, t } of stranky) {
     const img = imgs[0];
     if (!/loading="lazy"/.test(img)) bezLazy++;
     if (!/width="\d+"/.test(img) || !/height="\d+"/.test(img)) bezRozmeru++;
-    if (!/src="https:\/\/server\.arcgisonline\.com\//.test(img)) cizich++;
+    const src = (/src="([^"]+)"/.exec(img) || [])[1] || '';
+    const host = (/^https:\/\/([^/]+)\//.exec(src) || [])[1] || '(adresa bez hostitele)';
+    hostitele.set(host, (hostitele.get(host) || 0) + 1);
     const pin = /class="okr-pin"[^>]*style="left:([\d.]+)%;top:([\d.]+)%"/.exec(item);
-    if (!pin) { spatnyPin.push(`${f}: špendlík chybí`); continue; }
-    const [L, T] = [parseFloat(pin[1]), parseFloat(pin[2])];
-    if (!(L >= 0 && L <= 100 && T >= 0 && T <= 100)) spatnyPin.push(`${f}: ${L} %, ${T} %`);
+    /* ŠPENDLÍK PATŘÍ JEN NA MAPU. Na leteckou dlaždici ano — říká, kde
+       v tom výřezu pozemek je. Na FOTKU z inzerátu ne: ta není mapa,
+       takže by „45 % zleva, 60 % shora" neukazovalo na nic. */
+    if (host === 'server.arcgisonline.com') {
+      if (!pin) { spatnyPin.push(`${f}: letecká dlaždice bez špendlíku`); continue; }
+      const [L, T] = [parseFloat(pin[1]), parseFloat(pin[2])];
+      if (!(L >= 0 && L <= 100 && T >= 0 && T <= 100)) spatnyPin.push(`${f}: ${L} %, ${T} %`);
+    } else if (pin) {
+      pinNaFotce.push(`${f}: fotka z inzerátu má špendlík`);
+    }
     void foto;
   }
 }
@@ -76,10 +94,20 @@ pravda('a je to právě jedna dlaždice, ne skládaný snímek',
 pravda('náhled se stahuje odloženě', bezLazy === 0, `bez loading="lazy": ${bezLazy}`);
 pravda('a má dopředu napsané rozměry (jinak stránka poskočí)',
   bezRozmeru === 0, `bez width/height: ${bezRozmeru}`);
-pravda('dlaždice je z podkladu, který znají zásady soukromí',
-  cizich === 0, `z jiné adresy: ${cizich}`);
-pravda('špendlík leží uvnitř snímku', spatnyPin.length === 0,
+const zasady = readFileSync(path.join(KOREN, 'ochrana-udaju.html'), 'utf8');
+const nepriznane = [...hostitele.keys()].filter((h) => zasady.indexOf(h) < 0);
+const souhrnHostu = [...hostitele.entries()].map(([h, n]) => `${h} ${n}×`).join(', ');
+pravda(`náhledy sahají jen na servery, které jmenují zásady soukromí (${souhrnHostu})`,
+  nepriznane.length === 0,
+  `v ochrana-udaju.html nejsou jmenované: ${nepriznane.join(', ')} — prohlížeč návštěvníka tam přitom jde`);
+/* A že se opravdu měří obojí. Kdyby fotky z inzerátů zmizely, pravidlo
+   o špendlíku na fotce by procházelo naprázdno. */
+pravda(`a jsou dva druhy náhledu, ne jeden (${hostitele.size} hostitelů)`,
+  hostitele.size >= 2, souhrnHostu);
+pravda('letecká dlaždice má špendlík a leží uvnitř snímku', spatnyPin.length === 0,
   spatnyPin.slice(0, 4).join('\n      '));
+pravda('a fotka z inzerátu špendlík nemá (není to mapa, neukazoval by na nic)',
+  pinNaFotce.length === 0, pinNaFotce.slice(0, 4).join('\n      '));
 
 /* ATRIBUCE. Esri ji vyžaduje všude, kde se jeho dlaždice kreslí. Píše ji
    stylopis (`.okr-list::after`), takže se hledá v TOM souboru, který si

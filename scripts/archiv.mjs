@@ -148,9 +148,45 @@ export function krok(stav, nabidky, den) {
   const novy = { verze: VERZE, den, nabidky: {} };
   const uzavrene = [];
 
+  /* TÁŽ NABÍDKA POD NOVÝM KLÍČEM SE NESMÍ ZAPSAT JAKO ZMIZELÁ.
+     =================================================================
+     Klíč archivu je `pkey(d) + '#' + otisk(adresy inzerátu)`, a pkey
+     nese SOUŘADNICE na tři desetinná místa. Když se tedy u nabídky
+     změní poloha — a to se stává, aniž by se cokoli stalo s pozemkem —
+     klíč je jiný a archiv to vidí jako „stará zmizela, nová přišla".
+     Naměřeno 8. 11. 2026: Bezrealitky se přečetly novou, povolenou
+     cestou, na které poloha vychází z obce, a 3 151 nabídek tím
+     dostalo nový klíč. Nic z toho nezmizelo — inzeráty visí dál.
+     Archiv je přírůstkový, takže těch 3 151 vymyšlených životností by
+     v historii zůstalo navždy a statistika „jak rychle nabídky mizí"
+     by o ně byla pokřivená.
+     Páruje se podle TOHO OTISKU ZA MŘÍŽKOU: je to otisk adresy
+     inzerátu, tedy jediná věc v klíči, která nabídku opravdu
+     identifikuje. Záchytný tvar `#v<výměra>` (nabídka bez adresy) se
+     nepáruje — ten dvě různé nabídky nerozliší.
+     Tím se zároveň nemusí vymýšlet nová VERZE klíče: změnila se data,
+     ne soustava klíčů. */
+  const podleInzeratu = new Map();
+  for (const k of Object.keys(stav.nabidky)) {
+    const h = k.slice(k.lastIndexOf('#') + 1);
+    if (!h || /^v\d*$/.test(h)) continue;
+    /* Dvojznačný otisk (dvě uložené nabídky pod týmž inzerátem) se
+       nepáruje vůbec — hádat, která je která, je horší než nepárovat. */
+    podleInzeratu.set(h, podleInzeratu.has(h) ? null : k);
+  }
+  const prestehovane = new Set();
+
   for (const [k, d] of zive) {
     const z = zaznam(d);
-    const byl = stav.nabidky[k];
+    let byl = stav.nabidky[k];
+    if (!byl) {
+      const h = k.slice(k.lastIndexOf('#') + 1);
+      const stary = (h && !/^v\d*$/.test(h)) ? podleInzeratu.get(h) : null;
+      if (stary && !zive.has(stary) && !prestehovane.has(stary)) {
+        byl = stav.nabidky[stary];
+        prestehovane.add(stary);
+      }
+    }
     if (!byl) {
       /* first_seen ze zdroje je lepší než dnešek — nabídka mohla viset
          dřív, než ji tenhle archiv poprvé uviděl. Dopředu se ale věřit
@@ -171,12 +207,12 @@ export function krok(stav, nabidky, den) {
   }
 
   for (const k of Object.keys(stav.nabidky)) {
-    if (zive.has(k)) continue;
+    if (zive.has(k) || prestehovane.has(k)) continue;
     const byl = stav.nabidky[k];
     uzavrene.push({ k, m: byl.m, o: byl.o, dr: byl.dr, t: byl.t,
       v: byl.v, c: byl.c, od: byl.od, do: byl.videno, proc: 'zmizela' });
   }
-  return { stav: novy, uzavrene };
+  return { stav: novy, uzavrene, prestehovano: prestehovane.size };
 }
 
 export function pripoj(uzavrene) {
@@ -281,7 +317,9 @@ function krokDneska() {
   fs.writeFileSync(STAV, JSON.stringify(v.stav, null, 1));
   console.log(`Archiv: ${Object.keys(v.stav.nabidky).length} živých nabídek, `
     + `uzavřeno ${pocet} období (${v.uzavrene.filter((x) => x.proc === 'zmizela').length} zmizelo, `
-    + `${v.uzavrene.filter((x) => x.proc === 'cena').length} změnilo cenu).`);
+    + `${v.uzavrene.filter((x) => x.proc === 'cena').length} změnilo cenu)`
+    + (v.prestehovano ? `, a ${v.prestehovano} nabídek dostalo nový klíč, aniž by zmizely`
+      + ' (změnila se jim poloha — viz krok())' : '') + '.');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

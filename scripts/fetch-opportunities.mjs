@@ -3465,27 +3465,56 @@ export function brPopisZDetailu(html) {
   return nej.length >= 40 ? nej.slice(0, 4000) : null;
 }
 
+/* Jak daleko od mediánu ještě smí ležet nabídka téhož jména obce.
+   PROČ VŮBEC: jmen obcí je v Česku pár tisíc, ale NEJSOU jedinečná —
+   Lhot je dvacet, Roztoky tři, Kladno je město u Prahy i část Brna.
+   Medián dvou vzdálených hnízd téhož jména padne MEZI ně, tedy nikam:
+   naměřeno 8. 11. 2026, že takhle „Hrádek nad Nisou" dostal okres
+   Tachov a špendlík skončil 103 km od středu toho okresu. Dvacet km
+   je tedy mez, za kterou se jméno považuje za nejednoznačné a slovník
+   ho vůbec nenabídne — ať radši odpoví geokodér, který vrací JEDEN
+   konkrétní bod. */
+const BR_OBEC_ROZPTYL = 20;
+
 /**
  * Obce z dřívějších nabídek: jméno obce → okres a poloha.
  *
  * PROČ TO VŮBEC JE: na povolené cestě nejsou souřadnice (viz komentář
  * výš) a okres se z adresy nepozná — ta nese kraj („Jihočeský kraj"),
  * a kraj není okres. Obec ale na webu už většinou byla, a to včetně
- * okresu spočítaného ze SKUTEČNÝCH hranic. Bere se nejčastější okres
- * té obce a MEDIÁN souřadnic jejích nabídek — tedy poloha OBCE, ne
- * poloha jedné nabídky; proto se taky nikde netvrdí, že je přesná.
+ * polohy od zdroje, takže se poloha obce dá vzít jako MEDIÁN jejích
+ * nabídek — tedy poloha OBCE, ne jedné nabídky; proto se taky nikde
+ * netvrdí, že je přesná.
+ *
+ * TŘI VĚCI, KTERÉ SE TU 8. 11. 2026 ZMĚNILY, A PROČ (naměřeno na
+ * živých datech po prvním běhu po povolené cestě):
+ *
+ *   1. OKRES SE NEHLASUJE, ODVODÍ SE Z POLOHY. Dřív se bral nejčastější
+ *      okres té obce, nezávisle na mediánové poloze — takže web ukazoval
+ *      okres Sokolov a špendlík ležel v okrese Kladno. Teď rozhoduje
+ *      jediná věc: do kterého okresu padne ten mediánový bod. Okres
+ *      a poloha se tak nemají jak rozejít (§436-třída).
+ *   2. SLOVNÍK SE NESMÍ KRMIT SVÝM VLASTNÍM VÝSTUPEM. Nabídky
+ *      z Bezrealitek mají polohu DOPOČÍTANOU z tohoto slovníku, takže
+ *      kdyby do něj zpátky vstupovaly, odpověď by se běh po běhu
+ *      posouvala — a to se dělo: tři nabídky z Roztok měly po třech
+ *      bězích tři různé okresy (Praha-západ, Praha, Brno-město).
+ *      Do slovníku proto jdou jen nabídky od zdrojů, které polohu
+ *      opravdu uvádějí.
+ *   3. NEJEDNOZNAČNÉ JMÉNO SE ZAHODÍ (viz BR_OBEC_ROZPTYL).
+ *
+ * `okresZBodu(lat, lng)` dostane funkce zvenčí — kvůli zkoušce, která
+ * ji umí nahradit, a protože hranice okresů nemusí být po ruce.
  */
-export function brMistaZDrivejsich(nabidky) {
+export function brMistaZDrivejsich(nabidky, okresZBodu) {
   const podle = new Map();
   for (const o of (nabidky || [])) {
-    const k = String((o && o.place) || '').trim().toLowerCase();
-    if (k.length < 2 || !o.okres) continue;
-    if (!podle.has(k)) podle.set(k, { okresy: new Map(), lat: [], lng: [] });
-    const z = podle.get(k);
-    z.okresy.set(o.okres, (z.okresy.get(o.okres) || 0) + 1);
-    if (typeof o.lat === 'number' && typeof o.lng === 'number') {
-      z.lat.push(o.lat); z.lng.push(o.lng);
-    }
+    if (!o || o.zdroj === 'Bezrealitky') continue;        // bod 2 výš
+    const k = String(o.place || '').trim().toLowerCase();
+    if (k.length < 2) continue;
+    if (typeof o.lat !== 'number' || typeof o.lng !== 'number') continue;
+    if (!podle.has(k)) podle.set(k, []);
+    podle.get(k).push([o.lat, o.lng]);
   }
   const median = (a) => {
     if (!a.length) return null;
@@ -3493,9 +3522,16 @@ export function brMistaZDrivejsich(nabidky) {
     return b[Math.floor(b.length / 2)];
   };
   const ven = new Map();
-  for (const [k, z] of podle) {
-    const okres = [...z.okresy.entries()].sort((a, b) => b[1] - a[1])[0][0];
-    ven.set(k, { okres, lat: median(z.lat), lng: median(z.lng) });
+  for (const [k, body] of podle) {
+    const lat = median(body.map((b) => b[0]));
+    const lng = median(body.map((b) => b[1]));
+    if (lat == null || lng == null) continue;
+    let nejdal = 0;
+    for (const [la, ln] of body) nejdal = Math.max(nejdal, kmMezi(lat, lng, la, ln));
+    if (nejdal > BR_OBEC_ROZPTYL) continue;               // bod 3 výš
+    const okres = okresZBodu ? okresZBodu(lat, lng) : null;
+    if (!okres) continue;                                 // bod 1 výš
+    ven.set(k, { okres, lat, lng });
   }
   return ven;
 }
@@ -3555,7 +3591,8 @@ async function fetchBezrealitky() {
   /* ---- 1) MÍSTO: obec, okres a poloha obce ---------------------- */
   let drive = [];
   try { drive = JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []; } catch { drive = []; }
-  const mistaObci = brMistaZDrivejsich(drive);
+  const mistaObci = brMistaZDrivejsich(drive,
+    (la, ln) => (maHranice() ? okresPodleHranice(la, ln) : null));
   const zeSlovniku = new Map();
   let geoDotazu = 0, bezOkresu = 0;
   const kObjednani = [];
@@ -3652,10 +3689,22 @@ async function fetchBezrealitky() {
       const druh = jePozemek
         ? parseDruh(textInzeratu, [a.place, a.okres])
         : (PKKategorie.jmeno(kat) || 'Jiná nemovitost').toLowerCase();
-      /* Poloha obce s malým rozptylem. Semínkem je adresa inzerátu, ať
-         dvě nabídky z jedné obce neleží na jednom špendlíku. */
+      /* POLOHA OBCE, BEZ VLASTNÍHO ROZPTYLU. Stálo tu rozhození podle
+         adresy inzerátu, ať dvě nabídky z jedné obce neleží na jednom
+         špendlíku — a bylo to k ničemu i na škodu:
+           · K NIČEMU: o pár tisíc řádků níž se každé nabídce bez
+             souřadnic od zdroje (`_gps:false`, což je i tahle) poloha
+             přepočítá geokodérem a rozhodí znovu, takže tenhle rozptyl
+             se v datech nikdy neobjevil.
+           · NA ŠKODU: dvojníci se hledají PŘED tím přepočtem a klíč
+             nese souřadnice. Rozhozené body tedy dvojníky schovaly —
+             naměřeno 8. 11. 2026: 14 dvojic (dva různé inzeráty na týž
+             pozemek, čísla jako 1055749 a 1055750) zůstalo v datech
+             a dvakrát ve výpisu.
+         Nabídka proto nese polohu OBCE a dvě nabídky z jedné obce mají
+         týž bod — dokud je nerozhodí ten pozdější přepočet. */
       const j = (typeof a.obecLat === 'number' && typeof a.obecLng === 'number')
-        ? jitterAround(a.obecLat, a.obecLng, a.url, 0.006) : null;
+        ? { lat: a.obecLat, lng: a.obecLng } : null;
       const fotka = PK_FOTKA.zkratka(a.foto, a.id);
       if (fotka) sFotkou++;
       if (a.popis) sPopisem++;

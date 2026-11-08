@@ -132,21 +132,58 @@ je('stránka bez popisu dá null',
 /* --- 6. OBEC, OKRES A POLOHA Z DŘÍVĚJŠÍCH DAT ----------------------
    Na povolené cestě nejsou souřadnice (změřeno: v HTML detailu se vzor
    `4[89]\.[0-9]{3}|1[2-8]\.[0-9]{3}` nenašel ani jednou) a adresa nese
-   KRAJ, ne okres. Obec se proto hledá ve dřívějších datech — a okres
-   se bere ten, který u té obce vyšel nejčastěji ze skutečných hranic.
-   Poloha je MEDIÁN, ne první nalezená: jedna nabídka s chybnou
-   souřadnicí by jinak posunula celou obec. */
+   KRAJ, ne okres. Obec se proto hledá ve dřívějších datech.
+
+   ČTYŘI PRAVIDLA, A KAŽDÉ ZA JEDNU NAMĚŘENOU VADU (8. 11. 2026, první
+   běh po povolené cestě — 4 nabídky za 10km pásem, 3 špendlíky mimo
+   svůj okres, 3 páry obcí na jednom bodě):
+
+     1. OKRES SE ODVODÍ Z POLOHY, NEHLASUJE SE. Dřív se bral nejčastější
+        okres té obce bez ohledu na mediánový bod, takže web psal
+        „okres Sokolov" a špendlík ležel v okrese Kladno.
+     2. POLOHA JE MEDIÁN, ne první nalezená ani průměr: jedna nabídka
+        s chybnou souřadnicí by jinak posunula celou obec.
+     3. SLOVNÍK SE NEKRMÍ SVÝM VLASTNÍM VÝSTUPEM. Nabídky z Bezrealitek
+        mají polohu dopočítanou z tohohle slovníku; kdyby do něj zpátky
+        vstupovaly, odpověď by se běh po běhu posouvala (naměřeno: tři
+        nabídky z Roztok měly tři různé okresy).
+     4. NEJEDNOZNAČNÉ JMÉNO SE ZAHODÍ. Jmen obcí se v Česku opakuje
+        hodně; medián dvou vzdálených hnízd téhož jména padne MEZI ně,
+        tedy nikam — tak „Hrádek nad Nisou" dostal okres Tachov. */
+const OKRES_ZKUSEBNE = (lat, lng) => {
+  if (lat > 50.0 && lat < 50.4 && lng > 14.3 && lng < 14.9) return 'Mělník';
+  if (lat > 50.0 && lat < 50.4 && lng > 13.9 && lng <= 14.3) return 'Kladno';
+  return null;   // mimo = žádný okres (jako za hranicemi republiky)
+};
 const MAPA = brMistaZDrivejsich([
-  { place: 'Lhota', okres: 'Mělník', lat: 50.1, lng: 14.5 },
-  { place: 'Lhota', okres: 'Mělník', lat: 50.2, lng: 14.6 },
-  { place: 'Lhota', okres: 'Mělník', lat: 55.9, lng: 19.9 },
-  { place: 'Lhota', okres: 'Kladno', lat: 50.1, lng: 14.1 },
-  { place: 'Bez okresu', okres: '', lat: 1, lng: 1 },
-]);
-je('obec dostane svůj nejčastější okres', MAPA.get('lhota').okres, 'Mělník');
+  /* Pole `okres` je tu schválně NAPROSTO mimo: ukazuje, že se nehlasuje. */
+  { place: 'Lhota', okres: 'Sokolov', lat: 50.1, lng: 14.5 },
+  { place: 'Lhota', okres: 'Sokolov', lat: 50.2, lng: 14.6 },
+  { place: 'Lhota', okres: 'Sokolov', lat: 50.3, lng: 14.7 },
+  { place: 'Bez polohy', okres: 'Kladno' },
+  { place: 'Jen z Bezrealitek', okres: 'Kladno', lat: 50.1, lng: 14.1, zdroj: 'Bezrealitky' },
+  /* Dvě hnízda téhož jména 150 km od sebe: medián padne mezi ně. */
+  { place: 'Roztoky', okres: 'Praha-západ', lat: 50.16, lng: 14.39 },
+  { place: 'Roztoky', okres: 'Brno-město', lat: 49.19, lng: 16.61 },
+  /* Obec za hranicemi okresů — bod, který žádný okres nezná. */
+  { place: 'Zahranice', okres: 'Kladno', lat: 48.1, lng: 20.0 },
+], OKRES_ZKUSEBNE);
+je('okres se odvodí z mediánové polohy, ne z nejčastější hodnoty v datech',
+  MAPA.get('lhota').okres, 'Mělník');
 je('poloha obce je medián, ne průměr ani první hodnota',
   [MAPA.get('lhota').lat, MAPA.get('lhota').lng], [50.2, 14.6]);
-pravda('nabídka bez okresu se do slovníku nedostane', !MAPA.has('bez okresu'));
+pravda('nabídka bez polohy se do slovníku nedostane', !MAPA.has('bez polohy'));
+pravda('nabídky z Bezrealitek se do slovníku nedostanou (jinak se krmí sám sebou)',
+  !MAPA.has('jen z bezrealitek'),
+  'poloha Bezrealitek je z tohohle slovníku dopočítaná — zpátky do něj nesmí');
+pravda('jméno obce rozptýlené přes 20 km se nenabídne vůbec',
+  !MAPA.has('roztoky'),
+  'medián dvou vzdálených hnízd téhož jména leží mezi nimi, tedy nikde');
+pravda('a obec, jejíž bod nepatří do žádného okresu, taky ne',
+  !MAPA.has('zahranice'));
+/* A že slovník vůbec něco vrací — jinak by všechny kontroly výš
+   procházely i nad prázdnou mapou. */
+je('ve slovníku zůstala právě jedna obec', MAPA.size, 1);
 
 /* --- 7. ENTITY A CDATA V XML ---------------------------------------- */
 je('&amp; v adrese', brXmlText('https://x.cz/a?b=1&amp;c=2'), 'https://x.cz/a?b=1&c=2');

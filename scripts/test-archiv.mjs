@@ -80,6 +80,45 @@ je('a přestane se sledovat', Object.keys(v4.stav.nabidky).length, 0);
 je('z uzavřených období se dá poskládat celá doba na trhu',
   [v3.uzavrene[0].od, v4.uzavrene[0].do], ['2026-01-10', '2026-01-25']);
 
+/* ---- 4b) ZMĚNILA SE POLOHA, NE NABÍDKA ----
+   Klíč archivu nese souřadnice na tři desetinná místa, takže nabídka,
+   které se změní poloha, dostane nový klíč — a archiv to bez párování
+   vidí jako „stará zmizela, nová přišla". Naměřeno 8. 11. 2026 na
+   živých datech: Bezrealitky se začaly čít povolenou cestou, poloha
+   vychází z obce a 3 151 nabídek tím dostalo jiný klíč, přičemž
+   2 512 z nich šlo spárovat podle otisku adresy inzerátu. Archiv je
+   přírůstkový, takže vymyšlené životnosti by v historii zůstaly
+   navždy. */
+{
+  const sAdresou = (zm) => P(Object.assign(
+    { url: 'https://www.bezrealitky.cz/nemovitosti-byty-domy/111-nabidka-prodej-pozemku' }, zm || {}));
+  const prvni = krok(PRAZDNY, [sAdresou()], '2026-03-01');
+  const stary = Object.keys(prvni.stav.nabidky)[0];
+  /* Týž inzerát, jiná poloha (obec místo parcely) a táž cena. */
+  const posun = krok(prvni.stav, [sAdresou({ lat: 50.4, lng: 15.9 })], '2026-03-02');
+  const novy = Object.keys(posun.stav.nabidky)[0];
+  je('posunutá nabídka má jiný klíč', novy !== stary, true);
+  je('ale nezapíše se jako zmizelá', posun.uzavrene.length, 0);
+  je('a drží si den prvního vidění', kde(posun.stav, novy).od, '2026-03-01');
+  je('a počítadlo o přestěhování ví', posun.prestehovano, 1);
+  /* CENA SE PŘITOM POŘÁD HLÍDÁ: přestěhování nesmí zlevnění spolknout. */
+  const slevaPoPosunu = krok(prvni.stav, [sAdresou({ lat: 50.4, lng: 15.9, price: 400000 })], '2026-03-02');
+  je('zlevnění při posunu se pořád uzavře jako změna ceny',
+    slevaPoPosunu.uzavrene.map((x) => x.proc), ['cena']);
+  /* NABÍDKA BEZ ADRESY SE NEPÁRUJE. Záchytný tvar klíče je `#v<výměra>`
+     a ten dvě různé nabídky nerozliší — spárovat podle něj by slilo
+     dva pozemky v jedné vsi se stejnou výměrou. */
+  const bezAdresy = krok(PRAZDNY, [P()], '2026-03-01');
+  const posunBez = krok(bezAdresy.stav, [P({ lat: 50.4, lng: 15.9 })], '2026-03-02');
+  je('nabídka bez adresy inzerátu se podle výměry nepáruje',
+    [posunBez.prestehovano, posunBez.uzavrene.map((x) => x.proc)], [0, ['zmizela']]);
+  /* A OPRAVDU ZMIZELÁ NABÍDKA SE POŘÁD UZAVÍRÁ. Kdyby párování bralo
+     cokoli, archiv by přestal zapisovat zmizení vůbec. */
+  const zmizela = krok(prvni.stav, [], '2026-03-03');
+  je('nabídka, která v datech není, se pořád uzavře jako zmizelá',
+    zmizela.uzavrene.map((x) => x.proc), ['zmizela']);
+}
+
 /* ---- 5) co archiv dělat NESMÍ ---- */
 const jiny = P({ parcel: '999/9' });
 const v5 = krok(v2.stav, [P(), jiny], '2026-01-26');
