@@ -31,6 +31,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -92,7 +93,11 @@ pravda('knihovna na disku opravdu je',
   'vendor/leaflet/leaflet.js chybí');
 
 /* ---- 2) v prohlížeči ------------------------------------------ */
-const detail = pozemky.find((f) => f !== 'pozemek.html');
+/* ŽIVÁ STRÁNKA, NE PRVNÍ V ABECEDĚ. Vyřazená a přestěhovaná nabídka
+   mapu nekreslí (#pzm na nich není), takže sjetí k mapě skončilo
+   třicetivteřinovým timeoutem a zkouška spadla místo toho, aby něco
+   řekla. Výběr drží scripts/vzorek-pozemku.mjs. */
+const detail = zivaStranka();
 pravda('našla se stránka pozemku, na které se to dá změřit', !!detail, 'žádná pozemek-*.html');
 if (!detail) hotovo();
 

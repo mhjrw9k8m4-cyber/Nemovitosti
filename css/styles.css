@@ -6005,6 +6005,16 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    účtu někdy přibyl postranní panel jako na „Přidat pozemek" — tam se
    sloupec středit nemá, patří k hornímu rohu panelu vedle. */
 .section.app-section:not(:has(.add-aside)) > .add-wrap > *,
+/* A TOTÉŽ NA STRÁNCE PRO REALITNÍ KANCELÁŘE. inzerce.html má tytéž
+   karty v témže obalu, ale její oddíl se jmenuje `.section
+   .tesne-nahore`, ne `.app-section` — takže se jí vystředění
+   netýkalo a karta zůstala přilepená vlevo. Naměřeno 8. 11. 2026 při
+   1280 px: karta 72–792 px a napravo od ní 488 px prázdné stránky,
+   přičemž vedle ní nic nestojí (nula prvků). Je to první stránka,
+   kterou uvidí realitka, takže to není drobnost. Stránky, které
+   postranní panel MAJÍ (pridat.html, `.add-aside`), se dál nestředí —
+   tam karta patří k hornímu rohu panelu vedle. */
+.section.tesne-nahore:not(:has(.add-aside)) > .add-wrap > *,
 .app-hero > .add-wrap > *{margin-inline:auto;}
 /* Pás záložek se středí jako CELEK, ne každá záložka zvlášť. S
    `margin-inline:auto` na potomcích se tři záložky rozlezly po celé

@@ -26,11 +26,18 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const STRANKA = '/pozemek-benesov-benesov-1sjtz7b.html';
+/* NATVRDO ZAPSANÁ STRÁNKA ZESTÁRLA. Stálo tu
+   '/pozemek-benesov-benesov-1sjtz7b.html' — a 8. 11. 2026 se ta
+   nabídka ze zdroje ztratila, takže stránka přestala vykreslovat
+   nabídku a zkouška spadla na timeoutu, ne na vadě webu. Která
+   nabídka je živá, se mění každým během robota; výběr proto drží
+   scripts/vzorek-pozemku.mjs. */
+const STRANKA = '/' + zivaStranka();
 let ok = 0, chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
@@ -234,8 +241,18 @@ try {
       dlazdice.some((x) => /Termín dražby|Vlastnictví/.test(x.popisek)),
       'dlaždice: ' + dlazdice.map((x) => x.popisek).join(', '));
   } else {
+    /* POČET DLAŽDIC NENÍ TŘI — ZÁLEŽÍ NA TOM, CO SE PRODÁVÁ.
+       Tahle kontrola vznikla, když web uměl jen pozemky: ty mají
+       výměru, druh pozemku a cenu za metr, tedy tři. Od 5. 11. je na
+       webu i byt a dům, a u bytu druh pozemku neexistuje — naměřeno
+       8. 11. na živé stránce bytu: „Výměra, Typ nemovitosti", tedy
+       dvě. Hlídá se proto PRAVIDLO, ne číslo: dlaždice nesmí být
+       doplňovaná výplní („Vlastnictví" čili „Celý pozemek" u nabídky,
+       která podíl ani dražba není) a každá musí něco říct. */
     pravda('u běžné nabídky nejsou dlaždice dopl­ňované výplní',
-      dlazdice.length === 3 && !dlazdice.some((x) => /Vlastnictví/.test(x.popisek)),
+      dlazdice.length >= 2 && dlazdice.length <= 3
+        && !dlazdice.some((x) => /Vlastnictví/.test(x.popisek))
+        && dlazdice.every((x) => x.popisek.trim()),
       'dlaždice: ' + dlazdice.map((x) => x.popisek).join(', '));
   }
 

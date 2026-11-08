@@ -22,8 +22,14 @@ const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const SIRKA = 1440;
-const UCET = ['muj-inzerat.html', 'zpravy.html', 'hlidani.html'];
-const SLOUPCOVE = ['pridat.html', 'inzerce.html'];
+/* STŘEDÍ SE TO, VEDLE ČEHO NIC NESTOJÍ. inzerce.html tu byla mezi
+   sloupcovými stránkami — a není: postranní panel („panel s tipy")
+   má jen pridat.html. Naměřeno 8. 11. 2026 při 1280 px: na inzerce.html
+   stojí karta 72–792 px, napravo od ní nic (nula prvků) a 488 px
+   prázdné stránky. Je to stránka, kterou vidí realitní kancelář jako
+   první, takže patří k těm vystředěným, ne k dvousloupcovým. */
+const UCET = ['muj-inzerat.html', 'zpravy.html', 'hlidani.html', 'inzerce.html'];
+const SLOUPCOVE = ['pridat.html'];
 
 let ok = 0, chyb = 0;
 const zpravy = [];
