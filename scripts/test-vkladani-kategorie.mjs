@@ -83,6 +83,23 @@ function je(popis, vyslo, cekano) {
     'v js/pridat.js chybí podmínka na pozemek u p_kat');
 }
 
+/* --- 3b. DOKUD NENÍ SQL PUSTĚNÉ, AŤ TO ŘEKNE PRAVDU --------------
+   Nová podoba create_listing na databázi, kde se nové SQL nepustilo,
+   neexistuje — PostgREST volání s `p_kat` nenajde a vrátí PGRST202.
+   Pozemek se posílá BEZ typu, takže ten projde i tak. Hláška se proto
+   musí rozdělit: „inzeráty nejde přidávat" by bylo tomu, kdo přidává
+   pozemek, nepravda a odehnalo by ho to. */
+{
+  const js = cti('js/pridat.js');
+  const i = js.indexOf("=== 'db'");
+  const blok = i > 0 ? js.slice(i, i + 1400) : '';
+  pravda('hláška o staré databázi se dělí podle zvoleného typu',
+    /val\('p-kat'\)/.test(blok), 'v bloku pro chybu „db" se typ nečte');
+  pravda('a u pozemku neříká, že inzeráty nejde přidávat',
+    /Domy a byty/.test(blok) && /Pozemek vložit jde/.test(blok),
+    'chybí větev pro nepozemek');
+}
+
 /* --- 4. ČTENÍ: TYP SE OVĚŘUJE, NE PŘEBÍRÁ -------------------------- */
 {
   global.window = global;

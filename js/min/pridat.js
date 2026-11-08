@@ -978,7 +978,13 @@
           ms.textContent = 'Fotka ' + (mistoHlaska || 'nesedí k zadané obci') + ' Zkontrolujte prosím obec, nebo nahrajte fotky pozemku.';
           ms.classList.add('err');
         } else if (r === 'db') {
-          ms.innerHTML = 'Inzeráty teď nejde přidávat — na naší straně neběží aktuální verze databáze. Píšeme na tom; zkuste to prosím později, nebo nám dejte vědět přes <a href="kontakt.html">kontakt</a>.';
+
+          var katZvoleny = val('p-kat');
+          if (katZvoleny && katZvoleny !== 'pozemek') {
+            ms.innerHTML = 'Domy a byty zatím vložit nejde — databáze na naší straně ještě nemá pole pro typ nemovitosti. <b>Pozemek vložit jde</b>: přepněte typ na „Pozemek“. Pracujeme na tom; klidně nám dejte vědět přes <a href="kontakt.html">kontakt</a>.';
+          } else {
+            ms.innerHTML = 'Inzeráty teď nejde přidávat — na naší straně neběží aktuální verze databáze. Píšeme na tom; zkuste to prosím později, nebo nám dejte vědět přes <a href="kontakt.html">kontakt</a>.';
+          }
           ms.classList.add('err');
         } else {
           ms.textContent = 'Odeslání se teď nepovedlo, zkuste to prosím za chvíli znovu.';
