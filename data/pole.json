@@ -166,6 +166,12 @@
       "typ": "string",
       "vzdy": false,
       "popis": "Název souboru hlavní fotky nabídky, bez cesty — třeba „1076264-1792345838-foto-1.jpg“. Celá adresa v datech není schválně: měří 130 znaků a u 3 161 nabídek by tenhle soubor, který si stahuje úvodní stránka, narostl o 410 kB. Adresu z toho názvu složí js/fotka.js (jedno místo pro web, sestavení i robota). Fotka leží na serveru toho zdroje a jen se předává prohlížeči návštěvníka — nikam se nekopíruje."
+    },
+    "ul": {
+      "typ": "string",
+      "vzdy": false,
+      "popis": "Ulice, když ji zdroj uvedl a liší se od obce — třeba „Devonská“ u bytu v Praze. Není to náhrada obce: `place` nese obec, `ul` ulici. Do dat se ukládá od 8. 11. 2026 a má jednoho čtenáře: nadpis a titulek stránky nabídky (scripts/generate-parcel-pages.mjs, mistoFraze). Důvod je změřený — bez ulice sdílelo nadpis s jinou stránkou 574 z 3 417 stránek (17 %), protože „Prodej bytu 55 m² — Praha“ je v datech šestnáctkrát, a pro vyhledávač je šestnáct stránek s týmž nadpisem jedna stránka. Karta ve výpisu ulici neukazuje: tam je místa na jeden řádek a rozlišuje ji fotka a cena. V datech je jen u nabídek, kde zdroj ulici uvedl a liší se od obce — u ostatních pole prostě není (chybějící `ul` ZNAMENÁ „ulici neznáme“, ne „žádná“). Proto má příznak `jenKdyzZdrojZnaUlici`, stejně jako `kat` má `jenKdyzNeniPozemek`: popsané musí být dřív, než se objeví, protože jakmile se objeví, poteče ven ke každému, kdo si soubor vezme.",
+      "jenKdyzZdrojZnaUlici": true
     }
   }
 }

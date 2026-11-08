@@ -858,11 +858,19 @@ export function opravUliceVObci(nabidky) {
     if (!zbytek) continue;
     const jmeno = zname.get(zbytek);
     if (!jmeno || bezD(jmeno) === ps) continue;
-    /* Ulice se nikam neukládá. Stejně ji zahazuje i mistoZBezrealitky()
-       výš (volající bere jen `place`), web ji nikde neukazuje a nové
-       pole v datech hlídá data/pole.json — zavést ho jen proto, aby
-       leželo nepřečtené, by byl jen další sloupec k udržování. Z adresy
-       inzerátu, která u nabídky zůstává, se dá přečíst kdykoli. */
+    /* ULICE SE OD 8. 11. UKLÁDÁ — a je to obrat proti tomu, co tu stálo
+       („zavést pole jen proto, aby leželo nepřečtené"). Čtenář se našel:
+       jakmile tahle oprava udělala z ulice obec, přestaly být nadpisy
+       stránek rozlišitelné. Změřeno na ostrých datech: nadpis sdílí
+       znění s jinou stránkou u 574 z 3 417 stránek (17 %), zatímco před
+       opravou u 6 % — a 485 z těch 583 nabídek jsou byty v Praze, kde
+       se „Prodej bytu 55 m² — Praha" opakuje šestnáctkrát. Pro
+       vyhledávač je šestnáct stránek s týmž nadpisem jedna stránka.
+       Ulice to rozliší a je to pravda, kterou zdroj poslal: stojí tady
+       v `o.place` se správnou diakritikou, o řádek níž by se zahodila.
+       Z adresy inzerátu ji dopočítat JDE, ale jen bez diakritiky
+       („devonska"), a to by se psalo lidem do nadpisu. */
+    if (!o.ul) o.ul = String(o.place);
     o.place = jmeno;
     /* ZNAČKA PRO VOLAJÍCÍHO: TOMUHLE ZÁZNAMU UŽ NESEDÍ OKRES ANI POLOHA.
        Naměřeno 8. 11. 2026 na ostrých datech: 61 obcí mělo dva a víc
@@ -3657,9 +3665,11 @@ async function fetchBezrealitky() {
      a teprve pak se ptáme na okres.
      Vedlejší zisk: geokodér se neptá na jména ulic, takže strop dotazů
      nepadne na jména, která obec vůbec neznamenají. */
-  const predbezne = inzeraty.map((a) => ({
-    url: a.url, place: (mistoZBezrealitky(a.geo, a.uri).place || '').slice(0, 60),
-  }));
+  const predbezne = inzeraty.map((a) => {
+    const m = mistoZBezrealitky(a.geo, a.uri);
+    return { url: a.url, place: (m.place || '').slice(0, 60),
+      ...(m.ulice ? { ul: String(m.ulice).slice(0, 60) } : {}) };
+  });
   const opravenychUlic = opravUliceVObci(predbezne);
 
   const zeSlovniku = new Map();
@@ -3683,7 +3693,8 @@ async function fetchBezrealitky() {
     }
     const zn = zeSlovniku.get(klic);
     if (!zn || !zn.okres) { bezOkresu++; continue; }
-    kObjednani.push({ ...a, place, okres: zn.okres, obecLat: zn.lat, obecLng: zn.lng });
+    kObjednani.push({ ...a, place, ...(predbezne[i].ul ? { ul: predbezne[i].ul } : {}),
+      okres: zn.okres, obecLat: zn.lat, obecLng: zn.lng });
   }
 
   /* ---- 2) CENA A POPIS: z detailu, s mezipamětí podle lastmod ---- */
@@ -3779,6 +3790,9 @@ async function fetchBezrealitky() {
       if (a.popis) sPopisem++;
       out.push({
         place: a.place, okres: a.okres, type: 'sale',
+        /* Ulice jen tehdy, když to opravdu ulice JE a liší se od obce —
+           jinak by v nadpisu stálo „Praha, Praha". */
+        ...(a.ul && a.ul !== a.place ? { ul: a.ul } : {}),
         parcel: '—', _key: 'br-' + a.id,
         ...(jePozemek ? {} : { kat }),
         druh, area, price: a.cena,

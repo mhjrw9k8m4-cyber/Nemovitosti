@@ -57,6 +57,40 @@ pravda('mimo Prahu zůstává „obec, okres okres"',
   mistoFraze('Benešov', 'Benešov').dlouhe === 'Benešov, okres Benešov',
   `vyšlo „${mistoFraze('Benešov', 'Benešov').dlouhe}"`);
 
+/* ---- 1b) ULICE JAKO TŘETÍ ÚDAJ (od 8. 11. 2026) ----
+   Robot od té doby obec OPRAVUJE a ulici ukládá zvlášť (`ul`), takže
+   se nadpis nemusí spoléhat na to, že zdroj pošle ulici v poli pro
+   obec. Důvod je změřený: s opravenou obcí a bez ulice sdílelo nadpis
+   s jinou stránkou 574 z 3 417 stránek (17 %) — „Prodej bytu 55 m² —
+   Praha" je v datech šestnáctkrát a pro vyhledávač je to jedna
+   stránka. */
+pravda('ulice se přidá k obci, ne místo ní',
+  mistoFraze('Praha', 'Praha', 'Devonská').dlouhe === 'Praha, Devonská',
+  `vyšlo „${mistoFraze('Praha', 'Praha', 'Devonská').dlouhe}"`);
+pravda('mimo město-okres se za ulici ještě napíše okres',
+  mistoFraze('Roztoky', 'Praha-západ', 'Lesní').dlouhe === 'Roztoky, Lesní, okres Praha-západ',
+  `vyšlo „${mistoFraze('Roztoky', 'Praha-západ', 'Lesní').dlouhe}"`);
+pravda('ulice shodná s obcí se neopakuje',
+  mistoFraze('Praha', 'Praha', 'Praha').dlouhe === 'Praha, okres Praha',
+  `vyšlo „${mistoFraze('Praha', 'Praha', 'Praha').dlouhe}"`);
+pravda('prázdná ulice nic nemění',
+  mistoFraze('Vlašim', 'Benešov', '').dlouhe === 'Vlašim, okres Benešov',
+  `vyšlo „${mistoFraze('Vlašim', 'Benešov', '').dlouhe}"`);
+/* A že ji robot opravdu ukládá — jinak by tahle funkce uměla něco,
+   co jí nikdo nepošle. Hlídá se zdroj, protože v datech se ulice
+   objeví až po nejbližším běhu robota. */
+{
+  const robot = readFileSync(path.join(KOREN, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
+  pravda('robot ulici při opravě obce neztrácí',
+    /if \(!o\.ul\) o\.ul = String\(o\.place\);/.test(robot),
+    'v opravUliceVObci se ulice zahazuje');
+  pravda('a ukládá ji do nabídky jako `ul`',
+    /a\.ul && a\.ul !== a\.place \? \{ ul: a\.ul \}/.test(robot),
+    'nabídka z Bezrealitek pole `ul` nenese');
+  const pole = JSON.parse(readFileSync(path.join(KOREN, 'data', 'pole.json'), 'utf8'));
+  pravda('a pole `ul` je popsané v data/pole.json', !!(pole.pole && pole.pole.ul));
+}
+
 /* ---- 2) a je to vidět na stránkách ---- */
 const data = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
 const prazske = (data.opportunities || []).filter((o) => o.okres === 'Praha' && o.place && o.place !== 'Praha');

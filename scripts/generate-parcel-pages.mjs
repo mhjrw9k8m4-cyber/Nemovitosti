@@ -342,10 +342,31 @@ export function jeUlice(place) {
   return m[2] !== m[2].toLowerCase() && m[2] === m[2].toUpperCase();
 }
 
-export function mistoFraze(place, okres) {
+/* ULICE JE TŘETÍ ÚDAJ, NE NÁHRADA OBCE.
+   Pravidlo nad tímhle odstavcem vzniklo, když zdroj posílal do pole pro
+   obec ulici — proto se u okresu Praha skládalo „Praha, Devonská"
+   z `place`. Od 8. 11. robot obec opravuje a ULICI UKLÁDÁ zvlášť
+   (`ul`), takže se to dá říct rovnou a pravdivě. Důvod je změřený:
+   bez ulice sdílí nadpis s jinou stránkou 574 z 3 417 stránek (17 %),
+   protože „Prodej bytu 55 m² — Praha" je v datech šestnáctkrát.
+   Pro vyhledávač je šestnáct stránek s týmž nadpisem jedna stránka.
+   „Praha, okres Praha" se nepíše — okres Praha je Praha. */
+export function mistoFraze(place, okres, ulice) {
+  const ul = ulice && String(ulice).trim() && String(ulice) !== String(place)
+    ? String(ulice).trim() : '';
+  /* Stará cesta pro data, kde ulice ještě stojí v poli pro obec. */
   if (okres === 'Praha' && place && place !== 'Praha') {
     const f = `Praha, ${place}`;
     return { dlouhe: f, kratke: f };
+  }
+  /* Město, které je samo okresem (Praha, Brno-město, Plzeň-město): okres
+     se za ulici nepřipisuje, protože by stálo „Praha, Devonská, okres
+     Praha". Bez ulice se nemění NIC — „Benešov, okres Benešov" je
+     správně a hlídá to scripts/test-misto-prahy.mjs. */
+  if (ul) {
+    return place === okres
+      ? { dlouhe: `${place}, ${ul}`, kratke: `${place}, ${ul}` }
+      : { dlouhe: `${place}, ${ul}, okres ${okres}`, kratke: `${place}, ${ul}` };
   }
   return { dlouhe: `${place}, okres ${okres}`, kratke: `${place}` };
 }
@@ -382,9 +403,9 @@ export function coSeProdava(d) {
     || (d && d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek');
 }
 
-function slozTitulek(hlava, druh, vym, place, okres, podil) {
+function slozTitulek(hlava, druh, vym, place, okres, podil, ulice) {
   const konec = ' | Parcelka';
-  const M = mistoFraze(place, okres);
+  const M = mistoFraze(place, okres, ulice);
   /* Podíl ustupuje až jako předposlední — dřív se vzdá okres i výměra.
      Je to nejdůležitější údaj o tom, CO se prodává. */
   const p = podil ? ', ' + podil : '';
@@ -466,7 +487,7 @@ function slozPopis(d, cena, zaM2, vym, navic) {
      nabídka půl milionu metrů za čtyřicet tisíc. */
   const pod = textPodilu(d) ? ', ' + textPodilu(d) : '';
   const zaklad = `${TYP[d.type] || 'Nabídka'} · ${cena}${zaM2}${vym ? ' · ' + vym : ''}${pod}`
-    + ` · ${mistoFraze(d.place, d.okres).dlouhe}.${termin}${navic || ''}`;
+    + ` · ${mistoFraze(d.place, d.okres, d.ul).dlouhe}.${termin}${navic || ''}`;
   const varianty = [
     ' Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.',
     ' Poloha na mapě a srovnání s obvyklou cenou.',
@@ -539,7 +560,7 @@ export function pripravRozliseni(polozky) {
   for (const d of polozky) {
     const druh = coSeProdava(d);
     const vym = d.area ? `${fmt(d.area)} m²` : '';
-    const t = slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d));
+    const t = slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d), d.ul);
     if (!podleTitulku.has(t)) podleTitulku.set(t, []);
     podleTitulku.get(t).push({ d, druh, vym });
   }
@@ -596,7 +617,7 @@ export function textyPro(d) {
   const druh = coSeProdava(d);
   const vym = d.area ? `${fmt(d.area)} m²` : '';
   const titul = ROZLISENI.get(klicNabidky(d))
-    || slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d));
+    || slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d), d.ul);
   /* NADPIS STRÁNKY SE OD TITULKU PRO VYHLEDÁVAČ ODDĚLIL — a je to
      rozdíl v omezeních, ne dvě pravdy o jedné věci.
      Titulek musí do 65 znaků i se jménem webu, jinak ho Google usekne
@@ -609,7 +630,7 @@ export function textyPro(d) {
      („Prodej bytu 2+1 61 m²"). Místo za pomlčkou zůstává stejné: z něj
      dělá js/pozemek.js druhý řádek pod nadpisem. */
   const nadpis = `${hlavaTitulku(druh, d.type)}${vym ? ' ' + vym : ''}`
-    + `${textPodilu(d) ? ', ' + textPodilu(d) : ''} — ${mistoFraze(d.place, d.okres).dlouhe}`;
+    + `${textPodilu(d) ? ', ' + textPodilu(d) : ''} — ${mistoFraze(d.place, d.okres, d.ul).dlouhe}`;
   const cena = d.price ? `${fmt(d.price)} Kč` : 'cena neuvedena';
   /* CENA ZA METR Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE. Titulek, popis pro
      vyhledávač i náhled v chatu se skládaly dělením celé výměry —

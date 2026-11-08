@@ -73,9 +73,15 @@ const nabidky = D.opportunities || [];
      u pozemku se schválně nevyplňuje (chybějící `kat` ZNAMENÁ pozemek).
      Popsané být musí už dnes: jakmile se objeví, poteče ven ke každému,
      kdo si soubor vezme. Označuje se `jenKdyzNeniPozemek`. */
+  /* A POLE, KTERÉ ZÁVISÍ NA TOM, CO POŠLE ZDROJ. `ul` (ulice) je
+     v datech jen u nabídek, kde ji zdroj uvedl a liší se od obce;
+     robot ji ukládá od 8. 11. 2026 a v souboru se objeví po nejbližším
+     běhu. Že ji robot opravdu ukládá, hlídá scripts/test-misto-prahy.mjs
+     na zdrojovém kódu — tady by to hlídat nešlo, protože tahle zkouška
+     čte jen data. Označuje se `jenKdyzZdrojZnaUlici`. */
   const navic = Object.keys(P.pole)
     .filter((k) => !vDatech.has(k) && !P.pole[k].jenPriVypadku
-      && !P.pole[k].jenKdyzNeniPozemek);
+      && !P.pole[k].jenKdyzNeniPozemek && !P.pole[k].jenKdyzZdrojZnaUlici);
   pravda('a popis nemluví o poli, které v datech není', navic.length === 0,
     navic.join(', '));
   /* VÝJIMKA SE MUSÍ DÁT DOLOŽIT, JINAK JE TO JEN TICHO.
