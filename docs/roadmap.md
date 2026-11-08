@@ -11,14 +11,14 @@ Takový plán je horší než žádný: podle něj se nedá poznat, co ještě c
 
 <!-- PK-STAV-OD: přepočítá scripts/generate-roadmap-cisla.mjs -->
 
-## Stav k 7. 11. 2026
+## Stav k 8. 11. 2026
 
 | Co | Jak to je |
 |---|---|
 | Web | GitHub Pages, vlastní doména. **Přesun na Vercel z původního plánu se neuskutečnil a není potřeba** — Pages web nasazují samy z větve a server na pozadí dělá Supabase. U Vercelu zůstalo vedlejší nasazení, proto se tam zapíná jeho analytika. |
 | Databáze | Supabase, 17 tabulek a 51 funkcí (RPC). Sloučený balík k nahrání je `supabase/00-vse.sql`. |
-| Data příležitostí | 3 896 nabídek (3 793 prodejů, 52 dražeb, 51 exekucí), 3 168 popisů od inzerentů. Na webu je z toho vidět 3 885 — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (`update-data.yml`). |
-| Stránky | 4 588 vlastních stránek pozemků, 77 okresních, 14 krajských — všechny generované, v `sitemap.xml`. |
+| Data příležitostí | 3 889 nabídek (3 785 prodejů, 53 dražeb, 51 exekucí), 3 163 popisů od inzerentů. Na webu je z toho vidět 3 874 — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (`update-data.yml`). |
+| Stránky | 5 488 vlastních stránek pozemků, 77 okresních, 14 krajských — všechny generované, v `sitemap.xml`. |
 | Zkoušky | 331 souborů, v CI čtyři úlohy: 160 bez prohlížeče, 168 s prohlížečem ve třech směnách. |
 
 <!-- PK-STAV-DO -->
