@@ -387,7 +387,20 @@ jobs:
         env:
           PK_SQL_VYZADOVAN: '1'
         run: |
-          sudo apt-get install -y --no-install-recommends postgresql >/dev/null 2>&1 || true
+          # PŘED 8. 11. 2026 TU BYLO `>/dev/null 2>&1 || true`, a to byla
+          # chyba: když se apt nepovedl, nebylo z protokolu poznat PROČ —
+          # jen pak tři zkoušky spadly na „PostgreSQL tu není". Přesně to
+          # se dnes v bězích 1076 a 1081 stalo. Instalace proto mluví.
+          # A nejdřív se podívá, jestli už v obrazu běžce není: zkoušky
+          # si server pouštějí samy (scripts/zkouska-postgres.mjs hledá
+          # /usr/lib/postgresql/*/bin/initdb), takže stačí binárky.
+          if ls /usr/lib/postgresql/*/bin/initdb >/dev/null 2>&1; then
+            echo "PostgreSQL je v obrazu běžce: $(ls -d /usr/lib/postgresql/*)"
+          else
+            echo "PostgreSQL v obrazu není, doinstalovávám:"
+            sudo apt-get install -y --no-install-recommends postgresql \
+              || echo "::warning::apt-get postgresql selhal — viz výpis výš. Zkoušky to ohlásí jako chybu, ne jako přeskočení."
+          fi
           node scripts/test-sql-cista.mjs
 
       # A nestačí, že se databáze založí — musí i snést objem. Měřeno

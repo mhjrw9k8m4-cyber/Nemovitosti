@@ -22,6 +22,43 @@ ne čekání na DNS.
 | 7 | rozhodnutí o čtyřech červených | jedno písmeno |
 | 8 | ověřit, že se CI spouští sama | ~5 min |
 
+## Řádek po řádku: co udělat a jak si ověřit, že to platí
+
+Jedno pravidlo: **nic si neodškrtávej podle toho, že jsi to udělal — odškrtni
+to, až to řekne ta kontrola vpravo.** Stav ve třetím sloupci je změřený
+8. 11. 2026; co odsud (z repozitáře) vidět nejde, je tam napsané jako
+„neuvidím".
+
+| # | co udělat | jak si ověříš, že je to hotové | stav 8. 11. |
+|---|---|---|---|
+| 0 | Supabase → SQL Editor → pustit `supabase/navstevnost.sql` | `SUPABASE_SERVICE_ROLE_KEY=… node scripts/navstevnost.mjs` vypíše čísla, ne chybu | neuvidím (na databázi odsud nedosáhnu) |
+| 1 | Resend: potvrdit doménu + nastavit SMTP v Supabase | na webu „Zapomenuté heslo": mail přijde a odesílatel je `parcelaka.cz`, ne `supabase.co` | klíč v Secrets **JE**; doménu a SMTP neuvidím |
+| 2 | `PK_MAIL_FROM` do Secrets (`Parcelka <hlidani@parcelaka.cz>`) | Actions → „Rozeslat upozornění" → poslední běh → v protokolu `PK_MAIL_FROM: ***` (nesmí být prázdné) | **prázdné** |
+| 3 | pustit `supabase/00-vse.sql` | `SUPABASE_SERVICE_ROLE_KEY=… node scripts/kontrola-databaze.mjs` nenajde nález; a ve formuláři projde vložení **bytu**, ne jen pozemku | neuvidím; bez toho jde vložit jen pozemek (formulář to říká) |
+| 4 | Stripe (ostré klíče až s IČO) | na webu se u zvýraznění inzerátu nabídne platba | rozhodnutí, ne práce |
+| 5 | tři tajemství VAPID (push) | `node scripts/kontrola-spusteni.mjs` → řádek „upozornění do telefonu" přestane být `!` | `PK_PUSH_VEREJNY_KLIC` **prázdný** |
+| 6 | Sreality (volitelné, jeden placený běh ~$6) | po běhu je v datech zdroj „Sreality (Apify)" | čeká na tvoje slovo |
+| 7 | rozhodnout o čtyřech červených | jedno písmeno ve stylopisu | čeká na tvoje slovo |
+| 8 | ověřit, že se CI spouští sama | `node scripts/kontrola-uloh.mjs` | změřím kdykoli |
+
+**Tři příkazy, které to řeknou za tebe.** Nemusíš si pamatovat nic z tabulky:
+
+```
+node scripts/kontrola-spusteni.mjs      # co brání spuštění (OK / ! / ?)
+node scripts/kontrola-uloh.mjs          # běží ještě plánované úlohy?
+node scripts/kontrola-nasazeni.mjs --web https://parcelaka.cz   # je venku to, co má být
+```
+
+Značka `?` znamená **nezkoušeno, neplatí za „v pořádku"** — třeba tajemství
+v Secrets jsou vidět jen z protokolu úlohy, ne odsud.
+
+**A jedna věc, kterou neudělá žádný skript:** projít web naostro jako
+člověk — registrace → inzerát s fotkou → zpráva → hlídání. Pět průchodů
+je vypsaných v `docs/pro-majitele.md`, bod 0b. Dokud to neprojdeš, nikdo
+neví, jestli to drží pohromadě; zkoušky měří části, ne tvůj dojem.
+
+---
+
 **Body 0 a 1 jsou to podstatné**; zbytek web neblokuje. Reálně je to
 jeden až dva večery a web je venku.
 
