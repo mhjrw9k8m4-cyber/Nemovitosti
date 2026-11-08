@@ -152,6 +152,11 @@
     return mera(klic(o && o.kat)) === 'podlahova' ? 'podlahová plocha' : '';
   }
 
+  function nadpisPopisu(o) {
+    var k = klic(o && o.kat);
+    return 'Co o ' + (jePozemkova(k) ? 'pozemku' : 'nemovitosti') + ' píše inzerent';
+  }
+
   return {
     KATEGORIE: KATEGORIE,
     KLICE: KATEGORIE.map(function (z) { return z.klic; }),
@@ -169,6 +174,7 @@
     slovaPoctu: slovaPoctu,
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
+    nadpisPopisu: nadpisPopisu,
     klic: klic,
   };
 });

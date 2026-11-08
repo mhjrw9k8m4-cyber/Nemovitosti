@@ -262,7 +262,7 @@
   var POZN_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-poznamka"/></svg>';
   var SHARE_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sdilet"/></svg>';
 
-  function pzPopisInzerentaHtml() {
+  function pzPopisInzerentaHtml(d) {
     var t = '';
 
     var vHtml = document.getElementById('pz-popis-text');
@@ -274,7 +274,10 @@
     }
     t = t.trim();
     if (t.length < 60) return '';
-    return '<h2 class="pz-sect-h">Co o pozemku píše inzerent</h2>'
+
+    var nad = (window.PKKategorie && window.PKKategorie.nadpisPopisu)
+      ? window.PKKategorie.nadpisPopisu(d) : 'Co o pozemku píše inzerent';
+    return '<h2 class="pz-sect-h">' + esc(nad) + '</h2>'
       + '<p class="pz-popis-inzerent">' + esc(t) + '</p>';
   }
 
@@ -1350,7 +1353,7 @@
 
       pzMapaHtml(d) +
 
-      pzPopisInzerentaHtml() +
+      pzPopisInzerentaHtml(d) +
 
       '<div class="pz-akce-hlavni">' + hlavniAkce +
         '<button class="pz-btn ulozit' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">'

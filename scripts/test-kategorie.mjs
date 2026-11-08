@@ -777,6 +777,51 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     'byt bez podlahové: ' + R.brVymera({ surface: null, surfaceLand: 70 }, 'byt'));
 }
 
+/* --- 8. NADPIS NAD CIZÍM POPISEM MLUVÍ O TOM, CO SE PRODÁVÁ -------
+ *
+ * Nad citací inzerenta stálo „Co o pozemku píše inzerent" na všech
+ * 4 319 stránkách — i nad textem, který popisuje byt. Naměřeno 8. 11.
+ * po opravě: 2 481 stránek říká „o pozemku", 1 838 „o nemovitosti".
+ *
+ * Nadpis skládá JEDNO místo (nadpisPopisu v js/kategorie.js), protože
+ * ho potřebují obě strany webu: statickou část píše
+ * scripts/generate-parcel-pages.mjs, vykreslenou js/pozemek.js. Dokud
+ * to byly dva řetězce, rozešly by se tiše — §436-třída.
+ *
+ * Měří se funkce i obě volající místa; na hotových stránkách pak to,
+ * že se oba nadpisy opravdu vyskytují (jinak by pravidlo mohlo
+ * zmrtvět a nikdo by to nepoznal). */
+{
+  pravda('nadpisPopisu u pozemku mluví o pozemku',
+    K.nadpisPopisu({ kat: 'pozemek' }) === 'Co o pozemku píše inzerent'
+      && K.nadpisPopisu({}) === 'Co o pozemku píše inzerent',
+    'vyšlo: ' + K.nadpisPopisu({ kat: 'pozemek' }));
+  const nepozemkove = K.KLICE.filter((k) => k !== 'pozemek');
+  const spatne = nepozemkove.filter((k) => K.nadpisPopisu({ kat: k }) !== 'Co o nemovitosti píše inzerent');
+  pravda(`a u všech ${nepozemkove.length} nepozemkových kategorií o nemovitosti`,
+    !spatne.length, 'jinak u: ' + spatne.join(', '));
+  /* OBĚ VOLAJÍCÍ MÍSTA SE PTAJÍ MODULU, NE VLASTNÍHO ŘETĚZCE. */
+  const gen = readFileSync(join(KOREN, 'scripts', 'generate-parcel-pages.mjs'), 'utf8');
+  const pz = readFileSync(join(KOREN, 'js', 'pozemek.js'), 'utf8');
+  pravda('statickou část skládá modul (generate-parcel-pages.mjs)',
+    /nadpisPopisu\(d\)/.test(gen) && !/<h2>Co o pozemku píše inzerent<\/h2>/.test(gen),
+    'generátor si nadpis píše sám');
+  pravda('a vykreslenou taky (js/pozemek.js)',
+    /nadpisPopisu\(d\)/.test(pz), 'js/pozemek.js si nadpis píše sám');
+  /* NA HOTOVÝCH STRÁNKÁCH: OBA NADPISY SE OPRAVDU VYSKYTUJÍ. Sazba do
+     nich vkládá nezlomitelné mezery, proto se hledá bez nich. */
+  const soubory = readdirSync(KOREN).filter((f) => /^pozemek-.*\.html$/.test(f));
+  let oPozemku = 0, oNemovitosti = 0;
+  for (const f of soubory) {
+    const h = readFileSync(join(KOREN, f), 'utf8').replace(/\u00a0/g, ' ');
+    if (h.indexOf('Co o pozemku píše inzerent') !== -1) oPozemku++;
+    if (h.indexOf('Co o nemovitosti píše inzerent') !== -1) oNemovitosti++;
+  }
+  pravda(`na stránkách stojí oba nadpisy (${oPozemku} o pozemku, ${oNemovitosti} o nemovitosti)`,
+    oPozemku > 100 && oNemovitosti > 100,
+    'jeden z nich je skoro nulový — pravidlo buď nezafungovalo, nebo bere všechno');
+}
+
 console.log('\nKategorie nemovitosti');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

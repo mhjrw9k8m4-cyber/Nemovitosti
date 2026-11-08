@@ -1591,7 +1591,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        stránek ruší, aby týž text nebyl v dokumentu dvakrát; archiv si
        ho drží dál a js/pozemek.js umí obojí. */
     + (popisInzerenta && String(popisInzerenta).trim().length >= 60
-      ? `<h2>Co o pozemku píše inzerent</h2><p id="pz-popis-text">${esc(String(popisInzerenta).trim())}</p>`
+      ? `<h2>${esc(KATEGORIE.nadpisPopisu(d))}</h2><p id="pz-popis-text">${esc(String(popisInzerenta).trim())}</p>`
       : '')
     + (vObec ? `<p><a href="${esc(vObec.url)}">${esc(vObec.text)}</a></p>` : '')
     + (blok ? `<p>${esc(blok.text)}</p>` : '')

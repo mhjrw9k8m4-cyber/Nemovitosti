@@ -330,6 +330,22 @@
     return mera(klic(o && o.kat)) === 'podlahova' ? 'podlahová plocha' : '';
   }
 
+  /* NADPIS NAD CIZÍM POPISEM. Stál na dvou místech („Co o pozemku píše
+     inzerent" v scripts/generate-parcel-pages.mjs pro statickou část
+     a v js/pozemek.js pro vykreslenou) a u bytu i domu lhal: web mluvil
+     o pozemku nad textem, který popisuje byt.
+
+     DVĚ PODOBY, NE DEVĚT. Druhý pád od jmen kategorií („o bytu",
+     „o chatě", „o komerčním objektu") by znamenal tabulku skloňování
+     pro devět slov, a ta by žila jen kvůli jednomu nadpisu. „Nemovitost"
+     je nadřazené slovo, které platí u všech osmi nepozemkových
+     kategorií, a u pozemku zůstává „pozemek", protože je to 2 009 ze
+     3 874 nabídek a přesnější slovo. Jedno místo pro obě strany webu. */
+  function nadpisPopisu(o) {
+    var k = klic(o && o.kat);
+    return 'Co o ' + (jePozemkova(k) ? 'pozemku' : 'nemovitosti') + ' píše inzerent';
+  }
+
   return {
     KATEGORIE: KATEGORIE,
     KLICE: KATEGORIE.map(function (z) { return z.klic; }),
@@ -347,6 +363,7 @@
     slovaPoctu: slovaPoctu,
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
+    nadpisPopisu: nadpisPopisu,
     klic: klic,
   };
 });

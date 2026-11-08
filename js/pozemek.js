@@ -461,7 +461,7 @@
      vepsal při generování (scripts/generate-parcel-pages.mjs); čte se
      přes JSON.parse z <script type="application/json">, takže uvozovky
      ani lomená závorka v textu nemohou rozbít stránku. */
-  function pzPopisInzerentaHtml() {
+  function pzPopisInzerentaHtml(d) {
     var t = '';
     /* POPIS JE OD 14. 10. PŘÍMO V HTML. Dřív ležel jen v datovém
        ostrůvku pro skript, takže stránku bez JavaScriptu (a vyhledávač,
@@ -480,7 +480,13 @@
     }
     t = t.trim();
     if (t.length < 60) return '';
-    return '<h2 class="pz-sect-h">Co o pozemku píše inzerent</h2>'
+    /* Nadpis podle toho, co se prodává: u bytu „o nemovitosti",
+       u pozemku „o pozemku". Jedno místo pro obě strany webu —
+       nadpisPopisu v js/kategorie.js; statická část stránky
+       (scripts/generate-parcel-pages.mjs) se ptá téže funkce. */
+    var nad = (window.PKKategorie && window.PKKategorie.nadpisPopisu)
+      ? window.PKKategorie.nadpisPopisu(d) : 'Co o pozemku píše inzerent';
+    return '<h2 class="pz-sect-h">' + esc(nad) + '</h2>'
       + '<p class="pz-popis-inzerent">' + esc(t) + '</p>';
   }
 
@@ -2509,7 +2515,7 @@
          tedy ve chvíli, kdy o pozemku vím jen čísla. Akce tím neodjela
          daleko: na telefonu je pořád v první polovině stránky (změřeno
          1 352 → 1 640 px z 3 879). */
-      pzPopisInzerentaHtml() +
+      pzPopisInzerentaHtml(d) +
 
       /* ROZHODNUTÍ A AKCE HNED POD POPISEM. Nahoře jsou dvě tlačítka a ne
          víc: jít na nabídku a schovat si ji. Ostatní cesty ven čekají
