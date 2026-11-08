@@ -43,10 +43,10 @@
 
   var VEN = '<span class="visually-hidden"> — otevře se v novém okně mimo Parcelku</span>';
 
-  var PK_DIAKR = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
   function pkSlug(s) {
-    return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, function (c) { return PK_DIAKR[c] || c; })
-      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return String(s == null ? '' : s)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   }
 
   var pkeyPlny = window.PKKlic.pkey;

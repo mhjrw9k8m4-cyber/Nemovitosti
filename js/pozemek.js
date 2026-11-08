@@ -76,11 +76,31 @@
      Identita pozemku je pkeyPlny() o pár řádků níž — jedna, a tatáž
      jako na mapě. */
   /* Název vlastní stránky pozemku. Tentýž výpočet dělá generátor v Node —
-     kdyby se rozešly, odkazovalo by se na neexistující soubor. */
-  var PK_DIAKR = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
+     kdyby se rozešly, odkazovalo by se na neexistující soubor.
+
+     RUČNÍ TABULKA DIAKRITIKY TU BYLA A ROZEŠLA SE. Do 8. 11. stálo
+     tady patnáct českých písmen vypsaných rukou
+     (á č ď é ě í ň ó ř š ť ú ů ý ž), kdežto Node v scripts/text.mjs
+     odjakživa rozkládá písmo na znak a znaménko (NFD) a znaménko
+     škrtá. Na češtině to vyšlo nastejno, na čemkoli jiném ne:
+
+       „Fügnerova"  →  Node f-u-gnerova → „fugnerova"
+                       prohlížeč ü nezná → „f-gnerova"
+
+     Prohlížeč tedy skládal adresu souboru, který na webu NENÍ, a kdo
+     na tu kartu klikl, dostal 404. Jindřich Fügner má ulici
+     v desítkách měst; našlo se to teprve s domy a byty z Bezrealitek,
+     protože mezi 2 000 pozemky žádné takové jméno nebylo.
+     Vypsat písmena znamená vypsat JEN TA, NA KTERÁ SI VZPOMENU —
+     a cizí jméno v ulici je přesně ten případ, na který si nikdo
+     nevzpomene. Rozklad na znaménka žádný seznam nepotřebuje
+     a `normalize` umí každý prohlížeč od roku 2015 (Safari 10).
+     Že se ty dva výpočty nerozejdou, měří
+     scripts/test-stranky-pozemku.mjs — ten tuhle vadu taky našel. */
   function pkSlug(s) {
-    return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, function (c) { return PK_DIAKR[c] || c; })
-      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return String(s == null ? '' : s)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   }
   /* Klíč pozemku počítá js/klic.js — jedno místo pro celý web. Byl tu
      opsaný podruhé a dvě kopie téhož výpočtu se rozejdou; tady by se to

@@ -784,7 +784,30 @@ export function opravUliceVObci(nabidky) {
   let kolik = 0;
   for (const o of nabidky || []) {
     if (!o || !o.place || !vypadaJakoUlice(o.place)) continue;
-    const m = /nabidka-prodej-pozemku-(.+?)$/.exec(String(o.url || ''));
+    /* ADRESA INZERÁTU UŽ NENÍ JEN POZEMKOVÁ. Do 8. 11. tu stál vzorek
+       `nabidka-prodej-pozemku-`, tedy jediný typ nemovitosti — a celá
+       oprava proto na téhle dávce NEUDĚLALA NIC: změřeno na
+       data/opportunities.json, 1 242 nabídek má v poli pro obec něco,
+       co vypadá jako ulice, a opraveno jich bylo 0.
+       Tvary adres se nehádají, jsou vyčtené z uložených url:
+         nabidka-prodej-pozemku-…      1 592×
+         nabidka-prodej-bytu-…         1 076×
+         nabidka-prodej-domu-…           343×
+         nabidka-prodej-chaty-…           64×
+         nabidka-prodej-garaze-…          58×
+         nabidka-prodej-nebytoveho-…      33×
+         nabidka-prodej-kancelare-…        2×
+       Typ se proto NEVYJMENOVÁVÁ, nýbrž VYNECHÁVÁ — tak jako
+       u estateType v dotazu: vyjmenovat ho znamená hádat cizí
+       číselník a při překlepu tiše nic neopravit. Jméno obce se
+       hledá až za jménem ulice, takže na tom, kolik slov má typ
+       („nebytoveho-prostoru"), nezáleží.
+       PO TÉHLE ZMĚNĚ se opraví 904 nabídek (Devonská → Praha,
+       Rousínovská → Praha, Stará → Havířov, Lesní → Březová nad
+       Svitavou). Zbylých 338 opravit nejde a nehádá se: u 78 adresa
+       za ulicí nic nenese, u 34 v ní jméno vůbec nestojí a ostatní
+       končí obcí, kterou tahle dávka v poli pro obec nemá. */
+    const m = /nabidka-prodej-(.+?)$/.exec(String(o.url || ''));
     if (!m) continue;
     const ps = bezD(o.place);
     if (!ps || !m[1].includes(ps)) continue;
@@ -4206,6 +4229,35 @@ async function fetchNabidkyStatu() {
       o.lat = j.lat; o.lng = j.lng; refined++;
     }
   }
+  /* BEZ SOUŘADNIC SE NABÍDKA NEZVEŘEJNÍ — A TEPRVE TADY, PO GEOKÓDOVÁNÍ.
+     Nabídka bez bodu na mapě nemá kam na mapu, a protože vlastní
+     stránka pozemku se jmenuje podle otisku a kreslí výřez, generátor
+     jí stránku nenapíše. Dosud se přitom DO VÝPISU dostala: okresní
+     stránka jí vysázela řádek bez odkazu, takže v seznamu stál pozemek,
+     který se nedá otevřít. Naměřeno 8. 11.: 2 nabídky z 3 896 (dva
+     pražské byty za 17,5 a 31,9 milionu) — a právě na nich padala
+     kontrola „každý řádek nabídky vede na vlastní stránku pozemku"
+     (4 051 ze 4 053).
+     Mez je tu schválně AŽ ZA geokódováním: před ním nemá souřadnice
+     většina zdrojů (SPÚ, ÚZSVM, dražby) a síto by vyhodilo tisíce
+     nabídek, které se o chvíli později doplní. Nekontroluje se `_gps`,
+     ale samotná čísla — dopočítaný bod je k mapě i stránce stejně
+     dobrý jako bod od zdroje.
+     POČET SE HLÁSÍ VŽDYCKY, i když je nula: kdyby jednoho dne vyskočil
+     na stovky, je to zpráva o zdroji nebo o geokodéru, ne drobnost,
+     která se má najít až podle chybějících stránek. */
+  const bezBodu = fresh.filter((o) => typeof o.lat !== 'number' || typeof o.lng !== 'number');
+  if (bezBodu.length) {
+    for (let i = fresh.length - 1; i >= 0; i--) {
+      const o = fresh[i];
+      if (typeof o.lat !== 'number' || typeof o.lng !== 'number') fresh.splice(i, 1);
+    }
+  }
+  console.log(`Bez souřadnic (nezveřejní se, neměly by kam na mapu ani na vlastní stránku): `
+    + `${bezBodu.length}`
+    + (bezBodu.length ? ' — ' + bezBodu.slice(0, 5)
+      .map((o) => `${o.place || '?'} (${o.okres || '?'}, ${o.zdroj || '?'})`).join(', ') : ''));
+
   /* Čtvrť u nabídek, kde je místo jen celá obec. Jen tam, kde jsou
      souřadnice OD ZDROJE (o._gps): u dopočítaných by se jméno čtvrti
      vzalo z bodu, který jsme si sami vymysleli. */

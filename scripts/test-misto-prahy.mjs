@@ -74,10 +74,40 @@ const prazske = (data.opportunities || []).filter((o) => o.okres === 'Praha' && 
    Hlídá se proto to, co platí teď: v okrese Praha nestojí v poli pro
    obec nic jiného než Praha. Kdyby se oprava rozpadla, tahle kontrola
    padne. */
-pravda('v okrese Praha už žádná nabídka nemá v poli pro obec ulici', prazske.length === 0,
-  `nabídek v okrese Praha: ${(data.opportunities || []).filter((o) => o.okres === 'Praha').length},`
-  + ` z toho s místem jiným než Praha: ${prazske.length}`
-  + (prazske.length ? ' — ' + prazske.slice(0, 4).map((o) => o.place).join(', ') : ''));
+/* TAHLE KONTROLA SE 8. 11. VYMĚNILA, A PROČ, STOJÍ TU CELÉ.
+   Stálo tu „v okrese Praha už žádná nabídka nemá v poli pro obec
+   ulici" — tedy OTISK STAVU, ne tvrzení o webu. Když v dávce 7. 11.
+   přišlo 1 850 domů a bytů, spadla na 647 nabídkách… jenže ty
+   nabídky jsou na webu v pořádku: mistoFraze() z okresu Praha
+   a místa „Devonská" vysází „Praha, Devonská", což říká VÍC než
+   holé „Praha". Splnit tu starou podmínku by znamenalo ulici
+   z dat zahodit a webu ubrat. Kontrola, kterou se dá splnit
+   zhoršením webu, je špatně napsaná kontrola.
+   Co se místo toho hlídá: ŽE OPRAVA V ROBOTOVI NENÍ MRTVÁ. Tedy
+   že v datech nestojí nabídka, u které jméno obce LEŽÍ V ADRESE
+   INZERÁTU hned za jménem ulice a robot ji přesto nepřepsal. To je
+   přesně vada, která se 8. 11. našla: opravUliceVObci hledala
+   `nabidka-prodej-pozemku-`, takže na bytech a domech neudělala
+   nic — a na celé dávce opravila 0 z 1 242 možných.
+   Že stránka ulici nevydává za obec, hlídá kontrola o kus níž.
+   Ta zůstává a prochází. */
+const slug = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const znameObce = new Set((data.opportunities || []).map((o) => slug(o && o.place)).filter(Boolean));
+const neopravene = (data.opportunities || []).filter((o) => {
+  if (!o || !o.place || !jeUlice(o.place)) return false;
+  const m = /nabidka-prodej-(.+?)$/.exec(String(o.url || ''));
+  if (!m) return false;
+  const ps = slug(o.place);
+  if (!ps || !m[1].includes(ps)) return false;
+  const zbytek = m[1].slice(m[1].indexOf(ps) + ps.length).replace(/^-/, '');
+  return !!zbytek && znameObce.has(zbytek) && zbytek !== ps;
+});
+pravda('oprava ulice na obec v robotovi není mrtvá', neopravene.length === 0,
+  `nabídek, u kterých obec stojí v adrese inzerátu a robot ji nepřepsal: ${neopravene.length}`
+  + (neopravene.length ? ' — ' + neopravene.slice(0, 4)
+    .map((o) => `${o.place} (${String(o.url || '').split('/').pop()})`).join(', ')
+    + ' — opravUliceVObci ve scripts/fetch-opportunities.mjs nesáhla na tenhle tvar adresy' : ''));
 
 /* POZOR NA OKRESY, KTERÉ ZAČÍNAJÍ NA „Praha". Vzor `^pozemek-praha-`
    bere i Prahu-východ a Prahu-západ, a to jsou OPRAVDOVÉ okresy
