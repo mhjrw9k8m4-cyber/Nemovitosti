@@ -3008,7 +3008,7 @@
     document.getElementById('pz-detail').innerHTML =
       '<div class="pz-empty"><h1>Pozemek nenalezen</h1>' +
       '<p>Tento pozemek se nepodařilo najít — možná už byl z nabídky stažen.</p>' +
-      '<p><a href="index.html#mapa">Zpět na mapu a seznam pozemků</a></p></div>';
+      '<p><a href="index.html#mapa">Zpět na mapu a seznam nabídek</a></p></div>';
   }
 
   function kmBetween(la1, ln1, la2, ln2) {

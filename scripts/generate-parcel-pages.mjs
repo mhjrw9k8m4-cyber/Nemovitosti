@@ -864,14 +864,21 @@ export function migrujGrafCeny(h, okresKraj) {
  * ne přestavbou. Bez téhle by na nich zůstal starý tichý odkaz
  * „Zpět na seznam" šedým písmem, zatímco zbytek webu má tlačítko.
  * Majitel chtěl jedno tlačítko všude, ne na dvou třetinách.
+ * Nápis byl do 9. 11. „Zpět na pozemky"; změnil se na „Zpět na
+ * nabídky", protože 1 311 z 3 428 nabídek nejsou pozemky.
  * Idempotentní: co už je přepsané, se nepřepisuje podruhé. */
 export function migrujZpet(h) {
+  /* NEJDŘÍV SLOVO, POTOM TLAČÍTKO. Stránky nabídek se nepřegenerovávají,
+     jen migrují, takže ty, které tlačítko dostaly 1. 11., v sobě nesou
+     i tehdejší nápis. Přepíše se jim rovnou tady; je to idempotentní,
+     protože po přepsání se v nich „Zpět na pozemky" už nevyskytuje. */
+  h = h.replace('>Zpět na pozemky</a>', '>Zpět na nabídky</a>');
   if (/class="zpet-btn/.test(h)) return h;
   return h.replace(
     /<a class="pz-back" href="([^"]+)">[\s\S]*?<\/a>/,
     (_, kam) => '<a class="zpet-btn pz-back" href="' + kam + '">'
       + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>'
-      + 'Zpět na pozemky</a>');
+      + 'Zpět na nabídky</a>');
 }
 
 export function migrujOstrovNahoru(h) {
@@ -1076,7 +1083,7 @@ export function prestehovanaStranka(obsah, novySoubor, noveMisto, den) {
     + `<span>Pozemek je dál v nabídce, jen pod správným jménem obce `
     + `(${esc(noveMisto)}) — tahle adresa měla v názvu ulici.</span>`
     + `<p><a href="${esc(novySoubor)}">Otevřít pozemek na nové adrese</a></p>`
-    + `<p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p>`
+    + `<p><a href="index.html#mapa">Zpět na mapu všech nabídek</a></p>`
     + `</div>`;
   /* PRUH SE PŘEPISUJE, NE JEN DOPLŇUJE. U ukončené stránky stačí
      „když tam ještě není, přidej" — ta se víc nemění. Tady ne: pruh
@@ -1209,7 +1216,7 @@ export function ukoncenaStranka(obsah, den, podobne) {
     + `<span>Zmizela ze zdroje ${esc(cesky)}. Stránku necháváme dostupnou, `
     + `aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span>`
     + (odkazy ? `<p>Podobné pozemky ve stejném okrese:</p><ul>${odkazy}</ul>` : '')
-    + `<p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p>`
+    + `<p><a href="index.html#mapa">Zpět na mapu všech nabídek</a></p>`
     + `</div>`;
   if (!/class="pz-konec/.test(h)) {
     h = h.replace(/(<div id="pz-detail">)/, `$1${pruh}`);

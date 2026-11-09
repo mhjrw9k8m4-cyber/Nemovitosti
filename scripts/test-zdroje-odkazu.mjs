@@ -17,9 +17,12 @@
 // a jeho isDeepLink). Pravidlo tedy existovalo, jen se na záložní odkazy
 // nevztahovalo.
 //
-// A druhá past: tabulka TYPE je OPSANÁ dvakrát — v js/main.js (mapa) a
-// v js/pozemek.js (stránka pozemku). Dvě kopie téhož se rozejdou; u barev
-// kategorií se to na tomhle webu už stalo (viz scripts/test-barvy.mjs).
+// A druhá past: tabulka druhů je OPSANÁ dvakrát — v js/karta-nabidky.js
+// (výpis, tipy, Hlídání; do 9. 11. byla v js/main.js) a v js/pozemek.js
+// (stránka pozemku). Dvě kopie téhož se rozejdou; u barev kategorií se to
+// na tomhle webu už stalo (viz scripts/test-barvy.mjs). Proto se nečte
+// jméno proměnné z jednoho místa, ale u každého souboru se říká, jak se
+// jeho tabulka jmenuje.
 import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -53,9 +56,13 @@ const ROZCESTNIKOVE = ['Dražební portál', 'Web prodejce', 'Nabídka SPÚ', '�
 
 // --- 1) Záložní odkazy v tabulce TYPE --------------------------------
 const tabulky = {};
-for (const f of ['js/main.js', 'js/pozemek.js']) {
+const ZDROJE = [
+  { f: 'js/karta-nabidky.js', znacka: 'var TYPY = {' },
+  { f: 'js/pozemek.js', znacka: 'var TYPE = {' },
+];
+for (const { f, znacka } of ZDROJE) {
   const t = readFileSync(path.join(ROOT, f), 'utf8');
-  const od = t.indexOf('var TYPE = {');
+  const od = t.indexOf(znacka);
   pravda(`${f}: tabulka TYPE se našla`, od !== -1);
   if (od === -1) continue;
   const blok = t.slice(od, t.indexOf('};', od));
@@ -76,11 +83,11 @@ for (const f of ['js/main.js', 'js/pozemek.js']) {
 }
 
 // --- 2) Dvě kopie téže tabulky si musí odpovídat ---------------------
-if (tabulky['js/main.js'] && tabulky['js/pozemek.js']) {
-  const a = JSON.stringify(tabulky['js/main.js']);
+if (tabulky['js/karta-nabidky.js'] && tabulky['js/pozemek.js']) {
+  const a = JSON.stringify(tabulky['js/karta-nabidky.js']);
   const b = JSON.stringify(tabulky['js/pozemek.js']);
-  pravda('js/main.js a js/pozemek.js mají záložní odkazy shodné', a === b,
-    `main.js: ${a}\n      pozemek.js: ${b}`);
+  pravda('js/karta-nabidky.js a js/pozemek.js mají záložní odkazy shodné', a === b,
+    `karta-nabidky.js: ${a}\n      pozemek.js: ${b}`);
 }
 
 // --- 3) Řádek nabídky bez odkazu na zdroj nesmí být slepá ulička -----

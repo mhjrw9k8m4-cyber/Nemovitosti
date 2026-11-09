@@ -163,6 +163,7 @@
 
   root.PKKarta = {
     TYPY: TYPY,
+    tokenBarva: tokenBarva,
     odznakDruhu: odznakDruhu,
     nahled: nahled,
     telo: telo,

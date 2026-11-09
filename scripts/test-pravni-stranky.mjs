@@ -75,7 +75,17 @@ const CEKANO = {
      znění zůstalo (2 864 → 2 847, jinak znak po znaku totožné). */
   /* 29. 10. totéž co u zásad: šipka u tlačítka „Kontakt" je teď ikona,
      ne znak z písma. */
-  'podminky.html': { datum: 'říjen 2026', otisk: '493559a6919a6608' },
+  /* 9. 11. POPRVÉ SE ZMĚNILO ZNĚNÍ, ne jen rám — a datum se proto
+     posouvá. Web vede 3 428 nabídek a 1 311 z nich není pozemek (byty,
+     domy, garáže, chaty, areály) a formulář na pridat.html přijímá
+     všechny; podmínky přitom mluvily jen o pozemcích. Změnilo se čtyři
+     místa: „příležitostí u pozemků" → „u nemovitostí", „Přidat pozemek
+     smí jen přihlášený uživatel" → „Přidat nabídku…", „vlastník
+     pozemku" → „vlastník nemovitosti", „cizí pozemek bez souhlasu" →
+     „cizí nemovitost…". Pátá změna je pruh s odkazem dole („Chcete
+     přidat vlastní nabídku?" a tlačítko „Přidat nemovitost") — není to
+     právní znění, ale v otisku je, protože stojí uvnitř obsahu. */
+  'podminky.html': { datum: 'listopad 2026', otisk: '6ee12fc5e7d1d8a9' },
 };
 
 /** Viditelný text stránky: bez skriptů, stylů, komentářů a značek. */

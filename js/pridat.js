@@ -1,4 +1,4 @@
-/* Sdílený skript pro stránky „Přidat pozemek na prodej" (pridat.html)
+/* Sdílený skript pro stránky „Přidat nemovitost na prodej" (pridat.html)
    a „Inzerce" (inzerce.html). Každá stránka má jeden formulář; skript
    napojí ten, který na stránce je. Samostatné od main.js — mapy hlavní
    stránky se vůbec nedotýká. */
@@ -1359,7 +1359,10 @@
       });
     }
 
-    // Ukazatel „zbývá X z 10 inzerátů" — ať člověk ví, kolik ještě může přidat.
+    /* Ukazatel „zbývá X z N inzerátů" — ať člověk ví, kolik ještě může
+       přidat. N si říká databáze (my_listing_quota → account_tier),
+       NE tahle stránka: zdarma je jeden inzerát, placený účet má víc
+       a opsané číslo by lhalo tomu z těch dvou, kdo se netrefí. */
     function loadQuota() {
       var q = document.getElementById('quota-info'); if (!q || !(window.PKAuth && PKAuth.rpc)) return;
       PKAuth.rpc('my_listing_quota', {}, true).then(function (res) {

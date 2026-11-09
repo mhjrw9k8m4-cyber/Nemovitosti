@@ -750,7 +750,7 @@ ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.le
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <details class="nav-sk"><summary id="nav-sk-ucet">Moje</summary><div class="nav-sk-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
-      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
+      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat nemovitost</a>
     </nav>
   </div>
 </header>
@@ -1215,11 +1215,16 @@ for(const okres of eligibleOkres){
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
       <h1>Pozemky v okrese ${esc(okres)}.</h1>
       ${hlavickaCisla([
@@ -1405,11 +1410,16 @@ for(const kraj of eligibleKraj){
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
       <h1>Pozemky ${esc(meta.loc)}.</h1>
       ${hlavickaCisla([
@@ -1526,11 +1536,16 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Dražby pozemků · celá ČR</div>
       <h1>Dražby pozemků — aktuální nabídky.</h1>
       <p class="sub">Evidujeme <b>${count} ${sklon(count,'dražbu','dražby','dražeb')}</b> pozemků z celé České republiky, z <b>veřejné evidence dražeb</b>. ${minP?('Vyvolávací ceny od <b>'+fmt(minP)+' Kč</b>. '):''}V dražbě jde často pořídit pozemek pod tržní cenou — ale je potřeba znát pravidla.</p>
@@ -1660,11 +1675,16 @@ for (const d of DRUH_STRANKY) {
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>${esc(d.oznaceni)} · celá ČR</div>
       <h1>${esc(d.h1)}.</h1>
       ${hlavickaCisla([
@@ -1848,11 +1868,16 @@ for (const r of rozpocetVznikne) {
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Rozpočet do ${esc(r.popis)} · celá ČR</div>
       <h1>Pozemky do ${esc(r.popis)}.</h1>
       ${hlavickaCisla([
@@ -2056,11 +2081,16 @@ let novychZaTydenNabidky = [];
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Pohyb na trhu · celá ČR</div>
       <h1>Co je na trhu nového.</h1>
       ${hlavickaCisla([
@@ -2447,11 +2477,16 @@ ${druhyRadky}
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
       <!-- Podnadpis ODPOVÍDÁ na otázku z nadpisu, místo aby sliboval, co
@@ -2621,11 +2656,16 @@ const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxC
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Pozemky podle regionu</div>
       <h1>Pozemky podle krajů a okresů.</h1>
       <p class="sub">Vyberte kraj nebo okres a prohlédněte si aktuální nabídky pozemků — prodeje, dražby i exekuce z veřejných zdrojů. Pokryto <b>${krajPages.length} krajů</b> a <b>${okresPages.length} okresů</b>, přes <b>${fmt(totalListed)} ${pluralNabidky(totalListed, vsechnyVypsane)}</b> na jedné mapě.</p>
@@ -2791,11 +2831,16 @@ ${radky}
       <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
            okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
            značka v liště a hamburger, tedy nic, co by bylo napsané
-           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           slovem. Majitel 1. 11.: „Zpět na pozemky by mělo být všude a více
            viditelné, udělej z toho tlačítko."
+           NÁPIS SE 9. 11. ZMĚNIL na „Zpět na nabídky". Web tehdy vedl
+           3 428 nabídek a 1 311 z nich nebyl pozemek — byty, domy,
+           garáže, chaty, areály —, takže slovo „pozemky" o cíli lhalo.
+           Majitel: „nápisy typu zpět na pozemky nedávají smysl v tomhle
+           stádiu webu." Tlačítko zůstalo, změnilo se jen slovo.
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
-      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Celky, ne jednotlivé parcely</div>
       <h1>Víc pozemků pohromadě.</h1>
       <p class="sub">Pět hektarů v jednom kuse je něco jiného než pět hektarů roztroušených po okrese. Tady jsou místa, kde je zrovna na prodej <b>několik pozemků do ${BLOKY.MEZ_METRU} metrů od sebe</b> — ${fmt(celky.length)} ${sklon(celky.length, 'lokalita', 'lokality', 'lokalit')}, ${fmt(celkemNabidek)} ${pluralNabidky(celkemNabidek, vsechnyVBlocich)}, dohromady <b>${celkemHa.toFixed(0)} ha</b>.</p>

@@ -3,8 +3,12 @@
    Spuštění: node scripts/test-zpet-tlacitko.mjs
      (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=…/chrome)
 
-   PROČ VZNIKL. Majitel: „Zpět na pozemky by mělo být všude a více
-   viditelné, a věci normálně — z toho udělej tlačítko, neboj se toho."
+   PROČ VZNIKL. Majitel 1. 11.: „Zpět na pozemky by mělo být všude
+   a více viditelné, a věci normálně — z toho udělej tlačítko, neboj
+   se toho." Nápis se 9. 11. změnil na „Zpět na nabídky" (1 311 z 3 428
+   nabídek nejsou pozemky); tahle zkouška hlídá tlačítko, ne to slovo —
+   chce jen, aby nápis začínal „Zpět", protože na rádci a na hlídání
+   vede jinam než na výpis.
    Naměřeno 1. 11. před opravou: 2 328 stránek pozemků mělo tichý šedý
    odkaz „Zpět na seznam" (.pz-back), 20 ručně psaných jiný tichý odkaz
    na pásu (.st-zpet), 3 stránky účtu třetí (.uc-zpet-a) — a 103
@@ -223,7 +227,7 @@ if (tvary.length === VZORKY.length) {
     `změřily se jen ${tvary.length} ze ${VZORKY.length} — není co porovnávat`);
 }
 
-console.log('\nTlačítko „Zpět na pozemky"');
+console.log('\nTlačítko „Zpět na nabídky"');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Zpět: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }

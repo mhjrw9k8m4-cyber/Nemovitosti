@@ -233,17 +233,10 @@
     { place:'Slaný',             okres:'Kladno',        type:'sale',    parcel:'96',    druh:'zahrada',   area:1340, price:1340000, extra:'na prodej',        lat:50.2300, lng:14.0860 }
   ];
 
-  /* Barva kategorie má JEDEN zdroj, a tím je CSS. Dřív byla opsaná tady,
-     znovu v pozemek.js a potřetí v pravidlech stylu — a když se paleta
-     měnila, mapa a karty si u téhož pozemku přestaly odpovídat. Tady se
-     tedy jen přečte proměnná ze stylu; hodnota v kódu je záloha pro případ,
-     že by styl ještě nebyl načtený. Hlídá to scripts/test-barvy.mjs. */
-  function tokenBarva(nazev, zaloha) {
-    try {
-      var v = getComputedStyle(document.documentElement).getPropertyValue(nazev).trim();
-      return v || zaloha;
-    } catch (e) { return zaloha; }
-  }
+  /* Barva kategorie má JEDEN zdroj, a tím je CSS. Čtení toho zdroje
+     (tokenBarva) bydlí v js/karta-nabidky.js spolu s tabulkou druhů —
+     tady stála opsaná kopie, kterou 9. 11. ohlásil
+     scripts/test-kopie-funkci.mjs. Hlídá to i scripts/test-barvy.mjs. */
   /* DRUHY NABÍDEK SE ODSTĚHOVALY DO js/karta-nabidky.js. Tabulka tu
      byla jediná na webu, jenže kartu dnes kreslí i stránka Hlídání,
      kde main.js není — a druhá kopie téže tabulky by znamenala dvoje
@@ -6712,21 +6705,11 @@
     return t ? ' title="' + t.replace(/"/g, '&quot;') + '"' : '';
   }
   function perM2Val(d){ var v = zaMetr(d); return v == null ? Infinity : v; }
-  /* ČTVRŤ U VELKÝCH MĚST. U 142 nabídek zdroj uvádí jen celou obec —
-     v Praze to je 496 km², podle kterých se nedá rozhodnout nic. Robot
-     proto u těch nabídek dopočítá čtvrť ze souřadnic (pole `cast`,
-     scripts/fetch-opportunities.mjs). Do `place` se nesahá: je v klíči
-     pozemku, a s ním v uložených oblíbených i ve sdílených adresách. */
+  /* ČTVRŤ U VELKÝCH MĚST a pravidlo „obec se neopakuje po okresu"
+     bydlí v js/karta-nabidky.js (mistoRadek) — kreslí týž řádek
+     i na kartě Hlídání a na tipech. Kopie tady se 9. 11. zrušila. */
   function mistoRadek(d) {
-    var okr = d.okres ? 'okres ' + esc(d.okres) : '';
-    if (d.cast) return esc(d.cast) + (okr ? ' · ' + okr : '');
-    /* Když je „místo" totéž co okres (zdroj nic bližšího neuvedl),
-       stálo na kartě „Brno-venkov" a hned pod tím „okres Brno-venkov".
-       Dvakrát totéž, a to druhé navíc tvrdí, že jde o obec. Radši nic:
-       název je vidět v nadpisu o řádek výš. Když ale čtvrť známe,
-       řádek smysl má — proto se tahle výjimka řeší až za ní. */
-    if (d.place && d.okres && String(d.place).trim() === String(d.okres).trim()) return '';
-    return okr;
+    return (window.PKKarta && window.PKKarta.mistoRadek) ? window.PKKarta.mistoRadek(d) : '';
   }
   // „Rozprostření": u řazení Doporučené nechceme 5 dražeb (nebo 2× stejná obec)
   // za sebou. Zachová pořadí podle skóre, jen bere vždy nejlepší kousek, který
@@ -9638,12 +9621,12 @@
          jedna z hlavních věcí na webu, musela jedna ze tří ustoupit —
          a tahle je nejslabší ze všech: je to PRÁZDNÝ STAV (ukazuje se,
          jen dokud žádný vložený pozemek není), stojí v čárkovaném boxu
-         a vede na „Přidat pozemek", tedy na totéž, co nese trvalé
+         a vede na „Přidat nemovitost", tedy na totéž, co nese trvalé
          tlačítko v hlavičce. Dvakrát tatáž akce v plné zeleni je přesně
          to, čemu ten strop brání. Výzvou být nepřestala, jen obrysem. */
       wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
         '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
-        '<a href="pridat.html" class="btn-secondary odl-empty-btn">Přidat pozemek zdarma →</a>';
+        '<a href="pridat.html" class="btn-secondary odl-empty-btn">Přidat nemovitost zdarma →</a>';
       if (cta) cta.style.display = 'none';
       return;
     }
@@ -10413,7 +10396,8 @@
     okruhPodpis = podpis;
     if (okruhKruh) { map.removeLayer(okruhKruh); okruhKruh = null; }
     if (!podpis) return;
-    var barva = tokenBarva('--brand-live', '#2C7150');
+    var barva = (window.PKKarta && window.PKKarta.tokenBarva)
+      ? window.PKKarta.tokenBarva('--brand-live', '#2C7150') : '#2C7150';
     okruhKruh = L.circle([okruhStred.lat, okruhStred.lng], {
       radius: dotazFiltr.okruh * 1000, pane: 'overlayPane', interactive: false,
       color: barva, weight: 1.6, opacity: 0.8,

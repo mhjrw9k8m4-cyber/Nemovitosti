@@ -179,7 +179,7 @@ pravda('a titulek stránky se nepřepíše na hlášku',
     /\d\s*Kč/.test(v.text) && /pozemek na mapě/i.test(v.text)
     && !/Pozemek nenalezen/.test(v.text),
     `${f}: ${v.text.slice(0, 120).replace(/\n/g, ' / ')}`);
-  /* NÁPIS NA TLAČÍTKU ZPĚT SE 1. 11. ZMĚNIL na „Zpět na pozemky"
+  /* NÁPIS NA TLAČÍTKU ZPĚT SE 9. 11. ZMĚNIL na „Zpět na nabídky"
      (majitel: „zpět na pozemky by mělo být všude a víc viditelné",
      úkol #196). Tahle kontrola si nechala ten starý a od té chvíle
      padala v CI — stránka byla celou dobu v pořádku, mýlila se
@@ -187,7 +187,7 @@ pravda('a titulek stránky se nepřepíše na hlášku',
      pozná, že se statická část vykreslila celá a nenahradila ji
      hláška. Když se nápis zase přejmenuje, patří sem taky. */
   pravda('a statická část se na ní opravdu nahradila',
-    v.text.indexOf('Zpět na pozemky') === 0 && /Rozbalit|Uložit/.test(v.text),
+    v.text.indexOf('Zpět na nabídky') === 0 && /Rozbalit|Uložit/.test(v.text),
     `${f}: text začíná „${v.text.slice(0, 40).replace(/\n/g, ' / ')}"`);
 }
 

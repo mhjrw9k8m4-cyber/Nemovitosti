@@ -156,7 +156,7 @@ export function spust() {
 <main id="obsah">
   <section class="st-hlava">
     <div class="st-wrap">
-      <a href="index.html" class="zpet-btn"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      <a href="index.html" class="zpet-btn"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div><span class="st-odznak">Otevřená data</span></div>
       <h1>Data Parcelky</h1>
     </div>

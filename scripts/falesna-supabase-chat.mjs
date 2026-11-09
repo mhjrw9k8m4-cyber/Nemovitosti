@@ -21,7 +21,7 @@ const videno = new Map();            // id hledání → klíče pozemků označ
 // Uložená hledání podle uživatele. Majitel má jedno předem (kvůli odznaku
 // „Hlídání" v menu), další si testy ukládají samy přes save_search.
 const hledani = new Map();
-// Inzeráty vložené přes „Přidat pozemek" a kolik jich kdo smí mít.
+// Inzeráty vložené přes „Přidat nemovitost" a kolik jich kdo smí mít.
 const inzeraty = [];
 const kvota = new Map();
 // Kolikrát se u kterého inzerátu započítalo zhlédnutí (čte to zkouška).

@@ -36,14 +36,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
-  <title>Přidat pozemek na prodej — Parcelka</title>
+  <title>Přidat nemovitost na prodej — Parcelka</title>
   <meta name="description" content="Přidejte na Parcelku vlastní pozemek na prodej. Vyplníte údaje a nabídka se hned objeví na mapě mezi ostatními. Zdarma a bez provize.">
   <meta name="theme-color" content="#FFFFFF">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/pridat.html">
   <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Přidat pozemek na prodej — Parcelka">
+  <meta property="og:title" content="Přidat nemovitost na prodej — Parcelka">
   <meta property="og:description" content="Prodáváte pozemek? Vytvořte hezký inzerát za pár minut — zdarma a bez provize.">
   <meta property="og:locale" content="cs_CZ">
   <meta property="og:site_name" content="Parcelka">
@@ -52,7 +52,7 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Přidat pozemek na prodej — Parcelka">
+  <meta name="twitter:title" content="Přidat nemovitost na prodej — Parcelka">
   <meta name="twitter:description" content="Prodáváte pozemek? Vytvořte hezký inzerát za pár minut — zdarma a bez provize.">
   <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og.png?v=5">
 
@@ -94,7 +94,7 @@
         <a href="zpravy.html" id="nav-zpravy"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-obalka"/></svg>Zprávy</a>
         <a href="hlidani.html" id="nav-hlidani"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zvonek"/></svg>Hlídání</a>
       </div></details>
-      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
+      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat nemovitost</a>
       <p class="nav-pata nav-mobil">Data z veřejných zdrojů, naposledy 8. 11.</p>
     </nav>
     <a class="hdr-ucet" href="muj-inzerat.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg><span class="hu-out">Přihlásit</span><span class="hu-in">Profil</span></a>
@@ -106,7 +106,7 @@
   <section class="add-hero">
         <div class="wrap add-wrap">
       <!-- ÚVOD JE KRÁTKÝ SCHVÁLNĚ.
-           Kdo sem přijde, klepl na „Přidat pozemek" — rozhodnutý už je
+           Kdo sem přijde, klepl na „Přidat nemovitost" — rozhodnutý už je
            a přesvědčovat ho je zbytečné. Změřeno na telefonu: úvod měl
            814 px a první políčko, do kterého jde psát, začínalo až na
            1 221 px, tedy půldruhé obrazovky dolů.
@@ -115,8 +115,8 @@
            a pak ještě kroky („Stačí e-mail a heslo"). Zůstala jedna věta
            s tím, co člověk opravdu potřebuje vědět dřív, než narazí na
            přihlášení, a pilulky nesou zbytek. -->
-      <a href="index.html" class="zpet-btn"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
-      <h1>Přidat pozemek na prodej</h1>
+      <a href="index.html" class="zpet-btn"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
+      <h1>Přidat nemovitost na prodej</h1>
       <!-- POD NADPISEM UŽ ŽÁDNÝ ODSTAVEC (1. 11.). Majitel zakroužkoval
            větu „Nejdřív je potřeba účet — stačí e-mail a heslo. První
            nabídku z nového účtu si napřed projdeme…": „texty ve žlutém
@@ -415,7 +415,7 @@
                 <span>Potvrzuji, že jsem oprávněn pozemek nabízet, údaje jsou pravdivé a neporušuji cizí práva. Souhlasím s <a href="pravidla-inzerce.html" target="_blank" rel="noopener">pravidly inzerce</a>.</span>
               </label>
               <p class="add-warn" id="p-varovani" role="status" aria-live="polite" hidden></p>
-              <button type="submit" class="btn-primary btn-glow">Odeslat pozemek ke zveřejnění</button>
+              <button type="submit" class="btn-primary btn-glow">Odeslat nabídku ke zveřejnění</button>
               <p class="add-msg" id="msg-prodej" role="status" aria-live="polite"></p>
               </section>
             </form>
@@ -425,8 +425,14 @@
             <h2>Hotovo! Nabídka je odeslaná.</h2>
             <p>Spravovat ji (stav, zhlédnutí, smazání) můžete ve svém <b>profilu</b> — přihlášeném stejným účtem. Tam ji taky najdete hned po odeslání — můžete ji upravit nebo smazat.</p>
             <div class="asx-actions">
-              <a href="index.html#mapa" class="btn-primary btn-glow">Zpět na mapu</a>
-              <button type="button" class="btn-ghost" id="add-another">Přidat další pozemek</button>
+              <!-- KAM PO ODESLÁNÍ. Do 9. 11. tu stálo „Zpět na mapu" — jenže na
+                   mapě nikdo nebyl: na tuhle stránku se chodí z lišty, aby se
+                   nabídka vložila. „Zpět" tedy slibovalo návrat, který se
+                   nekonal, a vedlo pryč od jediné věci, kterou člověk po
+                   odeslání chce vidět — svůj inzerát. Odstavec nad tlačítky
+                   na profil odkazuje slovem, tak ať tam vede i tlačítko. -->
+              <a href="muj-inzerat.html" class="btn-primary btn-glow">Otevřít můj profil</a>
+              <button type="button" class="btn-ghost" id="add-another">Přidat další nabídku</button>
             </div>
           </div>
         </div>
@@ -491,7 +497,7 @@
 
   <section class="section pt-0">
     <div class="wrap add-wrap">
-      <div class="section-head"><div class="eyebrow">Časté dotazy prodejců</div><h2>Než přidáte pozemek.</h2></div>
+      <div class="section-head"><div class="eyebrow">Časté dotazy prodejců</div><h2>Než přidáte nabídku.</h2></div>
       <details class="faq-item"><summary>Kolik to stojí?</summary><p>Nic. Přidání i zobrazení nabídky je zdarma a bez provize — platíte jen tehdy, když se s kupujícím sami domluvíte.</p></details>
       <details class="faq-item"><summary>Musím mít účet?</summary><p>Na přidání vlastního inzerátu ano — stačí e-mail a heslo. Je to jediné místo na Parcelce, kde účet potřebujete: drží venku spam a vám dává možnost inzerát kdykoli upravit nebo smazat. Prohlížení mapy, filtry, hledání i uložené pozemky účet nevyžadují.</p></details>
       <details class="faq-item"><summary>Kdy se nabídka objeví na mapě?</summary><p>Hned po odeslání, a to u každé nabídky včetně první — nic neschvalujeme ručně a na nic se nečeká. Inzerát si pak najdete ve svém profilu na stránce „Moje inzeráty“, kde ho můžete upravit nebo smazat. Když nabídka pravidla porušuje (opsaná cizí parcela, cizí fotky, nesmyslná cena), sundáme ji z mapy, jenže až potom, co se objeví.</p></details>

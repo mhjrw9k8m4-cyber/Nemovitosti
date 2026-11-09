@@ -97,7 +97,10 @@ pravda('čtvrť jde do vlastního pole, ne do místa', /o\.cast = c;/.test(ROBOT
    sabotáží: podmínka se z podpory čtvrti odebrala a test mlčel. */
 {
   const zdroje = {
-    'mapa (js/main.js)': readFileSync(new URL('../js/main.js', import.meta.url), 'utf8'),
+    /* Výpis, tipy i Hlídání kreslí kartu z js/karta-nabidky.js — tam se
+       9. 11. mistoRadek přestěhoval z js/main.js, kde po něm zbylo jen
+       předání dál. Měřit to předání by neměřilo nic. */
+    'karta nabídky (js/karta-nabidky.js)': readFileSync(new URL('../js/karta-nabidky.js', import.meta.url), 'utf8'),
     'stránka pozemku (js/pozemek.js)': readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8'),
   };
   const vysledky = {};

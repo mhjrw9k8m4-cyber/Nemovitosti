@@ -139,7 +139,7 @@ const ikona = (jm) => `<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><u
    Počet u „Hledat na mapě" zůstává: to není nová položka, to je údaj
    na položce, která tam stejně byla. */
 /* POŘADÍ VE ZNAČCE JE TO SPRÁVNÉ PRO MONITOR, ne pro šuplík: první je
-   hledání, poslední tlačítko „Přidat pozemek" — tak to patří do lišty
+   hledání, poslední tlačítko „Přidat nemovitost" — tak to patří do lišty
    a tak to čte i scripts/test-data.mjs („nahoře je hledání pozemků").
    V šuplíku na telefonu tlačítko vyskočí nahoru přes `order` v CSS;
    jedna značka, dvě podoby. */
@@ -153,7 +153,7 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
         <a href="zpravy.html" id="nav-zpravy">${ikona('obalka')}Zprávy</a>
         <a href="hlidani.html" id="nav-hlidani">${ikona('zvonek')}Hlídání</a>
       </div></details>
-      <a href="pridat.html" class="btn-primary nav-add">${ikona('plus')}Přidat pozemek</a>
+      <a href="pridat.html" class="btn-primary nav-add">${ikona('plus')}Přidat nemovitost</a>
       <p class="nav-pata nav-mobil">${POCTY ? 'Data z veřejných zdrojů, naposledy ' + POCTY.kdy : 'Data z veřejných zdrojů'}</p>
     </nav>
     <a class="hdr-ucet" href="muj-inzerat.html">${ikona('uzivatel')}<span class="hu-out">Přihlásit</span><span class="hu-in">Profil</span></a>`;
@@ -181,7 +181,7 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
    stalo s CTA v hlavičce (viz komentář níž). */
 const VZOR = /<nav id="nav"[\s\S]*?<\/nav>(?:\s*<a class="hdr-ucet"[\s\S]*?<\/a>)?/;
 
-/* CTA „Přidat pozemek" V LIŠTĚ SE VYNDÁVÁ, nevkládá.
+/* CTA „Přidat nemovitost" V LIŠTĚ SE VYNDÁVÁ, nevkládá.
    Mezi značkou a navigací stál na 2 311 stránkách odkaz
    `<a class="btn-primary header-cta">` se dvěma variantami popisku —
    a `css/styles.css` ho schovával dvěma pravidly `display:none`, jedním

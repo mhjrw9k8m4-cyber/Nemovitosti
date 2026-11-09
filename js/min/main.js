@@ -119,13 +119,6 @@
     { place:'Slaný',             okres:'Kladno',        type:'sale',    parcel:'96',    druh:'zahrada',   area:1340, price:1340000, extra:'na prodej',        lat:50.2300, lng:14.0860 }
   ];
 
-  function tokenBarva(nazev, zaloha) {
-    try {
-      var v = getComputedStyle(document.documentElement).getPropertyValue(nazev).trim();
-      return v || zaloha;
-    } catch (e) { return zaloha; }
-  }
-
   var TYPE = (window.PKKarta && window.PKKarta.TYPY) || {};
 
   var KRAJE = {
@@ -4100,11 +4093,7 @@
   function perM2Val(d){ var v = zaMetr(d); return v == null ? Infinity : v; }
 
   function mistoRadek(d) {
-    var okr = d.okres ? 'okres ' + esc(d.okres) : '';
-    if (d.cast) return esc(d.cast) + (okr ? ' · ' + okr : '');
-
-    if (d.place && d.okres && String(d.place).trim() === String(d.okres).trim()) return '';
-    return okr;
+    return (window.PKKarta && window.PKKarta.mistoRadek) ? window.PKKarta.mistoRadek(d) : '';
   }
 
   function declump(arr){
@@ -5769,7 +5758,7 @@
 
       wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
         '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
-        '<a href="pridat.html" class="btn-secondary odl-empty-btn">Přidat pozemek zdarma →</a>';
+        '<a href="pridat.html" class="btn-secondary odl-empty-btn">Přidat nemovitost zdarma →</a>';
       if (cta) cta.style.display = 'none';
       return;
     }
@@ -6324,7 +6313,8 @@
     okruhPodpis = podpis;
     if (okruhKruh) { map.removeLayer(okruhKruh); okruhKruh = null; }
     if (!podpis) return;
-    var barva = tokenBarva('--brand-live', '#2C7150');
+    var barva = (window.PKKarta && window.PKKarta.tokenBarva)
+      ? window.PKKarta.tokenBarva('--brand-live', '#2C7150') : '#2C7150';
     okruhKruh = L.circle([okruhStred.lat, okruhStred.lng], {
       radius: dotazFiltr.okruh * 1000, pane: 'overlayPane', interactive: false,
       color: barva, weight: 1.6, opacity: 0.8,

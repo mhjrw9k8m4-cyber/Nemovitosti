@@ -67,7 +67,7 @@
     { klic: 'pk_videno_den_v1', kde: 'local', skupina: 'provoz', nazev: 'Co se už ukázalo jako nové',
       popis: 'Aby tatáž nabídka nesvítila jako nová podruhé.', pocet: jeNeco },
     { klic: 'pk_add_draft_v1', kde: 'local', skupina: 'provoz', nazev: 'Rozepsaný inzerát',
-      popis: 'Co jste nedopsali ve formuláři „Přidat pozemek".', pocet: jeNeco },
+      popis: 'Co jste nedopsali ve formuláři „Přidat nemovitost".', pocet: jeNeco },
     { klic: 'pk_rv_uvod_v1', kde: 'local', skupina: 'provoz', nazev: 'Viděný úvod rychlého výběru',
       popis: 'Jen příznak, že už jste vysvětlení četli — podruhé se neukáže.',
       pocet: jeNeco },
