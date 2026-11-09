@@ -6076,7 +6076,53 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    postranní panel MAJÍ (pridat.html, `.add-aside`), se dál nestředí —
    tam karta patří k hornímu rohu panelu vedle. */
 .section.tesne-nahore:not(:has(.add-aside)) > .add-wrap > *,
-.app-hero > .add-wrap > *{margin-inline:auto;}
+/* A PÁS NAD TAKOVÝM ODDÍLEM SE STŘEDÍ S NÍM. Naměřeno 9. 11. na
+   inzerce.html při 1280 px: karty pod pásem stály na 280–1000 (bylo
+   to zařízeno o řádek výš), kdežto nadpis, úvodní věta i obě tlačítka
+   v pásu zůstaly přilepené vlevo na 72 px. Stránka se tím v půlce
+   zlomila o 208 px — a je to první stránka, kterou uvidí realitní
+   kancelář. Pravidlo je obecné, ne „když inzerce": pás, pod kterým
+   stojí vystředěný oddíl, se středí taky, protože jinak si ty dvě
+   části odporují.
+
+   POZOR NA ZANOŘENÉ `:has()`. Napsal jsem to napoprvé jako
+   `:has(+ .section.tesne-nahore:not(:has(.add-aside)))` — a `:has()`
+   uvnitř `:has()` je neplatný selektor, který podle pravidel CSS
+   zahodí CELÉ pravidlo i s ostatními selektory v seznamu. Naměřeno
+   hned po sestavení: karty na inzerce.html se místo vystředění
+   přesunuly doleva na 72 px, protože přestal platit i řádek nad tím.
+   Výjimka pro postranní panel je proto schovaná v `:not()`, kde
+   zanořené `:has()` vadit nemůže. */
+body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .section.tesne-nahore) > .add-wrap > *,
+.app-hero > .add-wrap > *{margin-inline:0;}
+/* A TEĎ TO HLAVNÍ: STŘEDÍ SE SLOUPEC, NE KAŽDÝ BLOK ZVLÁŠŤ.
+   Pravidlo nad tímhle komentářem dává `margin-inline:auto` každému
+   potomkovi — a protože každý má jiný strop na šířku, vystředí se
+   každý jinak. Naměřeno 9. 11. na inzerce.html při 1280 px, když se
+   pás konečně středil: tlačítko zpět 72, odznak 280, nadpis 349,
+   úvodní věta 357. Čtyři svislice v jednom pásu, tedy přesně ta vada,
+   kterou mělo vystředění spravit, jen o kus posunutá.
+   Obal proto dostane šířku sloupce a vystředí se SÁM; potomci v něm
+   pak začínají u jeho levé hrany, ať jsou široké jakkoli. Nadpis tím
+   drží svůj kratší řádek (dělí se na tři, jak byl navržený) a přitom
+   stojí na téže svislici jako karty pod ním.
+   Dvakrát okraj stránky k tomu patří: `.wrap` nese vodorovné
+   odsazení, takže bez něj by se sloupec o ty dva okraje zúžil.
+   Pravidlo nad tímhle komentářem proto drží `margin-inline:0`, ne
+   `auto`: zůstává napsané schválně, aby bylo na jednom místě vidět,
+   čeho se to týká — a aby se někdo nevrátil k „auto" a nevyrobil ty
+   čtyři svislice znovu. Co se středit MÁ (karta přihlášení), má na to
+   vlastní pravidlo níž.
+
+   ČLÁNKY SE TOHO NETÝKAJÍ. Stránky s `.clanek` mají vlastní rozvrh:
+   obal je mřížka 172 px osnovy + text a drží stránkovou míru (viz
+   „OSNOVA ČLÁNKU" níž). Užší obal mřížku zmáčkne — naměřeno: text
+   podmínek spadl z celé šířky na 500 px a osnova se přilepila na
+   248 px. Proto `body:not(:has(.clanek))`. */
+body:not(:has(.clanek)) .section.app-section:not(:has(.add-aside)) > .add-wrap,
+body:not(:has(.clanek)) .section.tesne-nahore:not(:has(.add-aside)) > .add-wrap,
+body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .section.tesne-nahore) > .add-wrap,
+.app-hero > .add-wrap{max-width:calc(var(--m-ucet) + 2 * var(--okraj-stranky));}
 /* Pás záložek se středí jako CELEK, ne každá záložka zvlášť. S
    `margin-inline:auto` na potomcích se tři záložky rozlezly po celé
    šířce (naměřeno 297, 671 a 1044 px) — je to vodorovný flex, takže
@@ -6412,7 +6458,14 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    a karta se lepila k jeho levé hraně. Naměřeno 9. 11. na 1280 px:
    na „Hlídání" x 361–799, na „Můj profil" x 420–860. Táž karta
    o 60 px jinde podle toho, odkud se na ni přišlo. */
-.app-section .auth-card{margin-inline:auto;}
+/* Druhý selektor je tu kvůli VÁZE: `margin-inline:0` výš má čtyři
+   třídy (`.section.app-section:not(:has(.add-aside)) > .add-wrap > *`)
+   a přebilo by samotné `.app-section .auth-card`. Karta na „Můj
+   profil" je přímý potomek obalu, takže se pojmenuje stejnou cestou
+   a o jednu třídu konkrétněji. Naměřeno: bez toho stála na 280–720,
+   tedy u levé hrany sloupce místo na jeho středu. */
+.app-section .auth-card,
+.section.app-section:not(:has(.add-aside)) > .add-wrap > .auth-card{margin-inline:auto;}
 
 /* ---------- Kontaktní e-mail karta (kontakt + „Ozvěte se nám") ---------- */
 .kt-mail{display:inline-flex; align-items:center; gap:12px; margin:4px 0 4px; padding:16px 16px; background:rgba(var(--plocha-znacka-svetla-rgb),0.08); border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.22); border-radius:var(--r-md); text-decoration:none; transition:var(--prechod);}

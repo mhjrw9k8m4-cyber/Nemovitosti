@@ -52,6 +52,35 @@ pravda('očištěná kopie odpovídá zdroji (není zapomenutá po úpravě)',
 const zbyle = (mini.match(/\/\*/g) || []).length;
 pravda('a nezůstal v ní ani jeden komentář', zbyle === 0, `zbylo ${zbyle} komentářů`);
 
+/* 2b) KONEC KOMENTÁŘE, KTERÝ SE ZAPOMNĚL OTEVŘÍT.
+   Tahle vada se 9. 11. stala DVAKRÁT během jedné hodiny: při dopsání
+   odstavce k existujícímu komentáři ve stylopisu zůstal uprostřed
+   zavírací pár hvězdička-lomítko, takže komentář skončil dřív a
+   zbytek prózy spadl do stylopisu jako text PŘED selektorem. Pravidlo
+   pak začíná větou místo selektoru a prohlížeč ho zahodí CELÉ, i
+   s ostatními selektory v tomtéž seznamu. Vzhled se tím rozsype o
+   200 px a sestavení přitom mlčí: kontrola výš hledá otevírací pár,
+   a ten v očištěné kopii nezůstane — zbyde jen holá věta.
+   Čte se ZDROJ, ne očištěná kopie: v očištěné už se nepozná, kde
+   komentář začínal. Projde se znak po znaku a hlídá se obojí —
+   zavírací pár mimo komentář i otevírací, který se nikdy nezavřel.
+   (Páry se sem schválně nepíšou doslova: zavřely by tenhle komentář
+   a zkouška by se nedala ani načíst. Vyzkoušeno, taky dvakrát.) */
+{
+  const mimo = [];
+  let vKomentari = false, radek = 1, nezavreny = 0;
+  for (let i = 0; i < zdroj.length; i++) {
+    if (zdroj[i] === '\n') { radek++; continue; }
+    if (!vKomentari && zdroj[i] === '/' && zdroj[i + 1] === '*') { vKomentari = true; nezavreny = radek; i++; continue; }
+    if (vKomentari && zdroj[i] === '*' && zdroj[i + 1] === '/') { vKomentari = false; i++; continue; }
+    if (!vKomentari && zdroj[i] === '*' && zdroj[i + 1] === '/') { mimo.push(radek); i++; }
+  }
+  pravda('a ve zdroji nestojí „*/" mimo komentář', mimo.length === 0,
+    'řádky: ' + mimo.slice(0, 5).join(', '));
+  pravda('ani komentář, který se nezavřel', !vKomentari,
+    vKomentari ? `otevřený od řádku ${nezavreny}` : '');
+}
+
 /* 3) Táž pravidla. Selektory se z obou souborů vytahují SAMOSTATNĚ:
    odstraní se komentáře, soubor se rozseká na bloky podle složených
    závorek a bere se text před každou otevírací závorkou. Není to plný
