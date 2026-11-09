@@ -1069,6 +1069,33 @@
     var mvBtns = document.querySelectorAll('.mv-toggle .mvt-btn');
     if (!appEl || !mvBtns.length) return;
     var mapFittedVisible = false;
+    /* JEZDEC SE ŘÍDÍ SKUTEČNOU ŠÍŘKOU ZAPNUTÉ POLOVINY, NE PŮLKOU.
+       Poloviny stejně široké nejsou: v pohledu na mapu nese levá navíc
+       počet nabídek („Seznam 3 418") a flexbox ji pod šířku jejího
+       obsahu nepustí. Jezdec s pevnými 50 % pak ležel vedle zapnuté
+       plochy a zpod něj koukal zelený proužek — naměřeno na 390 px:
+       jezdec 151–276 px, plocha 175–276 px. Ohlásil to
+       `test-ovladani-vypisu`, a to už podruhé: napoprvé se to zalepilo
+       mezí, pod kterou počet mizí, jenže mez zestárne s každým delším
+       číslem i s každým dalším ovladačem v řadě.
+       Čte se obdélník, který si zapnutá polovina kreslí sama
+       (`background-clip:padding-box` uvnitř průhledného 3px rámu) —
+       tedy přesně ten, se kterým se má jezdec krýt. Zapisují se dvě
+       proměnné, které si pseudoprvek bere v css/styles.css; jejich
+       náhradní hodnoty jsou původních 50 %, takže bez JS to vypadá
+       jako dřív. */
+    function srovnejJezdce() {
+      var t = document.querySelector('.mv-toggle');
+      var a = t && t.querySelector('.mvt-btn.active');
+      if (!t || !a) return;
+      var tr = t.getBoundingClientRect(), ar = a.getBoundingClientRect();
+      // Schovaný přepínač má nulové rozměry — pak se nepřepisuje nic,
+      // ať si jezdec drží poslední změřenou polohu místo nuly.
+      if (!tr.width || !ar.width) return;
+      var ram = parseFloat(getComputedStyle(a).borderLeftWidth) || 0;
+      t.style.setProperty('--jez-dx', (ar.left - tr.left) + 'px');
+      t.style.setProperty('--jez-w', (ar.width - 2 * ram) + 'px');
+    }
     /* `prvni` = nastavení při otevření stránky, ne klepnutí člověka.
        Rozdíl je jediný, ale podstatný: po klepnutí se k mapě odroluje
        (jinak by z ní pod ovládáním byl vidět jen horní okraj a člověk
@@ -1082,6 +1109,12 @@
         b.classList.toggle('active', on);
         b.setAttribute('aria-selected', String(on));
       });
+      /* Dvakrát: hned (počet se v tu chvíli skrývá nebo objevuje, takže
+         se šířky mění týmž překreslením) a ještě po doběhu přechodu,
+         kdy jsou rozměry ustálené. */
+      srovnejJezdce();
+      setTimeout(srovnejJezdce, 0);
+      setTimeout(srovnejJezdce, 260);
       // Mapa byla schovaná → po zobrazení přepočítat velikost; při prvním
       // zobrazení i znovu vystředit na ČR (fit z inicializace proběhl naprázdno).
       // Mapa nemusí existovat — když se nenačte Leaflet, přepínač má pořád
@@ -1185,6 +1218,22 @@
     var zapamatovany = null;
     try { zapamatovany = sessionStorage.getItem('pk_pohled_v1'); } catch (e) {}
     setView(zapamatovany === 'mapa' ? 'mapa' : 'seznam', true);
+    /* Šířky polovin se mění i bez přepnutí: otočením telefonu, když
+       si vedle sebe sedne tlačítko „Filtry", a hlavně když se dopočítá
+       počet nabídek. ResizeObserver na obě poloviny chytí všechno tohle
+       jedním posluchačem — reaguje na skutečnou změnu rozměru, ne na
+       domněnku, kdy k ní dojde. Když ho prohlížeč nemá, zbyde srovnání
+       při přepnutí a při změně velikosti okna; jezdec je pak jen
+       nepřesný, ne rozbitý. */
+    if (typeof ResizeObserver === 'function') {
+      var ro = new ResizeObserver(function () { srovnejJezdce(); });
+      mvBtns.forEach(function (b) { ro.observe(b); });
+    }
+    window.addEventListener('resize', srovnejJezdce);
+    /* Písmo dorazí po prvním vykreslení a texty se tím přeměří. */
+    if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+      document.fonts.ready.then(srovnejJezdce).catch(function () {});
+    }
     // Odkaz „+ N dalších příležitostí najdete na mapě" pod seznamem musí mapu
     // opravdu ukázat — jinak by odkazoval na něco, co není vidět.
     document.addEventListener('click', function (e) {

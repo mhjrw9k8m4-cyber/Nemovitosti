@@ -641,6 +641,18 @@
     if (!appEl || !mvBtns.length) return;
     var mapFittedVisible = false;
 
+    function srovnejJezdce() {
+      var t = document.querySelector('.mv-toggle');
+      var a = t && t.querySelector('.mvt-btn.active');
+      if (!t || !a) return;
+      var tr = t.getBoundingClientRect(), ar = a.getBoundingClientRect();
+
+      if (!tr.width || !ar.width) return;
+      var ram = parseFloat(getComputedStyle(a).borderLeftWidth) || 0;
+      t.style.setProperty('--jez-dx', (ar.left - tr.left) + 'px');
+      t.style.setProperty('--jez-w', (ar.width - 2 * ram) + 'px');
+    }
+
     function setView(mv, prvni) {
       var seznam = mv === 'seznam';
       appEl.classList.toggle('mv-seznam', seznam);
@@ -649,6 +661,10 @@
         b.classList.toggle('active', on);
         b.setAttribute('aria-selected', String(on));
       });
+
+      srovnejJezdce();
+      setTimeout(srovnejJezdce, 0);
+      setTimeout(srovnejJezdce, 260);
 
       if (!seznam) {
 
@@ -685,6 +701,16 @@
     var zapamatovany = null;
     try { zapamatovany = sessionStorage.getItem('pk_pohled_v1'); } catch (e) {}
     setView(zapamatovany === 'mapa' ? 'mapa' : 'seznam', true);
+
+    if (typeof ResizeObserver === 'function') {
+      var ro = new ResizeObserver(function () { srovnejJezdce(); });
+      mvBtns.forEach(function (b) { ro.observe(b); });
+    }
+    window.addEventListener('resize', srovnejJezdce);
+
+    if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+      document.fonts.ready.then(srovnejJezdce).catch(function () {});
+    }
 
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target.closest('.opp-more') : null;
