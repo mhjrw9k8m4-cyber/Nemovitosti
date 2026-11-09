@@ -108,6 +108,132 @@ for (const [jmeno, cesta] of STRANKY) {
   }
   await p.close();
 }
+/* ==================================================================
+   STRÁNKY ÚČTU MAJÍ JEDNU SVISLICI (měřeno na širokém okně)
+   ==================================================================
+   Měření výš běží na 390 px, kde je sloupec jeden a problém se
+   neprojeví. Na monitoru se ale stránky účtu rozpadly: naměřeno
+   9. 11. na 1280 px, že se KAŽDÝ blok středí sám za sebe a každý má
+   jinou šířku, takže levá hrana měla čtyři polohy —
+
+       řádek s nadpisem   280 px (720 široký)
+       úvodní věta        360 px (560)
+       karta přihlášení   420 px (440)   ← a na „Hlídání" dokonce 361,
+                                            protože tam se nestředila
+       pás záložek        505 px
+
+   — tedy schodiště. Majitel 9. 11.: „text je moc rozházený, není to
+   symetrické." Na telefonu přitom všechno sedělo, takže to hlídač
+   běžící jen na 390 px nikdy nemohl vidět.
+
+   HLÍDÁ SE TO, CO JE NA TOM ROZHODNUTÍ PODSTATNÉ, ve dvou větách:
+     1. Bloky, které nesou text stránky — řádek s nadpisem, úvodní věta
+        a sloupec obsahu —, začínají na TÉŽE svislici. (To chytí první
+        vadu: 280 / 360 / 360.)
+     2. Každý blok uvnitř sloupce je SOUMĚRNÝ podle jeho středu: co mu
+        zbývá vlevo, zbývá i vpravo. Užší karta se tedy středí, ne lepí
+        k jedné hraně. (To chytí druhou: karta 361–799 ve sloupci
+        360–920.)
+   Samotná souměrnost by nestačila — bloky z první vady byly souměrné
+   každý zvlášť, jen podle jiné šířky. A samotná shoda hran zase ne:
+   karta se do ní nevejde, protože je užší schválně. */
+const UCET = [
+  ['hlídání', '/hlidani.html', '.hl-wrap'],
+  ['zprávy', '/zpravy.html', '.zp-wrap'],
+  ['profil', '/muj-inzerat.html', '#mi-saved-wrap'],
+];
+{
+  const sirokyCtx = await prohlizec.newContext({
+    bypassCSP: true, viewport: { width: 1280, height: 900 }, locale: 'cs-CZ',
+  });
+  const rozchodyHran = [], nesoumerne = [];
+  let stranek = 0, hran = 0, bloku = 0;
+  for (const [jmeno, cesta, obsah] of UCET) {
+    const p = await sirokyCtx.newPage();
+    try {
+      await p.goto(BASE + cesta, { waitUntil: 'domcontentloaded', timeout: 25000 });
+      await p.waitForTimeout(1200);
+      const m = await p.evaluate((obsahSel) => {
+        const box = (sel) => {
+          const e = document.querySelector(sel);
+          if (!e) return null;
+          const r = e.getBoundingClientRect();
+          return r.width > 20 ? { l: Math.round(r.left), r: Math.round(r.right) } : null;
+        };
+        const sloupec = box(obsahSel) || box('.uc-hlava');
+        if (!sloupec) return null;
+        /* MĚŘÍ SE DESKY, NE ODSTAVCE. Souměrnost se smí žádat jen po
+           tom, co má vlastní plochu — po kartě s rámem a stínem.
+           Odstavec je taky užší než sloupec, ale schválně a jinak:
+           má strop na čtecí šířku (--m-text) a začíná u levé hrany
+           sloupce, protože text se čte zleva. Kdyby se středil,
+           každý odstavec by začínal jinde podle své délky.
+           Naměřeno hned při psaní téhle kontroly: `p.rules-note` na
+           „Můj profil" měla vlevo 0 px a vpravo 261 px — a je to
+           správně. Deska se pozná podle rámu nebo stínu; odstavec
+           nemá ani jedno. */
+        const vnitrni = [];
+        const obal = document.querySelector(obsahSel);
+        const kandidati = obal ? Array.from(obal.querySelectorAll(':scope > *, :scope > * > *')) : [];
+        for (const e of kandidati) {
+          const st = getComputedStyle(e);
+          if (st.display === 'none' || st.position === 'absolute' || st.position === 'fixed') continue;
+          const jeDeska = parseFloat(st.borderTopWidth) > 0 || st.boxShadow !== 'none';
+          if (!jeDeska) continue;
+          const r = e.getBoundingClientRect();
+          if (r.width < 200 || r.height < 20) continue;
+          vnitrni.push({
+            kdo: e.tagName.toLowerCase() + (e.id ? '#' + e.id : '')
+              + (typeof e.className === 'string' && e.className
+                ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : ''),
+            l: Math.round(r.left), r: Math.round(r.right),
+          });
+        }
+        return {
+          hlava: box('.uc-hlava'),
+          uvod: box('.app-hero .sub'),
+          sloupec: box(obsahSel),
+          vnitrni,
+        };
+      }, obsah);
+      if (!m) { rozchodyHran.push(`${jmeno}: sloupec účtu se nenašel`); continue; }
+      stranek++;
+      /* 1) Jedna svislice pro text stránky. */
+      const textove = [['řádek s nadpisem', m.hlava], ['úvodní věta', m.uvod], ['sloupec obsahu', m.sloupec]]
+        .filter(([, b]) => b);
+      for (const [co, b] of textove) {
+        hran++;
+        if (Math.abs(b.l - textove[0][1].l) > 1) {
+          rozchodyHran.push(`${jmeno}: ${co} začíná na ${b.l}, ${textove[0][0]} na ${textove[0][1].l}`);
+        }
+      }
+      /* 2) Souměrnost podle středu sloupce. */
+      const S = m.sloupec || m.hlava;
+      for (const b of m.vnitrni) {
+        bloku++;
+        const vlevo = b.l - S.l, vpravo = S.r - b.r;
+        if (Math.abs(vlevo - vpravo) > 1) {
+          nesoumerne.push(`${jmeno}: ${b.kdo} má vlevo ${vlevo} px, vpravo ${vpravo} px`);
+        }
+      }
+    } catch (e) {
+      rozchodyHran.push(`${jmeno}: ${String(e && e.message || e).slice(0, 80)}`);
+    } finally { await p.close(); }
+  }
+  await sirokyCtx.close();
+  /* POJISTKA PROTI TICHÉMU NIC. Kdyby se obaly přejmenovaly, obě
+     kontroly níž by prošly na prázdné množině — a vada by se vrátila
+     bez jediného pádu. */
+  pravda(`stránky účtu se na širokém okně změřily (${stranek} ze 3)`,
+    stranek === UCET.length, `změřeno ${stranek}`);
+  pravda(`a bylo co měřit (${hran} hran, ${bloku} bloků)`,
+    hran >= 6 && bloku >= 3, `hran ${hran}, bloků ${bloku}`);
+  pravda('text stránky účtu začíná na jedné svislici',
+    rozchodyHran.length === 0, rozchodyHran.slice(0, 4).join(' | '));
+  pravda('a každý blok ve sloupci účtu je souměrný podle jeho středu',
+    nesoumerne.length === 0, nesoumerne.slice(0, 4).join(' | '));
+}
+
 await prohlizec.close();
 
 const nenactene = namereno.filter(([, m]) => !m).map(([j]) => j);

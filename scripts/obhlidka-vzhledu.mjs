@@ -90,13 +90,25 @@ const MERENI = () => {
          useknuté schválně, to je jejich způsob, jak zmizet;
        · cokoli uvnitř <svg>: kresba má vlastní soustavu souřadnic
          a `preserveAspectRatio: slice` z ní schválně přetéká;
-       · prvek v posuvném rodiči (tabulka v pásu, který se táhne):
-         přetéká do něčeho, co se posouvá, tedy do ničeho zlého. */
+       · prvek v posuvném NEBO usekávajícím rodiči: přetéká do něčeho,
+         co se posouvá nebo co ho zakryje — tedy do ničeho, co by šlo
+         vidět. Naměřeno 9. 11.: nástroj hlásil čtyři „vady", které
+         žádná nebyla. Plátno mapy (canvas.leaflet-zoom-animated) je
+         1 690 px široké v okně 1 280 px, protože si Leaflet kreslí
+         zásobu za okraj — zakrývá ho .kraj-lock s overflow:hidden.
+         Tečka v legendě (.lg-dot.lg-ring) má prstenec kreslený za
+         svůj rámeček a usekává ji .map-holder. A dva ze tří kroků
+         „jak to funguje" měly scrollWidth o 46 px větší, protože se
+         právě odjíždí jejich příjezdová animace (.reveal) — třetí,
+         už dojezděný, měl scrollWidth rovný clientWidth.
+         Usekávající rodič se proto počítá stejně jako posuvný.
+         U prvku samého se `hidden` za úmysl bralo odjakživa (viz
+         níž u `posouva`); tady chybělo. */
   const schovane = (e) => e.closest('.visually-hidden, .skip-link, [hidden]') != null;
   const vSvg = (e) => e.closest('svg') != null;
-  const vPosuvniku = (e) => {
+  const vPosuvnikuNeboPodKlipem = (e) => {
     for (let x = e.parentElement; x && x !== document.body; x = x.parentElement) {
-      if (/auto|scroll/.test(getComputedStyle(x).overflowX)) return true;
+      if (/auto|scroll|hidden/.test(getComputedStyle(x).overflowX)) return true;
     }
     return false;
   };
@@ -108,13 +120,27 @@ const MERENI = () => {
     if (r.width === 0 || r.height === 0) continue;
     /* `overflow:hidden` je taky úmysl, ne vada: náhled okresu je 128 px
        široké okno do 256px dlaždice a usekává ji schválně. */
-    const posouva = /auto|scroll|hidden/.test(st.overflowX) || vPosuvniku(e);
+    const posouva = /auto|scroll|hidden/.test(st.overflowX) || vPosuvnikuNeboPodKlipem(e);
     if (!posouva && (r.left < -1 || r.right > W + 1)) {
       out.ven.push({ kdo: jmeno(e), left: Math.round(r.left), right: Math.round(r.right) });
     }
     /* Práh 4 px: zaokrouhlení subpixelů dělá rozdíl 1–2 px i tam, kde
-       se text vejde. Pod čtyřmi pixely není co vidět. */
-    if (!posouva && e.scrollWidth > e.clientWidth + 4 && e.clientWidth > 8) {
+       se text vejde. Pod čtyřmi pixely není co vidět.
+
+       A HLEDÁ SE TEXT, NE JAKÝKOLI PŘESAH. Kontrola se jmenuje
+       „useknutý text" a ptá se proto jen na prvky, které samy nějaký
+       text nesou. Naměřeno 9. 11. na stránce nabídky: #pz-detail
+       hlásil 350 < 370, protože fotka nahoře je na telefonu schválně
+       přes celou šířku okna — `.pz-media` má negativní okraj o
+       --okraj-stranky na každé straně (css/pozemek-vlozeny.css).
+       Obal tím má scrollWidth o 20 px větší, ale useknuté není nic:
+       fotka sahá právě k hraně okna a stránka se do strany netáhne.
+       Obaly bez vlastního textu se tedy neptají; kdyby se ve fotce
+       nebo v pilulce usekl nápis, ohlásí to ten nápis sám, protože
+       svůj text drží on. */
+    const maVlastniText = Array.from(e.childNodes)
+      .some((n) => n.nodeType === 3 && n.textContent.trim() !== '');
+    if (!posouva && maVlastniText && e.scrollWidth > e.clientWidth + 4 && e.clientWidth > 8) {
       out.useknute.push({ kdo: jmeno(e), je: e.clientWidth, treba: e.scrollWidth });
     }
   }

@@ -762,6 +762,20 @@
   --m-sloupec:720px;   /* sloupec článku i s kraji */
   --m-uzky:560px;      /* formuláře, boční panely */
   --m-karta:440px;     /* karty a okna */
+  /* SLOUPEC STRÁNEK ÚČTU — jedna svislice místo čtyř.
+     Naměřeno 9. 11. v prohlížeči na 1280 px, na „Hlídání", „Zprávy"
+     i „Můj profil": každý blok stránky se středil zvlášť a každý měl
+     jinou šířku, takže jich levá hrana měla ČTYŘI různé polohy —
+     řádek s nadpisem 280 px (720 široký), úvodní věta 360 px (560),
+     karta přihlášení 420 px (440) a pás záložek 505 px. Nahoře
+     nadpis, pod ním text o 80 px vpravo, pod ním karta o dalších
+     60 px vpravo: schodiště, kterému majitel 9. 11. řekl „text je
+     moc rozházený, není to symetrické".
+     Sloupec je proto jeden a drží šířku řádku s nadpisem, protože
+     ten je ze všech nejširší a zkracovat ho nejde (nadpis a tlačítko
+     „Zpět na nabídky" na jednom řádku). Užší bloky (karta
+     přihlášení) se středí UVNITŘ něj, ne na stránce. */
+  --m-ucet:720px;      /* sloupec stránek účtu */
 
   /* JEDEN KROK NA CELÉM WEBU.
      Naměřeno 26. 10. v prohlížeči na dvanácti typech stránek: svislé
@@ -6036,8 +6050,8 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 /* Odsazení nese pravidlo u „HLAVIČKA APLIKAČNÍCH STRÁNEK" níž (20/28 px
    na desce). Tady zůstává jen to, co se desky netýká. */
 .add-hero.app-hero .eyebrow{margin-bottom:12px;}
-.add-hero.app-hero h1{font-size:var(--h1-nastroj); font-weight:600; max-width:var(--m-uzky);}
-.add-hero.app-hero .sub{font-size:16px; margin-top:8px; max-width:var(--m-uzky);}
+.add-hero.app-hero h1{font-size:var(--h1-nastroj); font-weight:600; max-width:var(--m-ucet);}
+.add-hero.app-hero .sub{font-size:16px; margin-top:8px; max-width:var(--m-ucet);}
 .section.app-section{padding:16px 0 48px;}
 /* CELÝ SLOUPEC ÚČTU NA STŘED, NE PŘILEPENÝ VLEVO.
    Naměřeno na 1440 px: na „Můj profil", „Zprávy" i „Hlídání" stála
@@ -6389,6 +6403,16 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .auth-trust span{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--muted);}
 .auth-trust svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah); color:var(--c-ok-ink); flex:none;}
 @media (max-width:560px){ .auth-card{padding:28px 20px 20px; border-radius:var(--r-plocha);} .auth-title{font-size:20px;} }
+/* PŘIHLAŠOVACÍ KARTA SE STŘEDÍ VE SLOUPCI ÚČTU, AŤ LEŽÍ KDEKOLI.
+   `.auth-card` má `margin:0`, takže se řídí tím, co je kolem — a to
+   bylo na každé stránce jiné. Na „Můj profil" je karta přímo
+   v `.add-wrap` a dostávala `margin-inline:auto` z pravidla výš, tedy
+   stála na středu. Na „Hlídání" a „Zprávy" ji JS vykresluje dovnitř
+   sloupce (#hl-root v .hl-wrap), kde žádné takové pravidlo není —
+   a karta se lepila k jeho levé hraně. Naměřeno 9. 11. na 1280 px:
+   na „Hlídání" x 361–799, na „Můj profil" x 420–860. Táž karta
+   o 60 px jinde podle toho, odkud se na ni přišlo. */
+.app-section .auth-card{margin-inline:auto;}
 
 /* ---------- Kontaktní e-mail karta (kontakt + „Ozvěte se nám") ---------- */
 .kt-mail{display:inline-flex; align-items:center; gap:12px; margin:4px 0 4px; padding:16px 16px; background:rgba(var(--plocha-znacka-svetla-rgb),0.08); border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.22); border-radius:var(--r-md); text-decoration:none; transition:var(--prechod);}

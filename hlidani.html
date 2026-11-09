@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-WDdz7wtdtkoAOx7aNlpuX2wshx333wpDWJEb3/Vjnps='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-NFnA4RA20PuBNTYLpOzE4N4b77fAj7Ku+1muv9elPY0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=bb0efcb7">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=4d9177ab">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -75,7 +75,11 @@
        ale telefonní stránka roztažená na monitor. Středí se sloupec,
        ne jen karta v něm: jinak by se vystředilo přihlášení a seznam
        pod ním by zůstal vlevo. */
-    .hl-wrap{max-width:var(--m-uzky); margin-inline:auto;}
+    /* ŠÍŘKA SE BERE ZE SLOUPCE ÚČTU (--m-ucet), ne z --m-uzky.
+       Do 9. 11. měl sloupec 560 px, kdežto řádek s nadpisem nad ním
+       720 px — levá hrana textu tím ležela o 80 px vpravo od levé
+       hrany nadpisu. Důvod a měření jsou u --m-ucet v css/styles.css. */
+    .hl-wrap{max-width:var(--m-ucet); margin-inline:auto;}
     .hl-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-plocha); box-shadow:var(--e1); margin-bottom:12px;}
     /* PŘEPÍNAČ MEZI NOVÝM A ULOŽENÝM.
        Uložená hlídání ležela pod celým formulářem nového: na telefonu
@@ -110,10 +114,15 @@
     /* Odznak s počtem zůstává značkový i na zapnuté záložce — jezdec je
        teď světlý, takže bílá na bílé by zmizela. */
     .hl-tab.je .hl-tab-n{background:var(--plocha-znacka); color:#fff;}
-    /* Vlevo, ne na střed: karta se středila ve sloupci, takže začínala
-       na 212 px, zatímco nadpis stránky a pás záložek na 152. Svislice
-       se musí shodovat, jinak to vypadá jako posunutá sazba. */
-    .hl-auth{padding:16px; max-width:var(--m-karta); margin:8px 0;}
+    /* NA STŘED SLOUPCE, STEJNĚ JAKO UKÁZKA POD NÍ. Do 9. 11. byla tahle
+       karta vlevo a ukázka pod ní na střed — dvě stejně široké karty
+       (440 px) na dvou různých svislicích, naměřeno na 1280 px: 361 a
+       421. Původní zdůvodnění („vlevo, ať se shoduje s nadpisem")
+       padlo s tím, že sloupec účtu má teď jednu šířku (--m-ucet) a
+       všechno úzké se v něm středí: pás záložek nad kartou, karta
+       přihlášení na „Můj profil" i ukázka hned pod ní. Stránka má
+       jednu osu (střed sloupce), ne dvě. */
+    .hl-auth{padding:16px; max-width:var(--m-karta); margin:8px auto;}
     /* Ukázka pod přihlášením: stejná šířka jako okénko, ať to drží jednu
        osu, a čísla v jednom sloupci, aby šla porovnat očima. */
     /* Vystředěná, ne přilepená vlevo: vpravo od ní nic není (měřeno
@@ -556,7 +565,7 @@
         <h1>Hlídání nabídek</h1>
         <a href="index.html" class="zpet-btn"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       </div>
-      <p class="sub"><b>Hlídejte si nové pozemky.</b> Uložte si, co hledáte — a uvidíte, kolik <b>nových pozemků</b> vám sedí. Vše přehledně v aplikaci, i s detaily jako elektřina nebo přístupová cesta.</p>
+      <p class="sub"><b>Hlídejte si nové nabídky.</b> Uložte si, co hledáte — a uvidíte, kolik <b>nových nabídek</b> vám sedí. Vše přehledně v aplikaci, i s detaily jako elektřina nebo přístupová cesta.</p>
     </div>
   </section>
 
@@ -617,7 +626,7 @@
 <!-- Kategorie nemovitosti: od § 420 se podle nich vybírá slovo u počtů
      („3 pozemky" vs. „3 nemovitosti"). Do té doby si tahle stránka
      plurál psala sama a říkala „pozemky" i u bytu. -->
-<script src="js/min/kategorie.js?v=569f8cab"></script>
+<script src="js/min/kategorie.js?v=46b6089e"></script>
 <!-- KARTA NABÍDKY. Seznam nalezených inzerátů na téhle stránce se kreslí
      TOUŽ kartou jako výpis na úvodní stránce (js/karta-nabidky.js).
      Potřebuje k tomu letecký výřez (snimek), fotku z inzerátu (fotka)
@@ -724,7 +733,7 @@
     p.push.apply(p, rozsah(s.min_price, s.max_price, 'Kč'));
     p.push.apply(p, rozsah(s.min_area, s.max_area, 'm²'));
     if (s.max_perm2) p.push('do\u00a0' + fmt(s.max_perm2) + '\u00a0Kč/m²');
-    if (s.jen_celek) p.push('jen celé pozemky');
+    if (s.jen_celek) p.push('jen celé nemovitosti');
     if (s.features && s.features.length) p.push(s.features.map(esc).join(', '));
     /* Když po odečtení jména nezbylo nic, je to hlídání celého okresu bez
        dalších podmínek — a to je informace, ne prázdno: člověk podle ní
@@ -851,16 +860,16 @@
     var posilaSe = !!window.PK_MAIL_ZAPNUTO || !!window.PK_PUSH_VEREJNY_KLIC;
     box.innerHTML = (posilaSe
       ? '<h2>Co vám hlídání pošle</h2>'
-        + '<p>Upozornění chodí jen na pozemky, které nově <b>přibudou</b> — ne na celý seznam. '
+        + '<p>Upozornění chodí jen na nabídky, které nově <b>přibudou</b> — ne na celý seznam. '
         + 'Takhle často by se ozvala tahle tři hlídání:</p>'
       : '<h2>Co vám hlídání ukáže</h2>'
-        + '<p>Nové pozemky se vypíšou <b>přímo u\u00a0vašeho hlídání</b> — ne celý seznam, jen to, '
+        + '<p>Nové nabídky se vypíšou <b>přímo u\u00a0vašeho hlídání</b> — ne celý seznam, jen to, '
         + 'co přibylo. E-maily ani upozornění do telefonu zatím neposíláme, takže je uvidíte, '
         + 'až si web otevřete. Takhle často by se u\u00a0těchhle tří hlídání něco objevilo:</p>')
       + '<ul class="hlu-list">' + radky.join('') + '</ul>'
       + '<p class="hlu-pozn">Počítáno z\u00a0dnešní nabídky toutéž funkcí, která pak vyhodnocuje '
       + 'vaše vlastní hlídání. Svoje podmínky si nastavíte po přihlášení — druh, okres, cenu, '
-      + 'výměru i\u00a0to, co pozemek musí mít.</p>';
+      + 'výměru i\u00a0to, co nabídka musí mít.</p>';
     if (misto) misto.replaceWith(box); else root.appendChild(box);
   }
 
@@ -1074,7 +1083,7 @@
             '</select>' +
             '<p class="hl-napoveda" id="ns-okruh-pozn"></p>' +
           '</div>' +
-          '<div><label class="hl-lbl" for="ns-druh">Druh pozemku</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
+          '<div><label class="hl-lbl" for="ns-druh">Druh nabídky</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
           /* TYP NABÍDKY JE ŘADA DLAŽDIC, NE ROZBALOVÁTKO (1. 11.).
              Majitel: „to hledání vizuálně potřebuje brutálně překopat,
              udělej to podobné našemu vyhledávání, které mám na hlavní
@@ -1113,7 +1122,7 @@
              ČR.") zůstávají vidět — ty se čtou rychleji, než se na ně
              klepne. */
           '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-perm2-pozn" aria-label="Co to znamená"><span aria-hidden="true">i</span></button>' +
-          '<p class="hl-napoveda" id="ns-perm2-pozn" hidden>Podle ceny za metr se pozemky srovnávají nejčastěji — velký levný pozemek tak neutopí malý drahý.</p>' +
+          '<p class="hl-napoveda" id="ns-perm2-pozn" hidden>Podle ceny za metr se nabídky srovnávají nejčastěji — velká levná nemovitost tak neutopí malou drahou.</p>' +
           /* Podíl patří k ceně, ne k výměře: je to jiná odpověď na otázku
              „co vlastně kupuju", a nejčastěji si ho člověk všimne právě
              u podezřele nízké ceny za metr. */
@@ -1129,14 +1138,14 @@
              (.chip-n); dlouhé vysvětlení, CO podíl je, se nabídne až
              tomu, kdo si o ně klepne. */
           '<button type="button" class="hl-prep" id="ns-celek-b" aria-pressed="false" aria-controls="ns-celek">' +
-            '<span class="hl-prep-v" aria-hidden="true"></span>Jen celé pozemky' +
+            '<span class="hl-prep-v" aria-hidden="true"></span>Jen celé nemovitosti' +
             /* NULA SE NESCHOVÁVÁ, JEN SE ŘEKNE NAHLAS — fmt() vrací pro
                nulu prázdno (to se hodí tam, kde se číslo smí vynechat),
                tady by z toho zbylo „Jen celé pozemky podílů". */
             '<span class="hl-prep-n">' + (podiluDnes
               ? fmt(podiluDnes) + '\u00a0podíl' + (podiluDnes === 1 ? '' : (podiluDnes >= 2 && podiluDnes <= 4 ? 'y' : 'ů'))
               : 'žádné\u00a0podíly') + '</span></button>' +
-          '<label class="hl-skryty-vstup"><input type="checkbox" id="ns-celek">Jen celé pozemky — bez spoluvlastnických podílů</label>' +
+          '<label class="hl-skryty-vstup"><input type="checkbox" id="ns-celek">Jen celé nemovitosti — bez spoluvlastnických podílů</label>' +
           '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-podil-pozn" aria-label="Co to znamená"><span aria-hidden="true">i</span></button>' +
           '<p class="hl-napoveda" id="ns-podil-pozn" hidden>Bez spoluvlastnických podílů. U podílu je v ceně zlomek, ale výměra celé parcely, takže vychází podezřele levně. Dnes je takových ' +
             fmt(DATA.filter(function (d) { return d.podil; }).length) + ' z ' + fmt(DATA.length) + '.</p>' +
@@ -1216,14 +1225,20 @@
     function prepocti() {
       if (!souhrn) return;
       var k = kriteria();
-      var n = DATA.filter(function (d) { return matches(k, d); }).length;
+      /* SLOVO SE ŘÍDÍ TÍM, CO TO ČÍSLO POČÍTÁ (§ 420). Tvary slova
+         „pozemek" tu stály napevno, takže souhrn pod formulářem hlásil
+         „odpovídá 913 pozemků" i o hromádce samých bytů. Skloňování
+         i volbu slova umí tvarPoctu() nahoře — proto se do něj posílá
+         celá napočítaná hromádka, ne jen její délka. */
+      var sedi = DATA.filter(function (d) { return matches(k, d); });
+      var n = sedi.length;
       souhrn.className = 'hl-souhrn' + (n === 0 ? ' prazdno' : '');
       // Číslo s mezerou po tisících — jinak by vedle „1 940 pozemků" na mapě
       // stálo v hlídání „1940" a vypadalo to jako dva různé weby.
       var cis = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
       souhrn.innerHTML = n === 0
-        ? 'Tomuhle zadání dnes <b>neodpovídá žádný</b> pozemek. Hlídat ho můžete — ale možná jsou meze moc těsné.'
-        : 'Dnes tomu odpovídá <b>' + cis + '</b> ' + (n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků')) + '. Hlídat budeme jen to, co přibude nově.';
+        ? 'Tomuhle zadání dnes <b>neodpovídá žádná</b> nabídka. Hlídat ho můžete — ale možná jsou meze moc těsné.'
+        : 'Dnes tomu odpovídá <b>' + cis + '</b> ' + tvarPoctu(n, sedi) + '. Hlídat budeme jen to, co přibude nově.';
     }
     chips.forEach(function (c) {
       c.addEventListener('click', function () {
@@ -1339,7 +1354,7 @@
 
     document.getElementById('ns-save').addEventListener('click', function () {
       var k = kriteria();
-      var label = k.okres || (TYPE_LABEL[k.ptype] || 'Pozemky') + (k.druh ? ' · ' + k.druh : '');
+      var label = k.okres || (TYPE_LABEL[k.ptype] || 'Nabídky') + (k.druh ? ' · ' + k.druh : '');
       msg.textContent = 'Ukládám…'; msg.className = 'hl-msg';
       /* Nejvyšší stupeň umí i okruh (supabase/saved-searches-okruh.sql).
          Když ho databáze ještě nemá, ustoupí se o patro níž — na podobu
@@ -1401,7 +1416,7 @@
            popsaná ve formuláři, a věta říká, co z jeho zadání platí. */
         var nepropsano = [];
         if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('„cenu od", „výměru do" a „nejvýš za metr"');
-        if (v.uroven !== 'celek' && v.uroven !== 'bezOkruhu' && k.jen_celek) nepropsano.push('volbu „jen celé pozemky"');
+        if (v.uroven !== 'celek' && v.uroven !== 'bezOkruhu' && k.jen_celek) nepropsano.push('volbu „jen celé nemovitosti"');
         /* NÁZEV POLÍČKA MUSÍ DO VĚTY ZAPADNOUT. Dřív se sem vkládalo
            „okolí vašeho místa — hlídá se celý okres", takže na obrazovce
            stálo „ale okolí vašeho místa — hlídá se celý okres zatím
@@ -1413,7 +1428,7 @@
           var text = 'Hlídání jsme uložili, ale ' + nepropsano.join(' ani ')
             + ' zatím hlídat neumíme.'
             + (misoOkruhu ? ' Místo okruhu hlídáme celý okres.' : '')
-            + ' Ostatní podmínky platí a nové pozemky vám podle nich najdeme.';
+            + ' Ostatní podmínky platí a nové nabídky vám podle nich najdeme.';
           msg.textContent = text;
           msg.className = 'hl-msg err';
           // a hlavně: ať to přežije přepnutí záložky hned za chvíli
@@ -1476,8 +1491,8 @@
     return '<label class="hl-mail"><input type="checkbox" data-mail="' + s.id + '"'
       + (zap ? ' checked' : '') + '> <span>Posílat e-mailem</span></label>'
       + '<p class="hl-mail-pozn">' + (zap
-        ? 'Nové pozemky vám přijdou na e-mail, kterým se přihlašujete — nejvíc jeden e-mail za den.'
-        : 'Bez zapnutí nic neposíláme. Nové pozemky se vypíšou přímo tady u\u00a0hlídání.')
+        ? 'Nové nabídky vám přijdou na e-mail, kterým se přihlašujete — nejvíc jeden e-mail za den.'
+        : 'Bez zapnutí nic neposíláme. Nové nabídky se vypíšou přímo tady u\u00a0hlídání.')
       + '</p>';
   }
 
@@ -1506,7 +1521,7 @@
       pozn = 'Oznámení máte pro tento web <b>zakázaná v prohlížeči</b>, takže nic nepřijde. '
         + 'Zapnout je jde jen tam — v nastavení webu u adresního řádku.';
     } else if (zap) {
-      pozn = 'Nové pozemky vám přijdou jako upozornění do telefonu — nejvíc jedno za den.';
+      pozn = 'Nové nabídky vám přijdou jako upozornění do telefonu — nejvíc jedno za den.';
     } else {
       pozn = 'Bez zapnutí nic neposíláme. Prohlížeč se nejdřív zeptá na povolení.';
     }

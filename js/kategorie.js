@@ -275,9 +275,18 @@
     return vsePozemkove(klicePodleDat(nabidky)) ? SLOVA_POZEMEK : SLOVA_NEMOVITOST;
   }
 
+  /* PRÁZDNÁ MNOŽINA NENÍ „SAMÉ POZEMKY". Do 9. 11. tu stálo
+     `k.length === 0 ||`, takže nula nabídek vyšla jako pozemková a
+     hlídání psalo „Celkem sedí: 0 pozemků" i u hlídání nastaveného na
+     celou ČR bez omezení druhu — tedy u něčeho, kde by stejně dobře
+     mohl přibýt byt. Prázdná množina o kategorii neříká NIC, a modul
+     má napsáno hned nahoře, co se v takovém případě dělá: jde se
+     k obecnějšímu slovu, protože „nemovitost" je pravda vždycky,
+     kdežto „pozemek" by u bytu lhal. Táž asymetrie jako v záložní
+     cestě tvarPoctu() na hlidani.html. */
   function vsePozemkove(klice) {
     var k = klice || [];
-    return k.length < 2 && (k.length === 0 || k[0] === 'pozemek');
+    return k.length === 1 && k[0] === 'pozemek';
   }
 
   function jePozemkova(k) {

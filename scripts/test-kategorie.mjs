@@ -675,9 +675,19 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     'pozemek|pozemky|pozemků');
   je('u nemovitostí taky', K.slovaPoctu(sBytem).join('|'),
     'nemovitost|nemovitosti|nemovitostí');
-  /* Prázdná množina je „samé pozemky" — výchozí kategorie je pozemek
-     a web o něm takhle mluvil, dokud nic jiného neměl. */
-  je('a prázdná množina mluví o pozemcích', K.slovaPoctu([])[0], 'pozemek');
+  /* PRÁZDNÁ MNOŽINA MLUVÍ OBECNĚ, ne o pozemcích. Do 9. 11. vracela
+     „pozemek" — výchozí kategorie — a hlídání na celou ČR bez omezení
+     druhu tím psalo „Celkem sedí: 0 pozemků", přestože druhý den tam
+     mohl stejně dobře přibýt byt. Nula nabídek o kategorii neříká nic,
+     takže se jde k obecnějšímu slovu: „nemovitost" je pravda vždycky,
+     „pozemek" by u bytu lhal. Důvod stojí u vsePozemkove()
+     v js/kategorie.js. */
+  je('a prázdná množina mluví obecně, ne o pozemcích', K.slovaPoctu([])[0], 'nemovitost');
+  /* A JEDNA NABÍDKA BEZ KATEGORIE JE POŘÁD POZEMEK. Kdyby se obecné
+     slovo rozlilo i sem, přestal by web u ryze pozemkové hromádky
+     říkat „pozemků" — tedy pravý opak toho, oč jde. */
+  je('ale jedna nabídka bez vyplněné kategorie je pozemek',
+    K.slovaPoctu([{ place: 'Tábor' }])[0], 'pozemek');
 }
 
 /* ==================================================================

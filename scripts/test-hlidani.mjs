@@ -741,7 +741,7 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
 
   je('uložené stupně', 'nejnovější stupeň nechá zadání být',
     H.kriteriaUlozena(K0, 'celek'), K0);
-  je('uložené stupně', 'prostřední zahodí jen „jen celé pozemky"',
+  je('uložené stupně', 'prostřední zahodí jen „jen celé nemovitosti"',
     Object.keys(H.kriteriaUlozena(K0, 'siroke')).sort(),
     Object.keys(K0).filter((x) => x !== 'jen_celek').sort());
   je('uložené stupně', 'a širší meze v něm zůstanou',
@@ -935,8 +935,14 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('hláška', 'a neobviňuje databázi', /databáze je ještě neumí/.test(kod), false);
   je('hláška', 'a říká, co z zadání platí dál',
     /Ostatní podmínky platí/.test(kod), true);
+  /* NÁPIS POLÍČKA SE 9. 11. ZMĚNIL na „jen celé nemovitosti". Web tehdy
+     vedl 3 428 nabídek a 1 311 z nich nebyl pozemek (913 bytů, 245 domů,
+     52 chat, 52 garáží), takže zaškrtávátko o spoluvlastnických podílech
+     mluvilo o pozemcích i u bytu. Kontrola se ptá na totéž co dřív —
+     jmenuje hláška políčko tak, jak je popsané ve formuláři? — jen se
+     ten nápis mezitím změnil. */
   for (const policko of ['„cenu od"', '„výměru do"', '„nejvýš za metr"',
-    'volbu „jen celé pozemky"', '„okruh" kolem vašeho místa']) {
+    'volbu „jen celé nemovitosti"', '„okruh" kolem vašeho místa']) {
     je('hláška', `jmenuje políčko ${policko} lidsky`, kod.indexOf(policko) !== -1, true);
   }
   /* A JMÉNO POLÍČKA MUSÍ DO VĚTY ZAPADNOUT. Jednou tu stálo „okolí

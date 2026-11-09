@@ -131,7 +131,7 @@
 
   function vsePozemkove(klice) {
     var k = klice || [];
-    return k.length < 2 && (k.length === 0 || k[0] === 'pozemek');
+    return k.length === 1 && k[0] === 'pozemek';
   }
 
   function jePozemkova(k) {

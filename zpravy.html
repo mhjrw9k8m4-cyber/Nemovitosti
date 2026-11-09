@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=bb0efcb7">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=4d9177ab">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
@@ -73,7 +73,11 @@
        ale telefonní stránka roztažená na monitor. Středí se sloupec,
        ne jen karta v něm: jinak by se vystředilo přihlášení a seznam
        pod ním by zůstal vlevo. */
-    .zp-wrap{max-width:var(--m-uzky); margin-inline:auto;}
+    /* ŠÍŘKA SE BERE ZE SLOUPCE ÚČTU (--m-ucet), ne z --m-uzky.
+       Do 9. 11. měl sloupec 560 px, kdežto řádek s nadpisem nad ním
+       720 px — levá hrana textu tím ležela o 80 px vpravo od levé
+       hrany nadpisu. Důvod a měření jsou u --m-ucet v css/styles.css. */
+    .zp-wrap{max-width:var(--m-ucet); margin-inline:auto;}
     .zp-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-plocha); box-shadow:var(--e1);}
     /* Přihlášení */
     /* Vystředěná, ne přilepená vlevo: vpravo od ní nic není (měřeno
