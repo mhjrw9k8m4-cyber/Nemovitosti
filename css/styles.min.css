@@ -1784,6 +1784,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 }
 @media (min-width:1040px){.okr-hero .okr-wrap{display:grid;grid-template-columns:minmax(0,var(--m-text)) minmax(0,1fr);column-gap:56px;align-items:end}
 .okr-hero .okr-wrap>*{grid-column:1}
+.okr-hero .okr-wrap>.zpet-btn{justify-self:start}
 .okr-hero .okr-cisla{grid-column:1 / -1;gap:16px 48px;margin:28px 0 0;max-width:none}
 .okr-hero .okr-cislo-siroky{flex:0 1 auto}
 .okr-hero .okr-cislo-siroky b{font-size:28px}
@@ -1890,7 +1891,7 @@ a.rz-okres:hover{color:var(--znacka-svetla)}
 @media (min-width:1041px){.okr-item .okr-place{font-size:18px}
 }
 .okr-item::after{content:none}
-@media (min-width:1200px){.okr-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+@media (min-width:1200px){.okr-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
 .okr-list::after{grid-column:1 / -1}
 .okr-item{grid-template-areas:"foto misto cena" "foto meta meta" "foto extra extra" "foto zdroj zdroj"}
 .okr-item .okr-src{justify-self:start}

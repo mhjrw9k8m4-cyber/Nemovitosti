@@ -7973,6 +7973,13 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
   .okr-hero .okr-wrap{display:grid; grid-template-columns:minmax(0, var(--m-text)) minmax(0, 1fr);
     column-gap:56px; align-items:end;}
   .okr-hero .okr-wrap > *{grid-column:1;}
+  /* TLAČÍTKO ZPĚT SI NECHÁ SVOU ŠÍŘKU. V mřížce se prvek roztáhne přes
+     celý sloupec, takže z `display:inline-flex` zbylo jen jméno:
+     naměřeno na okrese Benešov při 1280 px 565 px široké tlačítko
+     „Zpět na nabídky", zatímco na inzerce.html má totéž tlačítko
+     164 px. Jeden ovladač, dvě šířky podle toho, na jaké stránce
+     zrovna stojí. */
+  .okr-hero .okr-wrap > .zpet-btn{justify-self:start;}
   /* Řádek s čísly přes obě řady sloupců. Rozpětí cen tu není široká
      položka — na 1040 px a víc se vešlo do řádku k ostatním — a nese
      proto týž stupeň jako ony, aby řádek četl jako jedna řada. */
@@ -8365,7 +8372,16 @@ a.rz-okres:hover{color:var(--znacka-svetla);}
    Hranice je 1200 px, ne 1100: na 1100 px se při dvou sloupcích
    zalomilo 12 řádků z 32. */
 @media (min-width:1200px){
-  .okr-list{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); align-items:start;}
+  /* KARTY V ŘÁDKU JSOU STEJNĚ VYSOKÉ. Do 9. 11. tu stálo
+     `align-items:start`, takže si každá karta držela svou výšku podle
+     délky textu a řádek měl dole schod. Naměřeno na okrese Benešov
+     při 1280 px: druhý řádek měl vlevo 145 px a vpravo 166 px, a tak
+     to pokračovalo celým výpisem. Dvacet pixelů je málo na to, aby si
+     toho člověk všiml vědomě, a dost na to, aby mu výpis připadal
+     rozházený — přesně ten dojem, na který majitel 9. 11. ukázal.
+     Protažením se vyrovná spodní hrana; uvnitř karty přibyde volné
+     místo tam, kde text došel dřív. */
+  .okr-list{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); align-items:stretch;}
   /* Popiska zdroje snímků je věta pod výpisem, ne třetí karta. */
   .okr-list::after{grid-column:1 / -1;}
   .okr-item{grid-template-areas:"foto misto cena" "foto meta meta"
