@@ -62,7 +62,14 @@ jobs:
           node-version: '22'
 
       - name: Rozeslat (nebo vypsat)
-        run: node scripts/send-alerts.mjs ${{ (github.event_name == 'workflow_dispatch' && inputs.opravdu) && '--opravdu' || '' }}
+        # OD 9. 11. 2026 ODESÍLÁ I NOČNÍ BĚH. Pojistka „jen na ruční
+        # spuštění" tu byla, dokud chyběl odesílatel (PK_MAIL_FROM) —
+        # bez něj by pošta stejně neodešla a dvojí zámek měl smysl.
+        # Odesílatel je nastavený (ověřeno v protokolu: PK_MAIL_FROM: ***),
+        # takže druhý zámek už jen držel slib, který web dává lidem:
+        # „ozveme se, až něco přibude". Ruční spuštění bez zaškrtnutí
+        # `opravdu` zůstává nasucho.
+        run: node scripts/send-alerts.mjs ${{ (github.event_name != 'workflow_dispatch' || inputs.opravdu) && '--opravdu' || '' }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

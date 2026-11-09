@@ -162,9 +162,29 @@ pravda('seznam k odeslání smí číst jen server',
 
 /* ---------- 2b) WEB O POŠTĚ MLČÍ, DOKUD NEODCHÁZÍ ------------- */
 const config = fs.readFileSync(path.join(ROOT, 'js', 'config.js'), 'utf8');
-pravda('vlajka posílání je v js/config.js vypnutá',
-  /window\.PK_MAIL_ZAPNUTO\s*=\s*false\s*;/.test(config),
-  'PK_MAIL_ZAPNUTO není false — web by sliboval poštu, která nechodí');
+/* PRAVIDLO SE 9. 11. 2026 ZMĚNILO — Z „MUSÍ BÝT VYPNUTÁ" NA „SMÍ BÝT
+   ZAPNUTÁ, JEN KDYŽ POŠTA OPRAVDU ODCHÁZÍ".
+   Dokud chyběl odesílatel, byla vlajka natvrdo false a tahle kontrola
+   to hlídala: slíbit poštu, která nepřijde, je horší než ji neslibovat.
+   Odesílatel je od 9. 11. nastavený (PK_MAIL_FROM, ověřeno v protokolu
+   úlohy „Rozeslat upozornění" — nastavená proměnná se vypíše jako ***,
+   nenastavená jako prázdná) a noční běh dostal `--opravdu`.
+   Hlídá se proto SOUVISLOST, ne hodnota: zapnutá vlajka jen tehdy,
+   když rozesílač v nočním běhu doopravdy odesílá. Kdyby někdo
+   `--opravdu` z úlohy zase odebral a vlajku nechal, web by sliboval
+   poštu, která nechodí — a to tahle kontrola pozná.
+   Co odsud vidět NEJDE: jestli je doména potvrzená v Resendu. To se
+   pozná jen z protokolu běhu, až se první zpráva odešle. */
+const uloha = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'rozesilani.yml'), 'utf8');
+const nocniOdesila = /github\.event_name\s*!=\s*'workflow_dispatch'\s*\|\|\s*inputs\.opravdu/.test(uloha);
+const vlajkaZapnuta = /window\.PK_MAIL_ZAPNUTO\s*=\s*true\s*;/.test(config);
+const vlajkaVypnuta = /window\.PK_MAIL_ZAPNUTO\s*=\s*false\s*;/.test(config);
+pravda('vlajka posílání má v js/config.js jednu ze dvou hodnot',
+  vlajkaZapnuta || vlajkaVypnuta, 'PK_MAIL_ZAPNUTO není ani true, ani false');
+pravda('a je zapnutá jen tehdy, když noční běh opravdu odesílá',
+  !vlajkaZapnuta || nocniOdesila,
+  'PK_MAIL_ZAPNUTO = true, ale rozesilani.yml pouští send-alerts bez --opravdu'
+  + ' — web by sliboval poštu, která nechodí');
 const hlidani = fs.readFileSync(path.join(ROOT, 'hlidani.html'), 'utf8');
 pravda('přepínač u hledání se bez té vlajky ani nevykreslí',
   /function mailRow\(s\) \{\s*\n\s*if \(!window\.PK_MAIL_ZAPNUTO\) return '';/.test(hlidani),

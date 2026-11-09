@@ -35,7 +35,7 @@ window.PK_FORM_EMAIL = '';
 
    Až klíč bude, stačí přepsat na true. Nic jiného se neupravuje.
    --------------------------------------------------------------------- */
-window.PK_MAIL_ZAPNUTO = false;
+window.PK_MAIL_ZAPNUTO = true;
 
 /* ---------------------------------------------------------------------
    UPOZORNĚNÍ DO TELEFONU (push) — vypnuté, dokud nejsou klíče.
