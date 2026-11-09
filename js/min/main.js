@@ -59,12 +59,18 @@
       try { v.zavri(); } catch (e) {}
     }, 300);
   }
+
+  var vrstvaPraveCouvla = false;
   window.addEventListener('popstate', function () {
     var v = pkVrstvy.pop();
     if (!v) return;
+    vrstvaPraveCouvla = true;
+    setTimeout(function () { vrstvaPraveCouvla = false; }, 0);
     v.couvlo = true;
     try { v.zavri(); } catch (e) {}
   });
+
+  window.PK_VRSTVA_COUVLA = function () { return vrstvaPraveCouvla; };
 
   var pkVraciSeZPozemku = false;
   window.addEventListener('pageshow', function (e) {
@@ -5563,6 +5569,8 @@
 
   window.addEventListener('hashchange', function () {
     if (adresaDrzi) return;
+
+    try { if (window.PK_VRSTVA_COUVLA && window.PK_VRSTVA_COUVLA()) return; } catch (e) {}
     try {
       if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
 

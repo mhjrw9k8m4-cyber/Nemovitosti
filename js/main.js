@@ -134,12 +134,35 @@
       try { v.zavri(); } catch (e) {}
     }, 300);
   }
+  /* ZAVŘENÍ VRSTVY NENÍ PŘÍCHOD Z ODKAZU.
+     ==================================================================
+     Vrstva si při otevření přidá do historie záznam s TEHDEJŠÍ adresou
+     (`pushState(..., location.href)`). Dokud je otevřená, mapa si pod
+     ní adresu přepisuje (`#m=šířka,délka,přiblížení`), takže couvnutí
+     vrátí adresu o kus zpátky — a prohlížeč na to pošle `hashchange`.
+     Obsluha `hashchange` níž je ale psaná pro NĚKOHO, KDO PŘIŠEL
+     z odkazu: zruší všechny filtry a dosadí jen to, co v adrese stojí.
+     Okolí vybraného místa v adrese není (a schválně: je to osobní
+     údaj), takže se tím vypnulo.
+     Naměřeno 9. 11.: vyber místo, pak změň okruh — po druhém potvrzení
+     zmizel odznak s místem a do výpisu se vrátila celá republika.
+     Napoprvé se to nestalo, protože adresa ještě žádný stav mapy
+     nenesla a obsluha se o ni nestarala. Ohlásil to `test-pamet`
+     šesti kontrolami.
+     Příznak proto říká, že nejbližší `hashchange` patří zavírané
+     vrstvě. Maže se časovačem na nulu, tedy až po obou událostech
+     (`popstate` chodí první, hned za ním `hashchange`). */
+  var vrstvaPraveCouvla = false;
   window.addEventListener('popstate', function () {
     var v = pkVrstvy.pop();
     if (!v) return;
+    vrstvaPraveCouvla = true;
+    setTimeout(function () { vrstvaPraveCouvla = false; }, 0);
     v.couvlo = true;
     try { v.zavri(); } catch (e) {}
   });
+  /* Čte to obsluha `hashchange` (hledej vrstvaPraveCouvla níž). */
+  window.PK_VRSTVA_COUVLA = function () { return vrstvaPraveCouvla; };
   /* Vrací se člověk ze stránky pozemku? Nastaví restoreMapReturn() níž,
      čte obsluha pageshow hned pod tím — viz komentář u ní. */
   var pkVraciSeZPozemku = false;
@@ -9291,6 +9314,9 @@
      history.replaceState, a ten událost hashchange nevyvolá. */
   window.addEventListener('hashchange', function () {
     if (adresaDrzi) return;
+    /* Couvnutí ze zavřené vrstvy není příchod z odkazu — viz
+       vrstvaPraveCouvla u obsluhy popstate nahoře. */
+    try { if (window.PK_VRSTVA_COUVLA && window.PK_VRSTVA_COUVLA()) return; } catch (e) {}
     try {
       if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
       /* NEJDŘÍV ZRUŠIT, PAK DOSADIT — jinak krok zpět nic neudělá.
