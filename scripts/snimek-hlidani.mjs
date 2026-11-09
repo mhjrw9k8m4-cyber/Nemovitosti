@@ -19,6 +19,10 @@ const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 const CIL = process.argv[2] || '/tmp/hl.png';
 const SIRKA = Number(process.argv[3] || 420);
+/* Čtvrtý argument: jiná stránka účtu (zpravy.html, muj-inzerat.html).
+   Hlídání se pořád uloží — na ostatních stránkách nepřekáží a zůstane
+   jediná cesta, jak mít účet v témž stavu jako při pohledu na Hlídání. */
+const STRANKA = process.argv[4] || 'hlidani.html';
 const zaDnu = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 const STARE = { updated: '2026-01-01', opportunities: [
   { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '1/1', druh: 'orná půda',
@@ -69,8 +73,8 @@ await p.evaluate(() => {
 });
 await domUtichlo(p, 600);
 data = NOVE;
-await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-await domUtichlo(p, 700);
+await p.goto(`${BASE}/${STRANKA}`, { waitUntil: 'domcontentloaded' });
+await domUtichlo(p, 900);
 const info = await p.evaluate(() => ({
   karet: document.querySelectorAll('.hl-nove li').length,
   vyska: document.documentElement.scrollHeight,

@@ -49,9 +49,22 @@ const POCTY = (() => {
 })();
 
 // --- 1) V kódu nesmí zůstat opsaná barva -----------------------------
-for (const f of ['../js/main.js', '../js/pozemek.js']) {
+/* Tabulka druhů se 9. 11. odstěhovala z js/main.js do
+   js/karta-nabidky.js (kreslí kartu i tam, kde main.js není) a jmenuje
+   se v něm TYPY. Jméno proměnné se proto říká u každého souboru zvlášť;
+   kdyby se hledalo jedno a nenašlo, slice() by vrátil nesmyslný úsek
+   a první kontrola by prošla naprázdno — přesně to se stalo. */
+const TABULKY = [
+  { f: '../js/karta-nabidky.js', znacka: 'var TYPY = {' },
+  { f: '../js/pozemek.js', znacka: 'var TYPE = {' },
+];
+for (const { f, znacka } of TABULKY) {
   const t = readFileSync(new URL(f, import.meta.url), 'utf8');
-  const blok = t.slice(t.indexOf('var TYPE = {'), t.indexOf('};', t.indexOf('var TYPE = {')));
+  const od = t.indexOf(znacka);
+  pravda(`${f.replace('../', '')}: tabulka druhů se našla`, od !== -1,
+    'značka ' + znacka + ' v souboru není — přejmenovala se?');
+  if (od === -1) continue;
+  const blok = t.slice(od, t.indexOf('};', od));
   const opsane = [...blok.matchAll(/color:\s*'#[0-9A-Fa-f]{6}'/g)].map((m) => m[0]);
   pravda(`${f.replace('../', '')} si barvy kategorií nedrží sám`, opsane.length === 0,
     'opsané: ' + opsane.join(', '));

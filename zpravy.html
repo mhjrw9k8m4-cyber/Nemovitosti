@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-sqlM4Me0+KoFodowj4h55Mygpx/0BcVAaoX+lqNIh08='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-MVAIWXkZ6y7cNd6zt9YwAzSdbPqojAsY+huz8KIL5QE='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -90,7 +90,7 @@
    (rgb(243,241,236), rgba(20,35,28,0.55) 1px). Bere si teď podobu,
    kterou web pro vedlejší akci má — bílo, zelený obrys, měděný text. */
     /* BÍLÁ NAPEVNO SVÍTILA V TMAVÉM REŽIMU. Tlačítko „Vytvořit účet"
-       a „Přidat vlastní pozemek" mělo background:#fff, tedy barvu
+       a „Přidat vlastní nemovitost" mělo background:#fff, tedy barvu
        zapsanou napevno místo tokenu --plocha-karta. Vzniklo to v době, kdy web
        měl i tmavý režim a ta bílá plocha v něm zůstávala svítit
        (24 864 px²); tmavý režim je pryč, ale důvod zůstává stejný:
@@ -386,9 +386,9 @@
         '(dražby, SPÚ, inzertní portály) vede odkaz k původnímu zdroji.</div>' +
         '<div class="zp-empty-akce">' +
           '<a class="zp-btn jako-odkaz" ' +
-            'href="index.html?q=' + encodeURIComponent('od majitele') + '">Ukázat pozemky od majitelů</a>' +
+            'href="index.html?q=' + encodeURIComponent('od majitele') + '">Ukázat nabídky od majitelů</a>' +
           '<a class="zp-btn sec jako-odkaz" ' +
-            'href="pridat.html">Přidat vlastní pozemek</a>' +
+            'href="pridat.html">Přidat vlastní nemovitost</a>' +
         '</div></div></div>';
       return;
     }

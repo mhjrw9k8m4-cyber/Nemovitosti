@@ -88,6 +88,13 @@ export const IKONY = {
      a oblouk pod ní, pata na obzoru nestojí — není to věc na zemi. */
   vratit: 'M9 6.5 5 10.5l4 4M5 10.5h8.5a5 5 0 0 1 0 10H9',
   zavrit: 'M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5',
+  /* KOŠ. Smazat hlídání se do 9. 11. kreslilo znakem 🗑 — emoji, tedy
+     kresba z písma operačního systému: na každém zařízení jiná,
+     barevná tam, kde je kolem všechno jednobarevné, a bez tahu, který
+     tahle sada drží na 1,5 px. Koš STOJÍ NA ZEMI, takže jeho dno leží
+     na obzoru y=20 jako dům, plot i příjezd; stěny se mírně sbíhají,
+     aby se nepletl s obdélníkem. */
+  kos: 'M4 7.5h16M9.5 7.5v-2h5v2M6.5 7.5 8 20h8l1.5-12.5',
   menu: 'M4 7h16M4 12h16M4 17h16',
   sipka_vlevo: 'M14.5 5.5 8 12l6.5 6.5',
   sipka_vpravo: 'M9.5 5.5 16 12l-6.5 6.5',
