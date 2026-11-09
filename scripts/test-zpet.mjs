@@ -158,13 +158,21 @@ try {
   /* STAV MAPY MUSÍ PŘEŽÍT. Kvůli němu to celé je: kdo si nastavil výřez,
      nesmí o něj přijít tím, že zavřel vrstvu.
 
-     ČEKÁ SE NA STAV, NE NA ČAS. Mapa si výřez zapisuje do adresy až
-     když se usadí, a tady se dřív jen čekalo 700 ms po klepnutí. Na
-     běžci CI (1108) to nestačilo: `hash: „"` — a kontrola hlásila
-     vadu webu tam, kde bylo jen pomalejší železo. Když stav mapy
-     v adrese opravdu chybí, čekání vyprší a kontrola spadne stejně
-     jako dřív, jen po právu. */
-  await p.waitForFunction(() => /m=/.test(location.hash), null, { timeout: 15000 })
+     ČEKÁ SE NA STAV, NE NA ČAS — A NEJDŘÍV MUSÍ BÝT CO ZAPISOVAT.
+     Mapa si výřez zapisuje do adresy, až když se usadí. Dřív se tu jen
+     čekalo 700 ms po klepnutí; na běžci CI (1108) to nestačilo
+     a kontrola hlásila `hash: „"`, tedy vadu webu tam, kde bylo jen
+     pomalejší železo. Samotné čekání na adresu ale nestačilo taky
+     (CI 1110 hlásilo prázdný hash znovu): poslední krok smyčky výš
+     načte stránku ZNOVU, a dokud se mapa nepostaví, nemá kdo do
+     adresy psát. Čeká se proto na hotovou mapu (PK_MAPA_HOTOVA), pak
+     se mapou pohne o pixel — pohyb je to, co zápis spouští — a teprve
+     pak se čeká na adresu. Zapisuje pořád web, ne zkouška; když to
+     nezvládne, čekání vyprší a kontrola spadne stejně jako dřív. */
+  await p.waitForFunction(() => window.PK_MAPA_HOTOVA === true, null, { timeout: 25000 })
+    .catch(() => {});
+  await p.evaluate(() => { try { window.PK_MAPA && window.PK_MAPA.panBy([1, 1]); } catch (e) {} });
+  await p.waitForFunction(() => /m=/.test(location.hash), null, { timeout: 20000 })
     .catch(() => {});
   await p.evaluate(() => document.getElementById('mc-vyvoz').click());
   await p.waitForTimeout(700);

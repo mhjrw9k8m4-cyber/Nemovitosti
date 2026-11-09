@@ -92,7 +92,17 @@ pravda('a filtr opravdu zabral (počet se změnil)', pocetSFiltrem !== pocetStar
 
 /* ---- 2. ZPĚT ZŮSTANE NA WEBU A FILTR VRÁTÍ ------------------------- */
 await p.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
-await p.waitForTimeout(1300);
+/* ČEKÁ SE NA STAV, NE NA ČAS. Po kroku zpět se výpis překresluje
+   a 1 300 ms stačilo u mě, ne na běžci CI: v běhu 1110 se naměřilo
+   „na začátku 3432, s filtrem 3339, po zpět 3339" — tedy stav TĚSNĚ
+   PŘED překreslením, ne vada webu. Čeká se proto na číslo, které tam
+   má být; když se nevrátí, čekání vyprší a kontroly níž spadnou
+   stejně jako dřív. */
+await p.waitForFunction((ocek) => {
+  const el = document.querySelector('#map-count, #opp-count, #mvt-count');
+  return !!el && String(el.textContent || '').replace(/\s/g, '') === ocek;
+}, pocetStart, { timeout: 20000 }).catch(() => {});
+await p.waitForTimeout(300);
 pravda('krok zpět nechá člověka na výpisu', /index\.html/.test(p.url()), p.url());
 const pocetPoZpet = await pocetZ();
 const druhPoZpet = await vybrany();
