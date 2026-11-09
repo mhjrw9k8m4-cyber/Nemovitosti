@@ -34,7 +34,7 @@ to, až to řekne ta kontrola vpravo.** Stav ve třetím sloupci je změřený
 | 0 | Supabase → SQL Editor → pustit `supabase/navstevnost.sql` | `SUPABASE_SERVICE_ROLE_KEY=… node scripts/navstevnost.mjs` vypíše čísla, ne chybu | neuvidím (na databázi odsud nedosáhnu) |
 | 1 | Resend: potvrdit doménu + nastavit SMTP v Supabase | na webu „Zapomenuté heslo": mail přijde a odesílatel je `parcelaka.cz`, ne `supabase.co` | klíč v Secrets **JE**; doménu a SMTP neuvidím |
 | 2 | `PK_MAIL_FROM` do Secrets (`Parcelka <hlidani@parcelaka.cz>`) | Actions → „Rozeslat upozornění" → poslední běh → v protokolu `PK_MAIL_FROM: ***` (nesmí být prázdné) | **prázdné** |
-| 3 | pustit `supabase/00-vse.sql` | `SUPABASE_SERVICE_ROLE_KEY=… node scripts/kontrola-databaze.mjs` nenajde nález; a ve formuláři projde vložení **bytu**, ne jen pozemku | neuvidím; bez toho jde vložit jen pozemek (formulář to říká) |
+| 3 | pustit `supabase/00-vse.sql` | `SUPABASE_SERVICE_ROLE_KEY=… node scripts/kontrola-databaze.mjs` nenajde nález; a ve formuláři projde vložení **bytu**, ne jen pozemku | **HOTOVO 9. 11. 2026** — ověřeno dotazem na `listings.kat` a `create_listing` s `p_kat`: vyšlo 1 a 1 |
 | 4 | Stripe (ostré klíče až s IČO) | na webu se u zvýraznění inzerátu nabídne platba | rozhodnutí, ne práce |
 | 5 | tři tajemství VAPID (push) | `node scripts/kontrola-spusteni.mjs` → řádek „upozornění do telefonu" přestane být `!` | `PK_PUSH_VEREJNY_KLIC` **prázdný** |
 | 6 | Sreality (volitelné, jeden placený běh ~$6) | po běhu je v datech zdroj „Sreality (Apify)" | čeká na tvoje slovo |
