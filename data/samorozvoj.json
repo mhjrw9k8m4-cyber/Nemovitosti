@@ -24,6 +24,11 @@
    "prokazanych": 20,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-09": {
+   "prokazanych": 18,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1151,20 +1156,20 @@
    "poznamka": ""
   },
   "test-cenova-historie.mjs": {
-   "kdy": "2026-11-04",
-   "hlidá": 2,
-   "chytila": 5,
-   "nechytila": 1,
+   "kdy": "2026-11-09",
+   "hlidá": 3,
+   "chytila": 0,
+   "nechytila": 0,
    "rovnocenne": [],
    "slepa": [],
-   "mlcela": [
-    "obrácené porovnání (>= na >) v scripts/archiv-statistiky.mjs"
-   ],
+   "mlcela": [],
    "nedorucene": [],
    "nelzeTady": false,
-   "pomucky": [],
-   "otisk": "1460135df971",
-   "poznamka": ""
+   "pomucky": [
+    "scripts/vzorek-pozemku.mjs"
+   ],
+   "otisk": "834b27cb7114",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   },
   "test-hledej-zdroje.mjs": {
    "kdy": "2026-11-05",
@@ -1677,13 +1682,13 @@
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-08",
+ "updated": "2026-11-09",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "305 z 332 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "306 z 333 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
