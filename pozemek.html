@@ -92,7 +92,7 @@
 .opp-badge.majitel::before{background:var(--c-majitel)}
 .pz-gallery{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;z-index:1}
 .pz-gallery::-webkit-scrollbar{display:none}
-.pz-shot{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;scroll-snap-stop:always;display:block;user-select:none}
+.pz-shot{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;scroll-snap-stop:always;display:block;user-select:none;color:transparent}
 .pz-media .opp-count{position:absolute;right:13px;bottom:13px;left:auto;z-index:3;display:inline-flex}
 @media (max-width:560px){.pz-media{margin:0 calc(-1 * var(--okraj-stranky));width:auto;aspect-ratio:4/3;max-height:none;border-radius:0;border-left:0;border-right:0;box-shadow:none}
 .pz-back{margin-bottom:12px}
@@ -355,7 +355,7 @@ body.pzm-cela-telo{overflow:hidden}
      ten dělá robot při stahování a výsledek ukládá do `kat`, takže
      stránka nepotřebuje js/druh.js (5 423 B přes drát, modul robota).
      Obyčejný skript PŘED js/pozemek.js, který z něj čte. -->
-<script src="js/min/kategorie.js?v=2fd284c1"></script>
+<script src="js/min/kategorie.js?v=569f8cab"></script>
 <script src="js/min/fotka.js?v=d7682566"></script>
   <script src="js/min/zlevneni.js?v=3d9fe537" defer></script>
   <!-- Křivka vývoje ceny v okolí pod verdiktem (pzVyvojHtml v js/pozemek.js).
@@ -377,7 +377,7 @@ body.pzm-cela-telo{overflow:hidden}
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=1f0ae1c8"></script>
-<script src="js/min/pozemek.js?v=29ad4031"></script>
+<script src="js/min/pozemek.js?v=575ef4e9"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

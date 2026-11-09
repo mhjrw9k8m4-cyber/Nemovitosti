@@ -330,6 +330,19 @@
     return mera(klic(o && o.kat)) === 'podlahova' ? 'podlahová plocha' : '';
   }
 
+  /* NADPISY ODDÍLŮ NA STRÁNCE NABÍDKY. Stály napevno jako „Parametry
+     pozemku" a „Pozemek na mapě" — na stránce, kde nahoře stojí
+     „Prodej domu 100 m²" a v tabulce „Typ nemovitosti: Dům". Majitel
+     9. 11.: „nápisy, které nedávají smysl v tomhle stádiu webu."
+     Jsou tu vedle nadpisPopisu, protože je to totéž rozhodnutí a dvě
+     místa by se rozešla. */
+  function nadpisParametru(o) {
+    return 'Parametry ' + (jePozemkova(klic(o && o.kat)) ? 'pozemku' : 'nemovitosti');
+  }
+  function nadpisMapy(o) {
+    return (jePozemkova(klic(o && o.kat)) ? 'Pozemek' : 'Nemovitost') + ' na mapě';
+  }
+
   /* NADPIS NAD CIZÍM POPISEM. Stál na dvou místech („Co o pozemku píše
      inzerent" v scripts/generate-parcel-pages.mjs pro statickou část
      a v js/pozemek.js pro vykreslenou) a u bytu i domu lhal: web mluvil
@@ -364,6 +377,8 @@
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
     nadpisPopisu: nadpisPopisu,
+    nadpisParametru: nadpisParametru,
+    nadpisMapy: nadpisMapy,
     klic: klic,
   };
 });

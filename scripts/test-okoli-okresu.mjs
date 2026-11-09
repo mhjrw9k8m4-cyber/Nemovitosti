@@ -1,4 +1,6 @@
-// Test: „Pozemky v okolí" na stránce okresu opravdu vede do okolí.
+// Test: „Okresy v okolí" na stránce okresu opravdu vede do okolí.
+// (Nadpis se 9. 11. přejmenoval z „Pozemky v okolí" — pod ním nejsou
+//  pozemky, ale sousední okresy.)
 //
 // Spuštění: node scripts/test-okoli-okresu.mjs
 //
@@ -94,7 +96,7 @@ const vzdalenosti = [];
 const bezOddilu = [], spatnePoradi = [], spatnaVzdalenost = [], mrtve = [], sebe = [];
 for (const [f, nazev] of Object.entries(nazevPodleSouboru)) {
   const h = readFileSync(path.join(KOREN, f), 'utf8').replace(/ /g, ' ');
-  const sek = /<h2>Pozemky v okolí<\/h2>([\s\S]*?)<\/div>/.exec(h);
+  const sek = /<h2>Okresy v okolí<\/h2>([\s\S]*?)<\/div>/.exec(h);
   if (!sek) { bezOddilu.push(f); continue; }
   const odkazy = [...sek[1].matchAll(/<a href="(pozemky-okres-[^"]+)">([^<]+?)\s*<span>(\d+) km · (\d+)<\/span>/g)]
     .map((m) => ({ soubor: m[1], okres: m[2].trim(), km: +m[3], pocet: +m[4] }));

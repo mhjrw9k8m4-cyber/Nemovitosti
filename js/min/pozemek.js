@@ -545,7 +545,8 @@
 
   function pzMapaHtml(d) {
     if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
-    return '<h2 class="pz-sect-h">Pozemek na mapě</h2>' +
+    return '<h2 class="pz-sect-h">' + ((window.PKKategorie && window.PKKategorie.nadpisMapy)
+        ? window.PKKategorie.nadpisMapy(d) : 'Pozemek na mapě') + '</h2>' +
       '<div class="pzm" id="pzm">' +
         '<div class="pzm-mapa" id="pzm-mapa" role="application" aria-label="Mapa pozemku, kterou lze posouvat a přibližovat">' +
 
@@ -1316,7 +1317,8 @@
 
       pzDrazbaHtml(d, days) +
 
-      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
+      '<h2 class="pz-sect-h">' + ((window.PKKategorie && window.PKKategorie.nadpisParametru)
+        ? window.PKKategorie.nadpisParametru(d) : 'Parametry pozemku') + '</h2>' +
       '<div class="pz-klice">' +
         klice.map(function (f) {
 

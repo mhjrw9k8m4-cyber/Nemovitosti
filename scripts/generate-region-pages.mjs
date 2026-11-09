@@ -1316,7 +1316,11 @@ ${obecLinks ? `
 ${sibLinks ? `
       <div class="add-card">
         <div class="rules-sect">
-          <h2>Pozemky v okolí</h2>
+          <!-- NADPIS ŘÍKÁ, CO POD NÍM JE. Stálo tu „Pozemky v okolí",
+               jenže pod ním nejsou pozemky — jsou to sousední OKRESY
+               (věta hned pod nadpisem to i přiznává). Majitel 9. 11.:
+               „nápisy, které nedávají smysl v tomhle stádiu webu." -->
+          <h2>Okresy v okolí</h2>
           <p class="rules-note">Nejbližší okresy, které tu mají vlastní stránku — vzdušnou čarou mezi středy okresů, za ní počet nabídek. Hranice kraje v tom nerozhoduje: když je za ní blíž, patří sem.</p>
           <div class="okr-index-grid">
             ${sibLinks}

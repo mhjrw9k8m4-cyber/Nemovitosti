@@ -314,8 +314,13 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForTimeout(2400);
   const v = await p.evaluate(() => {
-    const h = [...document.querySelectorAll('h2')].find((x) => /Parametry pozemku/i.test(x.textContent));
-    if (!h) return { chyba: 'nadpis „Parametry pozemku" nenalezen' };
+    /* NADPIS SE ŘÍDÍ KATEGORIÍ (§ nadpisParametru v js/kategorie.js):
+       u pozemku „Parametry pozemku", u domu a bytu „Parametry
+       nemovitosti". Hledá se proto obojí — vzorek zkoušky je pozemek,
+       ale měřit tvar nadpisu by znamenalo měřit kategorii vzorku. */
+    const h = [...document.querySelectorAll('h2')]
+      .find((x) => /^Parametry (pozemku|nemovitosti)$/i.test((x.textContent || '').trim()));
+    if (!h) return { chyba: 'nadpis „Parametry pozemku/nemovitosti" nenalezen' };
     const sloupec = h.parentElement;
     /* OBALY S `display:contents` SE MUSÍ ROZBALIT. Takový obal nemá
        vlastní rámeček ani rozměr — jeho děti se chovají, jako by byly

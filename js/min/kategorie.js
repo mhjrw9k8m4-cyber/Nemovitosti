@@ -152,6 +152,13 @@
     return mera(klic(o && o.kat)) === 'podlahova' ? 'podlahová plocha' : '';
   }
 
+  function nadpisParametru(o) {
+    return 'Parametry ' + (jePozemkova(klic(o && o.kat)) ? 'pozemku' : 'nemovitosti');
+  }
+  function nadpisMapy(o) {
+    return (jePozemkova(klic(o && o.kat)) ? 'Pozemek' : 'Nemovitost') + ' na mapě';
+  }
+
   function nadpisPopisu(o) {
     var k = klic(o && o.kat);
     return 'Co o ' + (jePozemkova(k) ? 'pozemku' : 'nemovitosti') + ' píše inzerent';
@@ -175,6 +182,8 @@
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
     nadpisPopisu: nadpisPopisu,
+    nadpisParametru: nadpisParametru,
+    nadpisMapy: nadpisMapy,
     klic: klic,
   };
 });

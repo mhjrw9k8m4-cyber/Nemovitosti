@@ -2306,7 +2306,14 @@ h1 em{ color:var(--znacka-svetla);
 .s-dot{width:8px; height:8px; border-radius:50%;}
 /* „celá parcela" u výměry podílu. Menší a tlumené — je to upřesnění
    k číslu, ne další údaj; kurzívou, ať se nepřečte jako součást čísla. */
-.opp-figures .m .m-celek{display:block; margin-top:2px; font-size:12px; font-style:italic; font-weight:500; color:var(--muted); letter-spacing:0;}
+/* ŠTÍTEK U VÝMĚRY STOJÍ V ŘÁDCE, NE POD ČÍSLEM. Byl to `display:block`
+   kurzivou, takže u bytu visela pod „97 m²" druhá řádka „podlahová
+   plocha" — uprostřed karty, nikam nezarovnaná, a jako jediná kurziva
+   v celém výpisu. Majitel 9. 11.: „text je rozházený, není
+   symetrický." Teď je to dovětek téhož řádku, oddělený tečkou jako
+   ostatní dvojice údajů na kartě. */
+.opp-figures .m .m-celek{font-size:12px; font-weight:500; color:var(--muted); letter-spacing:0;}
+.opp-figures .m .m-celek::before{content:"\00a0· ";}
 /* Katastr stojí pod řadou zdrojů, ne v ní — je to ověření, ne zdroj nabídek.
    Tečka zůstává, aby bylo poznat, že patří k téže rodině; text je ale věta,
    ne odznak, protože se tu něco vysvětluje. */

@@ -314,7 +314,8 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .source-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
 .source-chip{display:inline-flex;align-items:center;gap:8px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-drobnost);padding:8px 16px;font-size:14px;font-weight:500;color:var(--text)}
 .s-dot{width:8px;height:8px;border-radius:50%}
-.opp-figures .m .m-celek{display:block;margin-top:2px;font-size:12px;font-style:italic;font-weight:500;color:var(--muted);letter-spacing:0}
+.opp-figures .m .m-celek{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+.opp-figures .m .m-celek::before{content:"\00a0· "}
 .sources-over{display:flex;align-items:baseline;gap:8px;margin:12px 0 0;max-width:var(--m-text);font-size:14px;line-height:1.6;color:var(--muted)}
 .sources-over .s-dot{flex:none;transform:translateY(-1px);background:var(--znacka)}
 .section{padding:var(--oddil-y) 0}

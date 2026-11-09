@@ -986,7 +986,8 @@
 
   function pzMapaHtml(d) {
     if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
-    return '<h2 class="pz-sect-h">Pozemek na mapě</h2>' +
+    return '<h2 class="pz-sect-h">' + ((window.PKKategorie && window.PKKategorie.nadpisMapy)
+        ? window.PKKategorie.nadpisMapy(d) : 'Pozemek na mapě') + '</h2>' +
       '<div class="pzm" id="pzm">' +
         '<div class="pzm-mapa" id="pzm-mapa" role="application" aria-label="Mapa pozemku, kterou lze posouvat a přibližovat">' +
           /* NA CELOU OBRAZOVKU. Na telefonu je mapa vysoká 300 bodů —
@@ -2416,7 +2417,12 @@
          snímek, cena, klíčové údaje, a teprve pak povídání.
          Mapa zůstává AŽ ZA NIMI (napřed co to je, pak kde to je) —
          hlídá to scripts/test-poradi-pozemku.mjs. */
-      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
+      /* Nadpis se řídí kategorií: na stránce domu stálo „Parametry
+         pozemku" nad tabulkou, kde hned druhý řádek říká „Typ
+         nemovitosti: Dům". Rozhoduje js/kategorie.js, ne tahle
+         stránka — stejně jako u nadpisu nad popisem inzerenta. */
+      '<h2 class="pz-sect-h">' + ((window.PKKategorie && window.PKKategorie.nadpisParametru)
+        ? window.PKKategorie.nadpisParametru(d) : 'Parametry pozemku') + '</h2>' +
       '<div class="pz-klice">' +
         klice.map(function (f) {
           /* ZNAČKA JDE AŽ NAKONEC, i když leží v pravém horním rohu.

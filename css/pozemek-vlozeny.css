@@ -71,7 +71,12 @@
     /* Galerie nahraných fotek — vodorovný swipe (scroll-snap), bez JS */
     .pz-gallery{position:absolute; inset:0; display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:1;}
     .pz-gallery::-webkit-scrollbar{display:none;}
-    .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none;}
+    /* `color:transparent` KVŮLI FOTCE, KTERÁ SE NENAČTE — totéž, co už
+       platí pro náhled v okresní řádce (.okr-foto img v css/styles.css).
+       Prohlížeč na místo nenačteného obrázku nakreslí jeho popis, takže
+       přes celou hlavu stránky stála bílá řádka „Fotka nemovitosti 1".
+       Odečítačům to nevadí: alt se čte dál, barva písma na to nemá vliv. */
+    .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none; color:transparent;}
     .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3; display:inline-flex;}
     /* SNÍMEK OD KRAJE KE KRAJI, jako na telefonu u Rightmove, Zillow
        i Idealisty: v rámečku s odsazením vypadá jako ilustrace
