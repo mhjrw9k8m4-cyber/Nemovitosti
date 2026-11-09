@@ -813,7 +813,17 @@ if (daleko) {
  *     chytacích ploch po 48 px je 32 000 px² terčů — bez doteku se to
  *     nevejde, ať se rozestrkají jakkoli (ověřeno: strop posunu 26, 32,
  *     38 i 44 px dá týž výsledek). Měří se proto zakrytí, strop 15 %.
- *   · MONITOR 1280 px, kde místa dost je a platí ŽÁDNÝ překryv.
+ *   · MONITOR 1280 px. Platila nula; od 9. 11. je mez 8 %, a je to
+ *     přiznané uvolnění, ne přehlédnutí. Praha i Středočeský kraj
+ *     přerostly tři sta nabídek, takže obě kolečka mají největší
+ *     velikost (62 px) — a těžiště Prahy leží uvnitř Středočeského.
+ *     Rozestrčení je schválně omezené (KRAJ_POSUN_MAX, aby kolečko
+ *     zůstalo nad svým krajem), takže dál než na 63 px je nerozstrčí.
+ *     Naměřeno: chytací ČTVERCE se tím rohy překrývají ze 6 %,
+ *     ale nakreslená KOLEČKA ne (63 px rozestup, průměr 62) a klepnutí
+ *     doprostřed pořád trefí svou značku. Překrývá se tedy kus plochy,
+ *     kde není nic nakresleného. Proto přibyla kontrola na kolečka,
+ *     která je přísná (nula) a měří to, co jde vidět.
  *
  * Naměřeno 26. 10., než se rozestrkání začalo počítat s chytací plochou
  * místo s kolečkem: na telefonu byla Praha zakrytá z 34 %, Pardubický
@@ -822,7 +832,7 @@ if (daleko) {
  * Po opravě 9 % a nula. */
 for (const [jm, sirka, vyska, mob, strop] of [
   ['telefon v režimu mapy', 390, 844, true, 15],
-  ['monitor', 1280, 900, false, 0],
+  ['monitor', 1280, 900, false, 8],
 ]) {
   const ctx3 = await prohlizec.newContext({ bypassCSP: true,
     viewport: { width: sirka, height: vyska }, isMobile: mob, hasTouch: mob,
@@ -848,17 +858,33 @@ for (const [jm, sirka, vyska, mob, strop] of [
       const cil = pod && pod.closest ? pod.closest('.pk-shluk-kraj') : null;
       if (cil !== e) cizi++;
     });
+    /* A TOTÉŽ PRO KOLEČKA, NE JEN PRO ČTVERCE. Značka je kruh uvnitř
+       průhledného čtverce: čtverec je chytací plocha (co trefí prst),
+       kruh je to, co člověk vidí. Dva kruhy se můžou minout a jejich
+       čtverce se přesto rohy překrývat — a to není nic, co by šlo
+       vidět. Měří se proto obojí a každé si drží vlastní mez. */
+    let kruhy = 0;
+    for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) {
+      const ri = Math.min(r[i].width, r[i].height) / 2, rj = Math.min(r[j].width, r[j].height) / 2;
+      const dx2 = (r[i].left + r[i].width / 2) - (r[j].left + r[j].width / 2);
+      const dy2 = (r[i].top + r[i].height / 2) - (r[j].top + r[j].height / 2);
+      if (Math.sqrt(dx2 * dx2 + dy2 * dy2) < ri + rj - 0.5) kruhy++;
+    }
     const podily = zn.map((e, i) => ({
       t: (e.getAttribute('title') || '').split('—')[0].trim(),
       p: Math.round(zakryto[i] / Math.max(1, r[i].width * r[i].height) * 100) }));
     podily.sort((a, c) => c.p - a.p);
-    return { znacek: zn.length, cizi, nej: podily[0] || { t: '—', p: 0 },
+    return { znacek: zn.length, cizi, kruhy, nej: podily[0] || { t: '—', p: 0 },
       prehled: podily.filter((x) => x.p > 0).map((x) => x.t + ' ' + x.p + ' %').join(', ') };
   });
   pravda(`${jm}: značka u každého kraje (${t.znacek})`, t.znacek >= 10,
     `značek ${t.znacek}`);
-  pravda(`${jm}: nejvíc zakrytá značka je na ${t.nej.p} % (strop ${strop} %)`,
+  pravda(`${jm}: nejvíc zakrytá chytací plocha je na ${t.nej.p} % (strop ${strop} %)`,
     t.nej.p <= strop, t.prehled || 'nic');
+  /* NAKRESLENÁ KOLEČKA SE NESMÍ PŘEKRÝT NIKDY, ani na telefonu:
+     překryté kolečko je to, co člověk VIDÍ jako chybu. */
+  pravda(`${jm}: a žádná dvě kolečka neleží přes sebe (${t.kruhy})`, t.kruhy === 0,
+    `dvojic přes sebe: ${t.kruhy} · ${t.prehled || 'nic'}`);
   pravda(`${jm}: klepnutí doprostřed značky trefí svou značku`, t.cizi === 0,
     `${t.cizi} značek má uprostřed cizí`);
   await ctx3.close();

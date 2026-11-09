@@ -253,7 +253,7 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
       .slice(0, 2).map((d) => d.place).join(', '));
   const bezCisel = cele.filter((d) => {
     const t = blok(d, 'Co říká cena');
-    return !(/Kč\/m²/.test(t) && /srovnáno s \d+/.test(t));
+    return !(/Kč\/m²/.test(t) && /srovnáno s[\s\u00a0]\d+/.test(t));
   });
   pravda('u vyčísleného rozdílu stojí i cena za metr a z kolika nabídek', bezCisel.length === 0,
     'bez čísel: ' + bezCisel.slice(0, 2).map((d) => d.place).join(', '));
@@ -270,7 +270,10 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
     /* [\s\u00a0], ne obyčejná mezera: jednotka se od 1. 11. sází
        nezlomitelnou (viz test-sazba, blok o skládání v prohlížeči),
        a KORUNY o pár řádků níž to tak měly odjakživa. */
-    const PROC = /<b>o (\d+)[\s\u00a0]% (pod|nad)<\/b>/;
+    /* I MEZERA PO PŘEDLOŽCE JE OD 9. 11. NEZLOMITELNÁ: jednopísmenné
+       „o" se jinak lámalo na konec řádku (viz test-sazba-dom). Vzor
+       proto snese obojí na obou místech. */
+    const PROC = /<b>o[\s\u00a0](\d+)[\s\u00a0]% (pod|nad)<\/b>/;
     /* Mezera před jednotkou je od zavedení české sazby nezlomitelná
        (scripts/sazba.mjs), ale vzor musí snést obojí — jinak by kontrola
        po změně formátu tiše přestala cokoli nacházet. */

@@ -176,6 +176,8 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
   const NAHRADY = {
     '--vyska-hlavicky': 'pojmenovaná konstanta výšky hlavičky; schválně ji nikdo nenastavuje a body má stejné odsazení (viz vysvětlivka u body{padding-top})',
     '--cen-kroku': 'počet řádů na ose cen; nastavuje ho generátor na seznamu (cena-pozemku.html) podle skutečných dat. Záloha 3 je tam proto, že čáry řádů v pruhu jsou kresba: bez proměnné se nakreslí tři a pruh zůstane čitelný, místo aby zmizel celý.',
+    '--jez-dx': 'posun jezdce v přepínači Seznam/Mapa; nastavuje ho srovnejJezdce v js/main.js ze skutečné polohy zapnuté poloviny. Záloha je původní chování (0 px v poloze „seznam", celá šířka plus 6 px v poloze „mapa"), takže bez JS vypadá přepínač jako dřív, ne rozbitě. Stejně je na tom --jez-w, jehož záloha calc(50% - 6px) má závorky, takže ji regulárka výš nenajde.',
+    '--jez-w': 'šířka jezdce v přepínači Seznam/Mapa; viz --jez-dx.',
   };
   const PLOCHY = [['bílá karta', [255, 255, 255]],
     ['plocha stránky', naRgb(hodnoty.get('--bg') || '#ffffff')],

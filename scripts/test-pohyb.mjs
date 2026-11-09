@@ -129,9 +129,25 @@ async function kontext(pohybVypnut) {
     });
     const img = ctx2.getImageData(0, 0, platno.width, platno.height);
     const mer = platno.width / r.width;             // poměr plátna k bodům na obrazovce
+    /* JEN VIDITELNÝ PRUH PLÁTNA. Mapa je vyšší než okno, takže
+       scrollIntoView({block:'center'}) nechá její horní i dolní kus za
+       okrajem. Hledání od nultého řádku plátna pak vracelo body, které
+       na obrazovce padnou do hlavičky stránky (naměřeno 9. 11.: prvních
+       čtyřicet nálezů leželo na y 18–20 px a pod kurzorem byl DIV.wrap,
+       ne mapa). Myš tam najela mimo mapu a žádná tečka pochopitelně
+       neodpověděla — vypadalo to jako vada webu.
+       Rozsah se proto spočítá zpátky z okna: dvanáct pixelů od obou
+       okrajů, aby se kurzor netrefil do hrany. */
+    const yOd = Math.max(0, Math.ceil((12 - r.top) * mer));
+    const yDo = Math.min(platno.height, Math.floor((window.innerHeight - 12 - r.top) * mer));
+    if (yDo - yOd < 4) return { chyba: 'z plátna s tečkami není v okně vidět nic' };
+    /* Sbírá se víc bodů a z CELÉHO viditelného pruhu, ne jen z jeho
+       prvních řádků: body u horní hrany překrývá hlavička a odpadnou
+       o kus níž, takže by jich po filtru zbylo pár a všechny z jednoho
+       místa. Krok 4 px stačí — tečka má na obrazovce víc. */
     const nalez = [];
-    for (let y = 0; y < platno.height && nalez.length < 40; y += 2) {
-      for (let x = 0; x < platno.width; x += 2) {
+    for (let y = yOd; y < yDo && nalez.length < 600; y += 4) {
+      for (let x = 0; x < platno.width; x += 4) {
         const i = (y * platno.width + x) * 4;
         if (img.data[i + 3] < 200) continue;
         for (const c of cile) {
@@ -140,13 +156,31 @@ async function kontext(pohybVypnut) {
             break;
           }
         }
-        if (nalez.length >= 40) break;
+        if (nalez.length >= 600) break;
       }
     }
-    return { nalez, oknoVyska: window.innerHeight };
+    /* A JEŠTĚ: BOD MUSÍ BÝT OPRAVDU NA MAPĚ. Plátno pokračuje POD
+       hlavičkou stránky, takže body u jeho horního okraje sice v okně
+       jsou, ale překrývá je lišta — myš tam najede na ni a žádná tečka
+       pochopitelně neodpoví. Naměřeno 9. 11.: prvních čtyřicet nálezů
+       mělo pod kurzorem DIV.wrap. Filtruje se proto tím, co na tom
+       místě opravdu leží nahoře. */
+    const naMape = nalez.filter((b) => {
+      const e = document.elementFromPoint(b.x, b.y);
+      return !!(e && e.closest && e.closest('#leaflet-map'));
+    });
+    /* Rozprostřený výběr, ne prvních čtyřicet: sousední body padnou do
+       téže tečky, takže by se zkoušelo pořád totéž místo. */
+    const krok = Math.max(1, Math.floor(naMape.length / 40));
+    const vybrane = [];
+    for (let i = 0; i < naMape.length && vybrane.length < 40; i += krok) vybrane.push(naMape[i]);
+    return { nalez: vybrane, naMape: naMape.length,
+      zahozeno: nalez.length - naMape.length, oknoVyska: window.innerHeight };
   });
   pravda('tečky pozemků jsou na plátně opravdu vidět',
-    !body.chyba && body.nalez && body.nalez.length > 0, body.chyba || 'v plátně není ani jeden barevný bod');
+    !body.chyba && body.nalez && body.nalez.length > 0,
+    body.chyba || `v plátně není ani jeden barevný bod, na který by se dalo najet`
+      + ` (${body.zahozeno || 0} jich leželo pod hlavičkou nebo mimo mapu)`);
 
   let nasel = null;
   for (const b of (body.nalez || [])) {
