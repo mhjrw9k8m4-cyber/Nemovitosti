@@ -464,8 +464,14 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
   const vDetailu = PK_CENY.blokOdhadu(m, d, { fmt: (x) => String(x), trida: ' pz-odhad', dlouhy: true });
   pravda('varování je v okně na mapě', /ověřte si to/.test(vMape), vMape.slice(0, 160));
   pravda('i na stránce pozemku', /ověřte si to/.test(vDetailu), vDetailu.slice(0, 160));
-  pravda('a obě podoby uvádějí totéž číslo',
-    (vMape.match(/o (\d+) % níž/) || [])[1] === (vDetailu.match(/o (\d+) % níž/) || [])[1]);
+  /* Obě strany musí NĚCO najít. Dřív tu stálo porovnání dvou match()
+     s obyčejnými mezerami, jenže blok tiskne nezlomitelné — obě strany
+     vracely undefined a tvrzení bylo pravdivé, aniž cokoli změřilo
+     (§436). Číslo se proto vytáhne zvlášť a nejdřív se ověří, že vzniklo. */
+  const cisloSlevy = (html) => (html.match(/o[\s\u00a0](\d+)[\s\u00a0]% níž/) || [])[1];
+  pravda('v okně na mapě je vytištěné procento slevy', !!cisloSlevy(vMape), vMape.slice(0, 160));
+  pravda('a obě podoby uvádějí totéž číslo', cisloSlevy(vMape) === cisloSlevy(vDetailu),
+    `mapa ${cisloSlevy(vMape)} vs. detail ${cisloSlevy(vDetailu)}`);
 }
 
 /* --- Kdy odhadu sami nevěříme --------------------------------------
@@ -1254,8 +1260,8 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   const bloky = spu.map((o) => PK_CENY.blokOdhadu(M2, o, { fmt, esc: (x) => x, dlouhy: true })).filter(Boolean);
   pravda(`blok odhadu se u státní půdy pořád ukazuje (${bloky.length})`, bloky.length >= 50,
     `jen ${bloky.length} — mlčet by znamenalo nenapsat ani to, co je na trhu`);
-  pravda('ale netiskne tučnou slevu', bloky.every((b) => !/<b>o \d+ % níž<\/b>/.test(b)),
-    `se slevou: ${bloky.filter((b) => /<b>o \d+ % níž<\/b>/.test(b)).length}`);
+  pravda('ale netiskne tučnou slevu', bloky.every((b) => !/<b>o[\s\u00a0]\d+[\s\u00a0]% níž<\/b>/.test(b)),
+    `se slevou: ${bloky.filter((b) => /<b>o[\s\u00a0]\d+[\s\u00a0]% níž<\/b>/.test(b)).length}`);
   pravda('a řekne, že cenu stanovil úřad podle § 12',
     bloky.every((b) => /§ 12/.test(b) && /nestanovil trh/.test(b)));
   pravda('cena se v něm nejmenuje „nabídková"',

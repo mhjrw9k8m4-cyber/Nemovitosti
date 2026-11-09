@@ -634,7 +634,7 @@
         + (mlciOCastce ? 'neuvádíme' : fmt(o.castka) + '\u00a0Kč') + '</span></div>' +
 
       (mlciOCastce ? '' :
-      '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + '\u00a0% níž</b>' +
+      '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o\u00a0' + o.podOdhadem + '\u00a0% níž</b>' +
         (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
           : o.nejisty ? ' — ale ceny podobných pozemků ' + kde + ' se mezi sebou liší násobky, takže tohle číslo je jen hrubé vodítko'
                     : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>') +

@@ -130,7 +130,7 @@
       var muj = zm ? zm.call(root.PK_CENY, d) : null;
       var cisla = (muj && o.zaM2)
         ? ' Vychází to na <b>' + cis(muj) + ' Kč/m²</b> proti obvyklým <b>' + cis(o.zaM2) +
-          ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +
+          ' Kč/m²</b> (srovnáno s\u00a0' + o.vzorek + ' ' +
           (o.vzorek === 1 ? 'nabídkou' : (o.vzorek >= 2 && o.vzorek <= 4 ? 'nabídkami' : 'nabídkami')) + ').'
         : '';
 
@@ -138,7 +138,7 @@
         var zl = (root.PK_CENY && root.PK_CENY.vymeraVCene) ? root.PK_CENY.vymeraVCene(d) : null;
         var zm = (root.PK_CENY && root.PK_CENY.zaMetr) ? root.PK_CENY.zaMetr(d) : null;
         var cis = function (n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); };
-        return { lvl: 'mid', txt: 'Cena vychází <b>o ' + o.podOdhadem + '\u00a0% pod</b> obvyklou, ale ' +
+        return { lvl: 'mid', txt: 'Cena vychází <b>o\u00a0' + o.podOdhadem + '\u00a0% pod</b> obvyklou, ale ' +
           '<b>není to sleva</b>: prodává se <b>spoluvlastnický podíl</b>, zatímco výměra v inzerátu je ' +
           'celé parcely. ' +
           (zl && zm
@@ -148,18 +148,18 @@
       }
 
       if (o.pochybna) {
-        return { lvl: 'warn', txt: 'Cena je <b>o ' + o.podOdhadem + '\u00a0% pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde +
+        return { lvl: 'warn', txt: 'Cena je <b>o\u00a0' + o.podOdhadem + '\u00a0% pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde +
           '.' + cisla + ' Takový rozdíl už nebývá sleva: nejčastěji je v inzerátu výměra <b>celé parcely</b>, ale prodává se jen <b>spoluvlastnický podíl</b>, ' +
           'nebo jde o dražbu s jinou výměrou, případně o chybu v ceně. <b>Ověřte si to na listu vlastnictví</b>, než něco podepíšete.' };
       }
 
       if (o.nejisty && o.podOdhadem >= 25) {
-        return { lvl: 'mid', txt: 'Cena vychází <b>o ' + o.podOdhadem + '\u00a0% pod</b> obvyklou cenou podobných pozemků ' + kde +
+        return { lvl: 'mid', txt: 'Cena vychází <b>o\u00a0' + o.podOdhadem + '\u00a0% pod</b> obvyklou cenou podobných pozemků ' + kde +
           '.' + cisla + ' Jenže ceny takových pozemků se tu mezi sebou liší <b>násobky</b>, takže je to jen hrubé vodítko, ne spolehlivý rozdíl. ' +
           'Srovnejte si konkrétní nabídky v okolí sami.' };
       }
       if (o.podOdhadem >= 25) {
-        return { lvl: 'ok', txt: 'Cena je <b>o ' + o.podOdhadem + '\u00a0% pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '.' + cisla + ' Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
+        return { lvl: 'ok', txt: 'Cena je <b>o\u00a0' + o.podOdhadem + '\u00a0% pod</b> obvyklou cenou podobně velkých pozemků téhož druhu ' + kde + '.' + cisla + ' Může to být příležitost — ale stejně tak důvod ptát se <b>proč</b>: přístup, břemena, tvar parcely.' };
       }
     }
     return null;
