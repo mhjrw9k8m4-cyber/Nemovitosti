@@ -328,6 +328,21 @@ export function poradiCilu(zkouska, cile) {
    chytí první ostrý skript, přestane být pomůckou sám. Soubory z js/
    pomůcky nejsou nikdy — ty nese web. */
 export const STROJ = new Set(['sabotuj.mjs', 'samorozvoj.mjs', 'nalezce.mjs']);
+/* RUČNÍ NÁSTROJE: ani produkt, ani zkouška.
+   ------------------------------------------------------------------
+   Naměřeno 9. 11. na sobě: vznikla obhlídka vzhledu
+   (scripts/obhlidka-vzhledu.mjs), která si bere adresa-pozemku.mjs —
+   a adresa-pozemku.mjs tím PŘESTALA být pomůckou zkoušek, protože si
+   ji najednou bral i někdo, kdo se nejmenuje test-*. Sabotáž té
+   pomůcky by se od té chvíle počítala jako slepé místo hlídačů,
+   přestože rozbít zkoušce vlastní vybavení o hlídačích neříká nic.
+
+   Jsou proto vyjmenované, ne odvozené. Odvodit „ruční nástroj" se dá
+   leda z toho, že ho nikdo nepouští — a to je přesně ta vlastnost,
+   kterou má mít i ostrý modul spouštěný rukou (prvni-videno.mjs).
+   Jmenný seznam se nedá rozšířit omylem: přibrat sem ostrý modul
+   znamená přestat ho hlídat, a to musí být vidět v commitu. */
+export const NASTROJE = new Set(['obhlidka-vzhledu.mjs', 'snimek-hlidani.mjs']);
 export function modulyVeScripts(cti = readFileSync, vypis = readdirSync) {
   const mapa = {};
   let jmena = [];
@@ -402,6 +417,8 @@ export function pomuckaZkousek(cil, soubory, spoustene) {
        jmenovaný adresa-pozemku.mjs vypadl ze seznamu ve chvíli, kdy
        jsem o něm napsal komentář výš. */
     if (STROJ.has(f)) continue;
+    /* Ruční nástroj taky ne — viz NASTROJE výš. */
+    if (NASTROJE.has(f)) continue;
     if (bere.test(String(mapa[f] || ''))) kdo.push(f);
   }
   return kdo.length > 0 && kdo.every((f) => /^test-[a-z0-9-]+\.mjs$/.test(f));

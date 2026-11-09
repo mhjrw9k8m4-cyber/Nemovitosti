@@ -58,7 +58,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=8e0aaad2">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=bb0efcb7">
   <style>
     /* Karta profilu */
     /* Kotvu ani ořez karta nepotřebuje: position:relative a
@@ -97,7 +97,7 @@
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:4px; background:var(--plocha-zapustena); border:1px solid var(--line-strong);
       color:var(--muted); border-radius:var(--r-ovladani); padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:var(--prechod);}
-    .pf-logout svg{width:16px; height:16px; stroke-width:2.25;}
+    .pf-logout svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah);}
     .pf-logout:hover{color:var(--text); border-color:var(--znacka-svetla);}
     .pf-logout span{display:none;}
     .pf-stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:20px;}
@@ -147,7 +147,7 @@
     a.pf-stat{text-decoration:none; display:block;}
     .pf-actions{position:relative; display:flex; margin-top:16px;}
     .pf-add{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;}
-    .pf-add svg{width:18px; height:18px; stroke-width:2.0;}
+    .pf-add svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
     /* Prázdný stav */
     /* ČÁRKOVANÝ RÁM TU ZŮSTÁVÁ, A JE TO OPRAVA MÉHO VLASTNÍHO NÁLEZU.
        29. 10. jsem ho odsud vyhodil s odůvodněním, že je na celém webu
@@ -166,11 +166,11 @@
     .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-plocha); border:1px dashed var(--line); background:var(--plocha-karta);}
     .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-plocha); display:flex; align-items:center; justify-content:center;
       background:rgba(var(--plocha-znacka-svetla-rgb),.09); border:1px solid var(--line);}
-    .pf-empty-ico svg{width:32px; height:32px; color:var(--text);
+    .pf-empty-ico svg{width:var(--ik-l); height:var(--ik-l); color:var(--text);
       /* 1,125 proto, že 32 × 1,125 ÷ 24 = 1,5 px — tah jako u všech
          ostatních ikon. V HTML je u ikony atribut stroke-width="1.6",
          který kreslil tah 2,13 px; pravidlo v CSS ho přebije. */
-      stroke-width:1.125;}
+      stroke-width:var(--ik-l-tah);}
     .pf-empty h3{font-family:var(--font-ui); font-size:20px; font-weight:600; color:var(--text); margin:0 0 8px;}
     .pf-empty p{font-size:14px; line-height:1.6; color:var(--muted); margin:0 auto 16px; max-width:var(--m-popisek);}
     .pf-empty .pf-add{width:auto; padding-left:20px; padding-right:20px;}

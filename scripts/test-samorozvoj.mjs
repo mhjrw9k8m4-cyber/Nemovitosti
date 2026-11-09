@@ -645,6 +645,32 @@ function je(popis, vyslo, cekano) {
     'zmínka v sabotuj.mjs/samorozvoj.mjs/nalezce.mjs se nesmí počítat za užití');
   je('a ty tři soubory jsou vyjmenované na jednom místě',
     [...S.STROJ].sort(), ['nalezce.mjs', 'sabotuj.mjs', 'samorozvoj.mjs']);
+  /* RUČNÍ NÁSTROJ SE POČÍTÁ JAKO ZKOUŠKA, ne jako produkt. Naměřeno
+     9. 11.: obhlídka vzhledu si vzala adresa-pozemku.mjs a ta tím
+     přestala být pomůckou — sabotáž cizího vybavení by se od té chvíle
+     počítala jako slepé místo hlídačů. */
+  /* JMÉNO NÁSTROJE SE SEM NEPÍŠE, BERE SE ZE SEZNAMU. Napsat ho tu
+     natvrdo vypadá poctivěji, jenže scripts/test-staticka.mjs čte
+     z každé zkoušky, které skripty zmiňuje, a ty pak otevírá — a
+     obhlídka si bere prohlížeč. Zkouška by tím „začala potřebovat
+     prohlížeč" a spadla v úloze, která žádný nemá. Naměřeno 9. 11.
+     na sobě; kontrola níž proto drží TVAR jmen, ne jejich znění. */
+  const [prvniNastroj] = [...S.NASTROJE];
+  const sNastrojem = Object.assign({}, mapa,
+    { [prvniNastroj]: "import { adresaPozemku } from './adresa-pozemku.mjs';" });
+  pravda('pomůcka nepřestane být pomůckou tím, že si ji vezme ruční nástroj',
+    S.pomuckaZkousek('scripts/adresa-pozemku.mjs', sNastrojem, spoustene),
+    prvniNastroj + ' není produkt — viz NASTROJE v scripts/sabotuj.mjs');
+  /* A obráceně: nástroj sám pomůcka není, protože ho nikdo nebere. */
+  pravda('a nástroj sám se za pomůcku nevydává',
+    !S.pomuckaZkousek('scripts/' + prvniNastroj, sNastrojem, spoustene),
+    'bez jediného uživatele se nedá říct, kdo ho má hlídat');
+  je('nástroje jsou vyjmenované na jednom místě a jsou to opravdu nástroje',
+    [...S.NASTROJE].filter((f) => /^(obhlidka|snimek)-[a-z-]+\.mjs$/.test(f)).length,
+    S.NASTROJE.size);
+  pravda('a je jich tolik, kolik jich repozitář má',
+    S.NASTROJE.size > 0 && S.NASTROJE.size <= 5,
+    'seznam, který roste bez omezení, přestává být rozhodnutím');
   /* SOUBORY Z js/ NEJSOU POMŮCKY NIKDY — ty nese web. */
   pravda('js/ není pomůcka ani kdyby si ho bral jen test',
     !S.pomuckaZkousek('js/main.js', { 'test-a.mjs': 'js/main.js' }, new Set()));

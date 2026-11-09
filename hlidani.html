@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=8e0aaad2">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=bb0efcb7">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -219,8 +219,8 @@
        pohromadě a poznámka spadne na druhý řádek. */
     .hl-sekce-h{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; margin-bottom:8px;}
     .hl-sekce-h b{flex:none;}
-    .hl-sekce-h svg{width:17px; height:17px; flex:none; fill:none; stroke:var(--znacka);
-      stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
+    .hl-sekce-h svg{width:var(--ik-xs); height:var(--ik-xs); flex:none; fill:none; stroke:var(--znacka);
+      stroke-width:var(--ik-xs-tah); stroke-linecap:round; stroke-linejoin:round;}
     .hl-sekce-h b{font-size:14px; font-weight:700; color:var(--text); letter-spacing:0.01em;}
     .hl-sekce-h .hl-pozn{font-size:13px;}
     /* ROZSAH JAKO JEDNA VĚC. „od (Kč)" a „do (Kč)" byly dvě osamocené
@@ -308,8 +308,8 @@
       min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
       border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
       transition:var(--prechod);}
-    .hl-dlazdice-b .ik{width:18px; height:18px; flex:none; fill:none; stroke:currentColor;
-      stroke-width:2; stroke-linecap:round; stroke-linejoin:round; color:var(--znacka);}
+    .hl-dlazdice-b .ik{width:var(--ik-s); height:var(--ik-s); flex:none; fill:none; stroke:currentColor;
+      stroke-width:var(--ik-s-tah); stroke-linecap:round; stroke-linejoin:round; color:var(--znacka);}
     .hl-dlazdice-b:hover{border-color:var(--znacka-svetla);}
     .hl-dlazdice-b.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12);
       color:var(--znacka-svetla); font-weight:700;}
@@ -482,8 +482,8 @@
        co má na stránce nejvíc vážit — karty nově nalezených nabídek.
        Zůstává tlačítko, jen druhotné: rám a tlumená plocha jako
        u ostatních vedlejších akcí webu. */
-    .hl-a .ik{width:18px; height:18px; flex:none; fill:none; stroke:currentColor;
-      stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round;}
+    .hl-a .ik{width:var(--ik-s); height:var(--ik-s); flex:none; fill:none; stroke:currentColor;
+      stroke-width:var(--ik-s-tah); stroke-linecap:round; stroke-linejoin:round;}
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
     .hl-empty{padding:28px 20px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;}
     /* DRŽÍ MÍSTO, NEŽ OBSAH DOJDE. Změřeno: zástupný text měl 104 px

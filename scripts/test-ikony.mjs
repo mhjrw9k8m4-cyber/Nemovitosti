@@ -166,6 +166,10 @@ for (const s of STRANKY) {
           || (svg.getAttribute('class') || '').split(' ').filter((x) => x !== 'ik')[0]
           || svg.parentElement.tagName.toLowerCase(),
         velikost: Math.round(r.width),
+        /* Velikost ze STYLU (viz poznámka u kontroly stupnice níž):
+           obdélník na obrazovce nese i zvětšení z animace. Čte se
+           z <svg>, ne z <use> — <use> je obsah, rozměr drží obal. */
+        velikostStylu: Math.round(parseFloat(getComputedStyle(svg).width) || 0),
         stopa: +((parseFloat(cs.strokeWidth) || 0) * r.width / sirkaVB).toFixed(2),
       });
     });
@@ -195,6 +199,37 @@ pravda('všechny ikony mají na obrazovce zhruba stejnou stopu', rozpeti <= 0.2,
     .map((i) => `${i.stranka} ${i.kdo} ${i.velikost}px → ${i.stopa}px`).slice(0, 6).join('\n      '));
 pravda('a ta stopa není ani vlasová, ani tučná', min >= 1.2 && max <= 1.9,
   `rozsah ${min}–${max} px`);
+
+/* JEDNA STUPNICE VELIKOSTI (9. 11.)
+   ==================================================================
+   Majitel: „ikonky jsou rozházené." Obhlídka to změřila: na obrazovce
+   devět různých velikostí (15, 16, 17, 18, 19, 20, 22, 23, 24 px),
+   na úvodní stránce osm najednou — ikona v tlačítku zpět 15 px, hned
+   vedle ní v liště 18 px a o kus dál 22 px. Jednotlivě to nikdo
+   nepozná; dohromady z toho je dojem nedodělanosti.
+
+   Kroky drží tokeny --ik-xs/s/m/l/xl v css/styles.css. Měří se
+   VYKRESLENÁ velikost, ne zápis: token se dá přebít kdekoli a zápis
+   `width:20px` je stejně dobrý jako `var(--ik-s)` — špatně je až to,
+   co z toho vyjde na obrazovce.
+
+   ČTE SE ZE STYLU, NE Z OBDÉLNÍKU. Tlačítko „Nahoru" se vysouvá
+   zvětšením (transform: scale) a jeho dvacetipixelová ikona se
+   v obdélníku měří jako 19 — vypadalo by to jako šestá velikost. */
+const STUPNICE_IK = [16, 20, 24, 32, 48];
+const mimoStupnici = vsechny.filter((i) => STUPNICE_IK.indexOf(i.velikostStylu) < 0);
+pravda(`velikost ikon je na stupnici (${STUPNICE_IK.join(', ')} px)`,
+  mimoStupnici.length === 0,
+  [...new Set(mimoStupnici.map((i) => `${i.stranka} ${i.kdo} ${i.velikostStylu}px`))]
+    .slice(0, 10).join('\n      '));
+/* Bez tohohle by kontrola výš prošla naprázdno, kdyby se velikost ze
+   stylu nepodařilo přečíst (vrátila by samé NaN, a NaN není na
+   stupnici — tedy by naopak hlásila všechno; pojistka hlídá, že se
+   vůbec něco změřilo a že kroků není víc, než kolik jich stupnice má). */
+const kroky = [...new Set(vsechny.map((i) => i.velikostStylu))].sort((a, b) => a - b);
+pravda(`a kroků není víc, než kolik jich stupnice má (${kroky.join(', ')})`,
+  kroky.length > 0 && kroky.length <= STUPNICE_IK.length,
+  `naměřeno ${kroky.length} kroků`);
 
 pravda('v datech je pozemek, na kterém jde stránka inzerátu otevřít', !!POZEMEK,
   'žádný pozemek s polohou a cenou — kontrola špendlíků by měřila prázdno');

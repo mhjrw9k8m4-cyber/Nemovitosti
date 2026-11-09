@@ -46,7 +46,7 @@
     .zpet-btn:hover{border-color:var(--znacka-svetla); background:var(--surface-2);}
     .zpet-btn:active{transform:translateY(1px);}
     .zpet-btn:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
-    .zpet-btn .ik{width:15px; height:15px; stroke-width:2.4; flex:none;}
+    .zpet-btn .ik{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah); flex:none;}
     /* Odstup pod tlačítkem je vlastnost TÉHLE stránky, ne tlačítka. */
     .pz-back{margin-bottom:16px;}
 
@@ -111,7 +111,7 @@
     /* Dlouhý nadpis se na telefonu lámal mezi číslo a jednotku. */
     .pz-place{text-wrap:balance;}
     .pz-okres{display:flex; align-items:center; gap:4px; font-size:14px; color:var(--muted); margin-top:4px;}
-    .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
+    .pz-okres svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah);}
     /* 8 px, ne 4: řádek „kde to je" je od 26. 10. na stránce VŽDYCKY
        (nadpis nese jen „co se prodává"), takže se tahle mezera stala
        skutečným odstupem mezi dvěma bloky — a čtyřka ve slovníku
@@ -311,7 +311,7 @@
     
     .pz-feats{display:flex; flex-wrap:wrap; gap:8px;}
     .pz-feat{display:inline-flex; align-items:center; gap:4px; font-size:14px; font-weight:600; color:var(--text); background:var(--plocha-karta); border:1px solid var(--line-strong); padding:8px 12px; border-radius:var(--r-plocha);}
-    .pz-feat svg{width:17px; height:17px; stroke-width:2.12; color:var(--znacka-svetla);}
+    .pz-feat svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah); color:var(--znacka-svetla);}
     .pz-feat-acc svg{color:var(--muted);}
     /* ODKUD TY SÍTĚ JSOU. U stažených nabídek je z textu inzerátu vytáhl
        robot — není to úřední evidence a slibovat to tak by byla lež
@@ -333,7 +333,7 @@
     .pz-drazba.prosle{border-left-color:var(--line-ui); background:var(--plocha-tlumena); box-shadow:none;}
     .pzd-hlava{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; color:var(--c-drazba-ink);}
     .pz-drazba.prosle .pzd-hlava{color:var(--muted);}
-    .pzd-hlava svg{width:17px; height:17px; stroke-width:2.1; flex:none;}
+    .pzd-hlava svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah); flex:none;}
     .pzd-hlava b{font-size:14px; font-weight:700;}
     .pzd-kdy{font-size:13px; font-weight:600; color:var(--muted);}
     .pzd-pozn{margin:4px 0 0; font-size:13px; line-height:1.6; color:var(--muted);}
@@ -378,7 +378,7 @@
        zbývalo 358, takže se každá roztáhla přes celý řádek a stránka
        z nich měla sloupec plný pilulek. Při 140 px se dvě vejdou. */
     .pz-btn{flex:1 1 140px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:14px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
-    .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
+    .pz-btn svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah); flex:none;}
     /* Hlavní akce inzerátu má týž značkový přeliv jako zelené plochy
        ve stylopisu webu; tenhle soubor se vkládá do stránky až ZA ním,
        takže by jinak zkratkou `background` přeliv shodil. */
@@ -418,7 +418,7 @@
     .pz-abtn:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena); box-shadow:var(--e2);}
     .pz-abtn:active{transform:translateY(1px);}
     .pz-abtn.on{color:#fff; border-color:transparent; background:var(--plocha-znacka); box-shadow:var(--glow);}
-    .pz-abtn svg{width:17px; height:17px; stroke-width:2.12; color:var(--znacka-svetla);}
+    .pz-abtn svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah); color:var(--znacka-svetla);}
     .pz-abtn.on svg{color:#fff;}
 
     /* Varování u nabídky od majitele — táž věta jako na mapě. Rámeček,
@@ -503,7 +503,7 @@
        než při 16 px a ikona pak vypadá tučnější než ostatní.
        (2 ÷ 24 × 19 = 1,58 px proti 1,33 px u šestnáctibodových —
        přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
-    .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
+    .pzm-cela-btn svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
     .pzm-cela-btn:hover{background:var(--plocha-karta);}
     /* ZPÁTKY NA POZEMEK — V PRUHU POD MAPOU, NE NA MAPĚ.
        Dvakrát to bylo plovoucí tlačítko a dvakrát překáželo: vpravo
@@ -525,7 +525,7 @@
       font:inherit; font-size:13px; font-weight:600; white-space:nowrap;
       -webkit-tap-highlight-color:transparent;
       transition:var(--prechod);}
-    .pzm-zpet-btn svg{width:16px; height:16px; stroke-width:2; flex:none;}
+    .pzm-zpet-btn svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah); flex:none;}
     /* V mřížce panelu má vlastní řádek (1/-1) a šířku podle nápisu
        (justify-self:start) — roztažené přes 694 px monitoru by vypadalo
        jako odesílací tlačítko formuláře, ne jako návrat na pozemek. */
@@ -605,7 +605,7 @@
     .pzm-v{flex:1 1 150px; display:flex; align-items:center; gap:8px; min-height:44px; padding:8px; text-align:left; border-radius:var(--r-ovladani); border:1.5px solid var(--obrys-tlacitka); background:var(--plocha-karta); box-shadow:var(--e1); font:inherit; font-size:13px; font-weight:700; line-height:1.3; color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
     /* 18 px a tah 2 — dopočteno k velikosti (36 ÷ 18), stejně jako
        u ostatních značek na webu; hlídá scripts/test-tahy.mjs. */
-    .pzm-v > svg{width:18px; height:18px; stroke-width:2; flex:none;}
+    .pzm-v > svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah); flex:none;}
     /* Odsazení 8 px na všechny strany, ne 12 po bocích: na telefonu
        vychází dlaždice 158 px a „Záplavové území" je 106 px široké.
        Se dvanácti zbylo na text přesně 106 px a nápis se zalamoval na
