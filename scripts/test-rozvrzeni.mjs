@@ -1736,11 +1736,16 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
  * měla správnou výšku — takže je neodhalila žádná jiná kontrola.
  */
 {
-  // Popisky a zkratky se čtou z js/main.js, aby kontrola nehlídala
-  // svou vlastní kopii seznamu. Šestá kategorie se tím ohlásí sama.
-  const zdroj = readFileSync(path.join(KOREN, 'js', 'main.js'), 'utf8');
-  const blok = /var TYPE = \{([\s\S]*?)\n  \};/.exec(zdroj);
-  pravda('v js/main.js se našel seznam kategorií (bez něj není co měřit)', !!blok);
+  /* Popisky a zkratky se čtou ze zdroje, aby kontrola nehlídala svou
+     vlastní kopii seznamu. Šestá kategorie se tím ohlásí sama.
+     TABULKA SE PŘESTĚHOVALA: bývala v js/main.js jako `var TYPE`, od
+     sjednocení karty nabídky (js/karta-nabidky.js, `PKKarta.TYPY`) je
+     tam, protože kartu kreslí i stránky, kde main.js vůbec není.
+     main.js si ji od té doby jen bere. Zkouška to nepoznala a hlásila
+     „seznam kategorií se nenašel" — tedy nález o sobě, ne o webu. */
+  const zdroj = readFileSync(path.join(KOREN, 'js', 'karta-nabidky.js'), 'utf8');
+  const blok = /var TYPY = \{([\s\S]*?)\n  \};/.exec(zdroj);
+  pravda('v js/karta-nabidky.js se našel seznam kategorií (bez něj není co měřit)', !!blok);
   const DRUHY = [];
   if (blok) {
     const re = /^\s{4}(\w+):\s*\{\s*label: '([^']+)'(?:,\s*zkratka: '([^']+)')?/gm;

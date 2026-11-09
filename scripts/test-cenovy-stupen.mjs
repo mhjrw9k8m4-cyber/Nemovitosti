@@ -23,10 +23,10 @@
  * měří jen to, že se dvě místa na stránce shodnou.
  */
 import { chromium } from 'playwright-core';
-import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivyVzorek } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -48,19 +48,20 @@ function pravda(popis, vyslo, proc) {
    nabídek z Benešova a o zbytku republiky by zkouška nevěděla nic.
 
    DVACET, NE DVANÁCT — a není to z opatrnosti, je to z měření.
-   Verdikt o ceně nedostane každá nabídka: vyřazené stránky se
-   nevykreslují vůbec a u podílů bez výměry se verdikt nepíše. Na
-   třiceti stránkách rozprostřených po abecedě jich verdikt mělo 21,
-   tedy 70 %. Jenže krok vzorku (2 276 / 12 = 189) padal na shluky
-   vyřazených nabídek a z dvanácti stránek jich verdikt mělo jen čtyři
-   — PŘEDPOKLAD „aspoň pět" pak padal, i když na webu bylo všechno
-   v pořádku. Při dvaceti stránkách vychází při 70 % kolem čtrnácti,
-   takže mez pěti zůstává a přestává být loterií. Mez se nesnižuje:
-   snížit ji by znamenalo, že kontroly výš smějí měřit míň. */
-const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
-const POCET_VZORKU = 20;
-const krok = Math.max(1, Math.floor(vsechny.length / POCET_VZORKU));
-const VZOREK = Array.from({ length: POCET_VZORKU }, (_, i) => vsechny[i * krok]).filter(Boolean);
+   Verdikt o ceně nedostane každá nabídka: u podílů bez výměry se
+   nepíše. Na třiceti živých stránkách rozprostřených po abecedě jich
+   verdikt mělo 21, tedy 70 %; při dvaceti vychází kolem čtrnácti,
+   takže mez pěti zůstává. Mez se nesnižuje: snížit ji by znamenalo,
+   že kontroly výš smějí měřit míň.
+
+   A VZOREK JE ZE ŽIVÝCH STRÁNEK, ne z celé abecedy. Vyřazená stránka
+   nabídku nevykresluje, takže na ní není ani odznak, ani verdikt — a
+   vyřazených je dnes víc než živých (9. 11. 2026: 9 241 z 12 674, tedy
+   73 %). Rozprostřený krok přes VŠECHNY soubory proto padal na archiv
+   a naměřil 3 stránky s verdiktem z 20; na webu přitom nebylo nic
+   rozbitého. Výběr živých je v scripts/vzorek-pozemku.mjs, na jednom
+   místě pro všechny zkoušky. */
+const VZOREK = zivyVzorek(20);
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },

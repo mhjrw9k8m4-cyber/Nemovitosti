@@ -6064,7 +6064,13 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    na desce). Tady zůstává jen to, co se desky netýká. */
 .add-hero.app-hero .eyebrow{margin-bottom:12px;}
 .add-hero.app-hero h1{font-size:var(--h1-nastroj); font-weight:600; max-width:var(--m-ucet);}
-.add-hero.app-hero .sub{font-size:16px; margin-top:8px; max-width:var(--m-ucet);}
+/* PODNADPIS JE PRÓZA, TAK MÁ ČTECÍ MÍRU, NE ŠÍŘKU SLOUPCE.
+   Sloupec účtu je 720 px; věta přes celou jeho šířku měla na profilu
+   97 znaků na řádek, a strop webu je 90 (hlídá scripts/test-mira.mjs —
+   nad 90 znaků oko ztrácí řádek a vrací se na týž). Nadpis nad ní
+   šířku sloupce drží dál: tam je řádek jeden a je krátký. */
+.add-hero.app-hero .sub{font-size:16px; margin-top:8px;
+  max-width:min(var(--m-ucet), var(--m-text));}
 .section.app-section{padding:16px 0 48px;}
 /* CELÝ SLOUPEC ÚČTU NA STŘED, NE PŘILEPENÝ VLEVO.
    Naměřeno na 1440 px: na „Můj profil", „Zprávy" i „Hlídání" stála

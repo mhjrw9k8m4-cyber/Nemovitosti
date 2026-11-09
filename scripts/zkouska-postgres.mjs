@@ -15,14 +15,35 @@
    sám, protože se pak liší, co se s výsledkem dělá.
    ================================================================== */
 import { execFileSync, execSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
-export function najdiPg() {
-  for (const v of ['16', '15', '14', '17']) {
-    const bin = `/usr/lib/postgresql/${v}/bin`;
+/* KDE JE initdb. Dřív tu byl vypsaný seznam verzí ['16','15','14','17']
+   — a ten seznam zestárl: obraz běžce GitHubu dostal novější hlavní
+   verzi PostgreSQL, binárky v /usr/lib/postgresql/<verze>/bin byly na
+   místě, ale v seznamu nebyly. Zkoušky proto hlásily „PostgreSQL
+   chybí" na stroji, kde byl, a CI svítilo červeně bez vady na webu.
+   Proto se adresář ČTE a bere se nejvyšší nalezená verze; ruční
+   seznam, který musí někdo doplňovat po cizí aktualizaci, tu znovu
+   být nemá. */
+export function najdiPg(korenNavic) {
+  const koren = korenNavic || '/usr/lib/postgresql';
+  let verze = [];
+  try {
+    verze = readdirSync(koren).filter((v) => /^\d+$/.test(v))
+      .sort((a, b) => Number(b) - Number(a));
+  } catch (e) { verze = []; }
+  for (const v of verze) {
+    const bin = path.join(koren, v, 'bin');
     if (existsSync(path.join(bin, 'initdb'))) return bin;
   }
+  /* Někde (jiná distribuce, překlad ze zdrojů) initdb leží na PATH.
+     Jen pro opravdový strom — se podstrčeným korenem (zkouška) by
+     odpověď z PATH měřila stroj, ne tuhle funkci. */
+  if (korenNavic) return null;
+  const r = spawnSync('which', ['initdb'], { encoding: 'utf8' });
+  const cesta = String(r.stdout || '').trim();
+  if (cesta && existsSync(cesta)) return path.dirname(cesta);
   return null;
 }
 

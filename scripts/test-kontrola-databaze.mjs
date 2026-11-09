@@ -177,6 +177,32 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
   pravda('a neplatný klíč se z toho nevyrábí (stav byl 200)',
     !chybyZ(v).some((n) => /klíč nefunguje/.test(n.co)), JSON.stringify(chybyZ(v)));
 }
+/* POJISTKA NA ÚMYSLNĚ VEŘEJNOU TABULKU — A ŽE PLATÍ JEN NA NI.
+   `VEREJNE_TABULKY` je dnes prázdný seznam (kontrola výš to žádá), a
+   tím se vyjímací krok v kontrole stal neprokazatelným: sabotážní
+   stroj 9. 11. 2026 jeho vyjmutí zahodil a nechytila ho ani jedna ze
+   dvou zkoušek nad tím souborem — nad prázdným seznamem totiž nemá co
+   změnit. Mlčící pojistka je ale past na den, kdy někdo tabulku
+   zveřejní: do té chvíle se nedozví, že vyjímání nefunguje.
+   Seznam se proto podstrčí a měří se obojí — že vyjmutá tabulka
+   nálezem není A že ostatní se hlásí dál. */
+{
+  const v = await spust({ radkyAnonovi: ['messages', 'listings'] },
+    { verejneTabulky: ['messages'] });
+  pravda('tabulka vedená jako úmyslně veřejná se za nález nepovažuje',
+    !chybyZ(v).some((n) => /messages/.test(n.co)), JSON.stringify(chybyZ(v)));
+  pravda('ale ostatní tabulky se hlásí dál (pojistka nemlčí o všem)',
+    chybyZ(v).some((n) => /listings.*bez přihlášení/.test(n.co)), JSON.stringify(chybyZ(v)));
+}
+{
+  /* Totéž v roli přihlášeného — je to druhá, samostatná smyčka. */
+  const v = await spust({ radkyPrihlasenemu: ['messages', 'listings'] },
+    { token: 'TOKEN', verejneTabulky: ['messages'] });
+  pravda('a u přihlášeného platí vyjmutí stejně',
+    !chybyZ(v).some((n) => /messages/.test(n.co)), JSON.stringify(chybyZ(v)));
+  pravda('a ostatní se mu taky hlásí dál',
+    chybyZ(v).some((n) => /listings.*přečte přihlášený/.test(n.co)), JSON.stringify(chybyZ(v)));
+}
 {
   const v = await spust({ proPrihlaseneho: { tabulky: ['listings'],
     funkce: ['my_listings', 'prehled_navstevnosti'] } }, { token: 'TOKEN' });

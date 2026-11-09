@@ -25,6 +25,7 @@ import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { stavStranky } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -76,12 +77,18 @@ try {
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
 
-  /* Tři stránky z různých okresů: řez je u každé jiný. */
+  /* Tři ŽIVÉ stránky z různých okresů: řez je u každé jiný.
+     Živé schválně — vyřazená stránka nabídku nevykresluje, takže na ní
+     není verdikt o ceně a kontrola „aspoň na jedné se vykreslil" by
+     hlásila vadu webu tam, kde je jen archiv. První v abecedě je
+     přitom vyřazená skoro vždycky (9. 11. 2026 jich bylo 73 %), takže
+     dřívější „první z každého okresu" bralo tři archivní stránky. */
   const vzorek = [];
   const videneOkresy = new Set();
   for (const f of stranky) {
     const okres = (/^pozemek-([a-z-]+?)-/.exec(f) || [])[1];
     if (!okres || videneOkresy.has(okres)) continue;
+    if (stavStranky(f) !== 'ziva') continue;
     videneOkresy.add(okres); vzorek.push(f);
     if (vzorek.length >= 3) break;
   }

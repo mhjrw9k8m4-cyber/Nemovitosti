@@ -21,8 +21,8 @@
 // (statická stránka kreslí graf líně), a pak se ptá, jestli má třídu
 // „ma-graf" — tedy jestli opravdu vznikla čára, ne jen prázdný rámeček.
 import { chromium } from 'playwright-core';
-import { readdirSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { zivyVzorek, vzorekStavu } from './vzorek-pozemku.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
@@ -37,13 +37,17 @@ function pravda(popis, vyslo, proc) {
 }
 
 /* KOLIK STRÁNEK. Čtyřicet je kompromis: vzorek napříč abecedou zachytí
-   oba druhy stránek i různé okresy, a běh zůstane pod dvěma minutami. */
+   různé okresy a běh zůstane pod dvěma minutami.
+
+   OBA DRUHY SE BEROU ZVLÁŠŤ. Dřív se brala každá n-tá ze VŠECH souborů
+   a spoléhalo se, že v tom živé i vyřazené nějak budou. Jak archiv
+   rostl, přestalo to platit: 9. 11. 2026 bylo z 12 674 stránek 9 241
+   vyřazených (73 %) a ze čtyřiceti vzorků připadlo na živé jen sedm —
+   kontrola „vzorek je dost velký" (žádá 10) spadla, ačkoli graf vyšel
+   na všech živých i na všech vyřazených. Mez tedy nesnižuju; vzorek si
+   řekne o dvacet živých a dvacet vyřazených (scripts/vzorek-pozemku.mjs). */
 const KOLIK = 40;
-const vse = readdirSync(new URL('..', import.meta.url))
-  .filter((x) => x.startsWith('pozemek-') && x.endsWith('.html'));
-const krok = Math.max(1, Math.floor(vse.length / KOLIK));
-const vzorek = [];
-for (let i = 0; i < vse.length && vzorek.length < KOLIK; i += krok) vzorek.push(vse[i]);
+const vzorek = [...zivyVzorek(KOLIK / 2), ...vzorekStavu('vyrazena', KOLIK / 2)];
 
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },
   process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {}));

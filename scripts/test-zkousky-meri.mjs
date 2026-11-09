@@ -31,9 +31,11 @@
    nezapomnělo.
    ================================================================== */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { najdiPg } from './zkouska-postgres.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SKRIPTY = path.join(KOREN, 'scripts');
@@ -246,6 +248,49 @@ pravda('a žádná výjimka neukazuje na soubor, který neexistuje',
     spatne.join('; ') + ' — opravdové `stahni` vrací odpověď `fetch`, u které'
     + ' je `text()` FUNKCE; podstrčení s hodnotou měří tvar, který v běhu'
     + ' nevznikne (viz §337)');
+}
+
+/* HLEDÁNÍ POSTGRESQL NESMÍ STÁT NA RUČNÍM SEZNAMU VERZÍ.
+   ------------------------------------------------------------------
+   CI 1104–1108: tři nejsilnější zkoušky databáze spadly do jedné
+   sekundy s „PostgreSQL chybí" — na běžci, kde PostgreSQL BYL.
+   najdiPg() tehdy zkoušela vypsané verze ['16','15','14','17'],
+   a obraz běžce měl hlavní verzi, která v tom seznamu nebyla.
+   Seznam, který musí někdo doplňovat po cizí aktualizaci, je past:
+   mlčí, dokud se venku něco nezmění, a pak shodí CI bez vady na
+   webu. Tady se proto měří, že se adresář ČTE: podstrčí se strom
+   s verzí, kterou nikdo vypsat nemohl. */
+{
+  const zaklad = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-pg-verze-'));
+  try {
+    for (const v of ['14', '99']) {
+      fs.mkdirSync(path.join(zaklad, v, 'bin'), { recursive: true });
+      fs.writeFileSync(path.join(zaklad, v, 'bin', 'initdb'), '');
+    }
+    fs.mkdirSync(path.join(zaklad, 'bez-binarek', 'bin'), { recursive: true });
+    pravda('je co měřit — podstrčený strom s verzemi 14 a 99 stojí',
+      fs.existsSync(path.join(zaklad, '99', 'bin', 'initdb'))
+      && fs.existsSync(path.join(zaklad, '14', 'bin', 'initdb')),
+      'bez podstrčeného stromu by kontroly níž neznamenaly nic');
+
+    const nalez = najdiPg(zaklad);
+    pravda('najdiPg najde i hlavní verzi, kterou nikdo nevypsal (99)',
+      nalez === path.join(zaklad, '99', 'bin'),
+      `vrátila ${JSON.stringify(nalez)} — hledání stojí na ručním seznamu verzí;`
+      + ' obraz běžce ho přeroste a tři zkoušky databáze spadnou na'
+      + ' „PostgreSQL chybí" tam, kde PostgreSQL je (CI 1104–1108)');
+
+    const prazdny = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-pg-prazdno-'));
+    fs.mkdirSync(path.join(prazdny, '17', 'bin'), { recursive: true });
+    const nic = najdiPg(prazdny);
+    pravda('adresář verze bez initdb se za PostgreSQL nevydává',
+      nic === null,
+      `vrátila ${JSON.stringify(nic)} — pak by zkoušky zkoušely spustit server`
+      + ' z prázdného adresáře a spadly by na něčem jiném, než co je vada');
+    fs.rmSync(prazdny, { recursive: true, force: true });
+  } finally {
+    fs.rmSync(zaklad, { recursive: true, force: true });
+  }
 }
 
 console.log('\nZkoušky měří to, co si myslí');

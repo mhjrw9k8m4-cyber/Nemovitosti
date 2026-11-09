@@ -86,6 +86,23 @@ export function zivaStranka() {
 const STROP_HLEDANI = 60;
 
 export function zivyVzorek(kolik = 12) {
+  return vzorekStavu('ziva', kolik);
+}
+
+/**
+ * Totéž pro KTERÝKOLI stav — 'ziva', 'vyrazena', 'prestehovana'.
+ *
+ * PROČ TO TU JE. Vyřazených stránek je víc než živých a pořád jich
+ * přibývá: 9. 11. 2026 bylo z 12 674 stránek 9 241 vyřazených, tedy
+ * 73 %. Zkouška, která chtěla „vzorek obou druhů" a brala každou
+ * n-tou ze VŠECH souborů, tím přestala mít dost živých: test-graf-vsude
+ * naměřil 7 živých ze 40 (žádal 10) a test-cenovy-stupen 3 stránky
+ * s verdiktem z 20 (žádal 5). Ani jedno nebyla vada webu — graf vyšel
+ * na všech živých i na všech vyřazených. Kdo chce oba druhy, řekne si
+ * o každý zvlášť; mez „dost velký vzorek" tím přestává být loterií
+ * nad poměrem archivu a mohla zůstat, kde byla.
+ */
+export function vzorekStavu(stav, kolik = 12) {
   const vse = vsechnyStranky();
   if (!vse.length) return [];
   const krok = Math.max(1, Math.floor(vse.length / kolik));
@@ -94,7 +111,7 @@ export function zivyVzorek(kolik = 12) {
   for (let i = 0; i < vse.length && out.length < kolik; i += krok) {
     for (let j = i; j < Math.min(vse.length, i + STROP_HLEDANI); j++) {
       if (vzato.has(j)) continue;
-      if (stavStranky(vse[j]) === 'ziva') { vzato.add(j); out.push(vse[j]); break; }
+      if (stavStranky(vse[j]) === stav) { vzato.add(j); out.push(vse[j]); break; }
     }
   }
   return out;

@@ -398,8 +398,16 @@ jobs:
             echo "PostgreSQL je v obrazu běžce: $(ls -d /usr/lib/postgresql/*)"
           else
             echo "PostgreSQL v obrazu není, doinstalovávám:"
+            # `update` PŘED instalací: bez něj apt nemusí mít seznamy
+            # balíčků a „install postgresql" skončí za sekundu na
+            # „Unable to locate package" — tak vypadalo selhání
+            # v bězích 1076 a 1081.
+            sudo apt-get update \
+              || echo "::warning::apt-get update selhal — instalace to zkusí i tak."
             sudo apt-get install -y --no-install-recommends postgresql \
               || echo "::warning::apt-get postgresql selhal — viz výpis výš. Zkoušky to ohlásí jako chybu, ne jako přeskočení."
+            ls -d /usr/lib/postgresql/* 2>/dev/null \
+              || echo "::warning::po instalaci v /usr/lib/postgresql pořád nic není."
           fi
           node scripts/test-sql-cista.mjs
 

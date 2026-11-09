@@ -137,7 +137,15 @@ async function ziskej(url, cesta, klic, token) {
  * Projde databázi a vrátí seznam nálezů.
  * @returns {{nalezy: Array, prehled: object}}
  */
-export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null, fetchFn }) {
+/* `verejneTabulky` je seznam tabulek, které čte kdokoli ÚMYSLNĚ. Dnes je
+   prázdný (data jen přes funkce), a právě proto se dá podstrčit:
+   pojistka, kterou nelze rozhodnout jinak než prázdným seznamem, je
+   neprokazatelná — sabotážní stroj 9. 11. její vyjmutí zahodil a
+   nechytila ho ani jedna z dvou zkoušek nad tímhle souborem, protože
+   nad prázdným seznamem nemá co změnit. Se vstupem se dá změřit, že
+   vyjmutí platí JEN na vyjmenované tabulky a na ostatní ne. */
+export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null, fetchFn,
+  verejneTabulky = VEREJNE_TABULKY }) {
   const g = fetchFn || ziskej;
   const nalezy = [];
   const chyba = (co, proc, rada) => nalezy.push({ vaha: 'chyba', co, proc, rada });
@@ -215,7 +223,7 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
   if (klicPlati) {
     let overeno = 0;
     for (const t of je.tabulky) {
-      if (VEREJNE_TABULKY.indexOf(t) >= 0) continue;
+      if (verejneTabulky.indexOf(t) >= 0) continue;
       const jakoAnon = await g(url, `/rest/v1/${t}?select=*&limit=1`, anonKlic);
       overeno++;
       if (jakoAnon.stav !== 200 || !Array.isArray(jakoAnon.json) || !jakoAnon.json.length) continue;
@@ -307,7 +315,7 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
     }
     let overeno = 0;
     for (const t of je.tabulky) {
-      if (VEREJNE_TABULKY.indexOf(t) >= 0) continue;
+      if (verejneTabulky.indexOf(t) >= 0) continue;
       const jako = await g(url, `/rest/v1/${t}?select=*&limit=1`, anonKlic, token);
       overeno++;
       if (jako.stav !== 200 || !Array.isArray(jako.json) || !jako.json.length) continue;

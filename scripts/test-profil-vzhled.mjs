@@ -105,12 +105,18 @@ async function otevri(ulozenych) {
   const mailRadku = jedenRadek > 0
     ? Math.round(mail.getBoundingClientRect().height / jedenRadek) : -1;
   const mailCely = (mail.getAttribute('title') || '') === mail.textContent.trim();
-  /* Viditelná zelená tlačítka, která vedou na „přidat pozemek".
+  /* Viditelná zelená tlačítka, která vedou na vložení nabídky.
      Skrytá se nepočítají — prázdné stavy se překrývají podle toho,
-     co server odpoví, a hidden prvek nikomu nepřekáží. */
-  const pridat = [...document.querySelectorAll('#obsah a.btn-primary, #obsah button.btn-primary')]
+     co server odpoví, a hidden prvek nikomu nepřekáží.
+
+     POZNÁ SE PODLE CÍLE, NE PODLE SLOV. Dřív se hledalo „přidat
+     pozemek"; 8. 11. se tlačítko přejmenovalo na „Přidat nemovitost"
+     (web nenabízí jen pozemky) a zkouška od té chvíle nacházela nula
+     — tedy nález o svém vlastním zápisu, ne o stránce. Adresa
+     pridat.html je na rozdíl od nápisu to, co tlačítko DĚLÁ. */
+  const pridat = [...document.querySelectorAll('#obsah a.btn-primary')]
     .filter((e) => e.getBoundingClientRect().height > 8)
-    .filter((e) => /přidat pozemek/i.test(e.textContent || ''));
+    .filter((e) => /(^|\/)pridat\.html(\?|#|$)/.test(e.getAttribute('href') || ''));
   return { zelenRGB, dlazdice, mailRadku, mailCely, pridat: pridat.map((e) => e.textContent.replace(/\s+/g, ' ').trim()) };
 });
   await ctx.close();
@@ -158,7 +164,7 @@ pravda('ta nula už zelená NENÍ — jinak by pět nul bylo to nejhlasitější
   !!ulozeneNula && ulozeneNula.ink !== prazdny.zelenRGB,
   JSON.stringify(ulozeneNula) + ' | zeleň ' + prazdny.zelenRGB);
 
-pravda(`„Přidat pozemek" je na stránce jednou (${v.pridat.length})`,
+pravda(`tlačítko na vložení nabídky je na stránce jednou (${v.pridat.length})`,
   v.pridat.length === 1, JSON.stringify(v.pridat));
 
 console.log('\nVzhled profilu: sedí „Můj profil" ke zbytku webu?');
