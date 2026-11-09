@@ -305,7 +305,7 @@ footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-
 .to-top span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .to-top svg{width:var(--ik-s);height:var(--ik-s);stroke-width:var(--ik-s-tah)}
 }
-@media (max-width:560px){.to-top{bottom:10px;left:50%;right:auto;width:48px;height:48px;margin-left:-24px}
+@media (max-width:560px){.to-top{bottom:12px;right:12px;left:auto;width:48px;height:48px;margin-left:0}
 }
 
 @keyframes locOvIn{from{opacity:0}

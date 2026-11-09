@@ -4793,7 +4793,16 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
    48 je na stupnici, polovina 24 taky, a chytací ploše to prospěje
    (mez na dotyk je 44). */
 @media (max-width:560px){
-  .to-top{bottom:10px; left:50%; right:auto; width:48px; height:48px; margin-left:-24px;}
+  /* A OD 9. 11. U PRAVÉHO OKRAJE, NE UPROSTŘED.
+     Střed dole je na výpisu to nejhorší místo: karty jsou přes celou
+     šířku, takže jejich spodní řádek („zdroj", „Uložit") vede právě
+     tudy a knoflík na něm sedí. Naměřeno na 390 px krokem 40 px:
+     v poloze 3 480 px zakrýval odkaz na zdroj z 22 % a v CI (běh 1115)
+     padl hlídač na témže překryvu u 340 px širokého odkazu — tam už
+     i přes jeho střed. Klepnutí na odkaz pak odroluje nahoru.
+     Vpravo je karta prázdnější: spodní řádek začíná vlevo a doprava
+     nedosáhne. Odsazení 12 px, aby knoflík nelepil na hranu. */
+  .to-top{bottom:12px; right:12px; left:auto; width:48px; height:48px; margin-left:0;}
 }
 
 /* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */

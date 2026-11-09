@@ -465,6 +465,7 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
       if (!t || t.className.indexOf('show') === -1) return null;
       const g = t.getBoundingClientRect();
       const out = [];
+      const otrely = window.__otrely = (window.__otrely || []);
       const KARTY = '.opp-item, .okr-item, .deal-card, .ul-card, .odl-card';
       const sel = KARTY.split(', ').map((k) => k + ' a, ' + k + ' button, ' + k + ' [role="button"], ' + k + ' label').join(', ');
       for (const e of document.querySelectorAll(sel)) {
@@ -472,9 +473,25 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
         if (!q.width || !q.height || q.bottom < 0 || q.top > innerHeight) continue;
         const x = Math.min(g.right, q.right) - Math.max(g.left, q.left);
         const yy = Math.min(g.bottom, q.bottom) - Math.max(g.top, q.top);
-        if (x > 0 && yy > 0) out.push(((e.className && String(e.className)) || e.tagName)
+        if (x <= 0 || yy <= 0) continue;
+        /* MĚŘÍ SE MÍSTO, KAM ČLOVĚK KLEPNE, NE KAŽDÝ DOTYK HRAN.
+           Pevný knoflík nad nekonečným výpisem karet přes celou šířku
+           se někde o nějaký ovladač otře vždycky — a která karta pod
+           ním zrovna je, rozhoduje noční obměna dat. Zákaz „ať se
+           nedotkne ničeho" je tedy nesplnitelný a zelený býval jen
+           náhodou (běhy 1110–1115 to ukázaly třikrát).
+           Co ale rozbité JE: když knoflík zakryje STŘED ovladače,
+           tedy bod, na který prst míří — klepnutí pak odroluje nahoru
+           místo své akce. A když zakryje většinu plochy, zbyde proužek,
+           na který se nedá trefit. Obojí je nález; samotné olíznutí
+           hrany ne. */
+        const sx = q.left + q.width / 2, sy = q.top + q.height / 2;
+        const stred = sx >= g.left && sx <= g.right && sy >= g.top && sy <= g.bottom;
+        const podil = 100 * x * yy / (q.width * q.height);
+        const popis = ((e.className && String(e.className)) || e.tagName)
           + ' (' + Math.round(x) + '×' + Math.round(yy) + ' px, '
-          + Math.round(100 * x * yy / (q.width * q.height)) + ' % prvku)');
+          + Math.round(podil) + ' % prvku' + (stred ? ', A STŘED' : '') + ')';
+        if (stred || podil >= 50) out.push(popis); else otrely.push(popis);
       }
       return out;
     });
@@ -484,7 +501,12 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
   }
   pravda(`je z čeho měřit — knoflík byl vidět v ${mereno} polohách rolování`, mereno >= 6,
     'na úvodní stránce se knoflík skoro neukázal, takže kontrola pod tím nic nedokazuje');
-  pravda('knoflík nahoru neleží na žádném ovladači v kartě', nalezy.length === 0,
+  /* Kolik hran se knoflík dotkl, aniž by ovladač znepřístupnil —
+     vypisuje se, aby bylo vidět, že se měřilo, a aby šlo poznat, kdyby
+     těch doteků najednou začaly být desítky. */
+  const otrely = await p.evaluate(() => (window.__otrely || []).length).catch(() => 0);
+  zpravy.push(`  · knoflík se olízl o hranu ovladače ${otrely}×, aniž by zakryl jeho střed`);
+  pravda('knoflík nahoru nezakrývá střed žádného ovladače v kartě', nalezy.length === 0,
     'zakrývá: ' + nalezy.slice(0, 4).join('; ') + ' — klepnutí na ně odroluje nahoru místo své akce');
   await ctxV.close();
 }
