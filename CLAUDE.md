@@ -391,6 +391,15 @@ oprava `test-roadmap`, která sčítá obě směny). A **sabotovat se musí ten
 balíček stylů, který stránka opravdu načítá**: úvodní stránka má
 `css/uvod.min.css`, okresní `css/region.min.css`; sabotáž ve
 `css/styles.min.css` pro ně neudělá nic a vypadá to jako slepá zkouška.
+
+**Totéž platí pro JS, a je to zrádnější, protože zdroj se sabotovat
+SMÍ — jen to samo o sobě nestačí.** Stránky načítají `js/min/*.js`,
+takže po zásahu do `js/pozemek.js` musí přijít `node scripts/oprav.mjs`,
+než se zkouška pustí; jinak prohlížeč čte starou přeloženou kopii,
+zkouška zůstane zelená a vypadá to, že hlídač nic nehlídá. Stalo se
+9. 11. při prokazování hlídače v `test-parcely-z-textu`: sabotovaný
+řádek „Parcela" prošel, dokud se nepřestavělo. Pořadí je tedy vždycky
+sabotáž → `oprav.mjs` → zkouška → obnova ze zálohy → `oprav.mjs`.
 **Úvodní stránka stahuje `data/mapa.json`, ne celek.** Je to týž soubor
 bez duplicit a bez pole `url` (−19 kB gzipem, čtvrtina toho, co se
 přenese; měření v `docs/optimalizace.md` 58). Na adrese inzerátu přitom

@@ -28,6 +28,7 @@ import { chromium } from 'playwright-core';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stavStranky } from './vzorek-pozemku.mjs';
 import { createRequire } from 'node:module';
 import { najdi, klicPopisu, STROP_POPISU, TOLERANCE,
   vymeraJePodilova, zlomekCislo } from './parcely-z-textu.mjs';
@@ -151,7 +152,20 @@ await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
 });
-for (const { f, o } of sPc.slice(0, 3)) {
+/* JEN ŽIVÉ STRÁNKY, A ROZPROSTŘENĚ. `sPc.slice(0, 3)` bralo první tři
+   v pořadí, v jakém je vrací adresář — a to jsou dnes vyřazené
+   nabídky („Tato nabídka už není aktuální"), kde se tabulka parametrů
+   vůbec nekreslí. Zkouška pak hlásila „řádek Parcela je na stránce
+   řádků 0" a vypadalo to jako vada webu, přestože web dělal přesně to,
+   co má. Je to tatáž příčina jako u třinácti dalších zkoušek, které
+   proto berou vzorek přes scripts/vzorek-pozemku.mjs. Krok přes celé
+   pole navíc nebere tři sousedy z jednoho okresu. */
+const zive = sPc.filter((x) => stavStranky(x.f) === 'ziva');
+pravda(`živých stránek s parcelním číslem z textu je ${zive.length}`, zive.length >= 3,
+  'z ' + sPc.length + ' stránek s číslem nezbyly ani tři živé');
+const krok = Math.max(1, Math.floor(zive.length / 3));
+const kProhlednuti = [zive[0], zive[krok], zive[2 * krok]].filter(Boolean);
+for (const { f, o } of kProhlednuti) {
   const page = await ctx.newPage();
   await page.goto(`${BASE}/${f}`, { waitUntil: 'load' });
   await page.waitForSelector('.pz-spec', { timeout: 10000 }).catch(() => {});
@@ -177,19 +191,37 @@ for (const { f, o } of sPc.slice(0, 3)) {
 }
 /* A stránka, která má číslo ze zdroje, nesmí mít tu vysvětlivku. */
 {
-  const bez = stranky.find((f) => {
-    const s = readFileSync(path.join(ROOT, f), 'utf8');
-    return !/"pc":/.test(s);
+  /* STRÁNKA SE HLEDÁ MĚŘENÍM, NE PODLE HTML.
+     Tvrzení níž zní `maPozn !== true`, takže projde i tehdy, když se
+     řádek „Parcela" vůbec nevykreslí — a to nastane dvakrát: na
+     vyřazené stránce (tabulka parametrů tam není) a na pozemku, který
+     parcelní číslo nemá odnikud. V obou případech by zkouška tvrdila,
+     že vysvětlivka chybí, aniž by se na ni podívala (§436).
+     Podle čeho tedy vybrat? Číslo ZE ZDROJE v servírovaném HTML není
+     (PK_POZEMEK ho nenese, bere se z datového souboru okresu), takže
+     se nedá vyfiltrovat předem. Projdou se proto živé stránky bez
+     „pc" a vezme se PRVNÍ, na které se řádek „Parcela" opravdu
+     vykreslil — tedy taková, kde číslo ze zdroje je. Strop je na
+     počtu otevřených stránek, ať zkouška neroste s daty. */
+  const kandidati = stranky.filter((f) => {
+    if (stavStranky(f) !== 'ziva') return false;
+    return !/"pc":/.test(readFileSync(path.join(ROOT, f), 'utf8'));
   });
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/${bez}`, { waitUntil: 'load' });
-  await page.waitForSelector('.pz-spec', { timeout: 10000 }).catch(() => {});
-  const maPozn = await page.evaluate(() => {
-    const r = [...document.querySelectorAll('.pz-spec')].find((e) =>
-      ((e.querySelector('.k') || {}).textContent || '').trim() === 'Parcela');
-    return r ? !!r.querySelector('.pz-spec-pozn') : null;
-  });
-  pravda('pozemek bez čísla z textu tu vysvětlivku nemá', maPozn !== true,
+  let maPozn = null, kdeMereno = null;
+  for (const f of kandidati.slice(0, 25)) {
+    await page.goto(`${BASE}/${f}`, { waitUntil: 'load' });
+    await page.waitForSelector('.pz-spec', { timeout: 10000 }).catch(() => {});
+    const v = await page.evaluate(() => {
+      const r = [...document.querySelectorAll('.pz-spec')].find((e) =>
+        ((e.querySelector('.k') || {}).textContent || '').trim() === 'Parcela');
+      return r ? !!r.querySelector('.pz-spec-pozn') : null;
+    });
+    if (v !== null) { maPozn = v; kdeMereno = f; break; }
+  }
+  pravda('našla se živá stránka s řádkem „Parcela" a bez čísla z textu', maPozn !== null,
+    `prošlo se ${Math.min(kandidati.length, 25)} stránek a řádek „Parcela" nebyl ani na jedné`);
+  pravda(`pozemek bez čísla z textu tu vysvětlivku nemá (${kdeMereno})`, maPozn !== true,
     'vysvětlivka „podle inzerátu" se objevila i tam, kde číslo z textu není');
   await page.close();
 }
@@ -201,7 +233,7 @@ for (const { f, o } of sPc.slice(0, 3)) {
    pozemek. Zkouší se celá cesta, ne jen jedna polovina: odkaz na
    stránce pozemku, a pak co udělá stránka smlouvy. */
 {
-  const { f, o } = sPc[0];
+  const { f, o } = kProhlednuti[0];   // živá stránka, ne první v adresáři
   const page = await ctx.newPage();
   await page.goto(`${BASE}/${f}`, { waitUntil: 'load' });
   await page.waitForSelector('.pz-naklady a', { timeout: 10000 }).catch(() => {});
