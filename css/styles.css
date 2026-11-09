@@ -2827,12 +2827,29 @@ h1 em{ color:var(--znacka-svetla);
    scripts/test-dotyk.mjs) a tohle políčko ji o dva pixely nesplňovalo —
    vyšlo to najevo, až když se k němu srovnávalo políčko hlídání:
    vedle sebe byly 42 a 44 a nebylo poznat, která je ta správná. */
-.map-num{flex:1 1 0; min-width:0; width:100%; font:inherit; font-size:14px;
-  min-height:44px; padding:8px 8px; border-radius:var(--r-ovladani);
+/* JEDNA ŘEČ POLÍ — PANEL, HLÍDÁNÍ I PŘIDÁNÍ INZERÁTU.
+   Majitel 9. 11.: „toto řazení chci všude, chci, aby to bylo identické
+   vizuálně i na hlídání, přidávání inzerátu a všude." Změřeno na
+   390 px, jedno a totéž pole na třech stránkách:
+     · panel filtrů  bílá plocha, rám 0,55 alfa, odsazení 8/8
+     · hlídání       bílá plocha, rám 0,55 alfa, odsazení 8/12
+     · přidat inzerát  ZAPUŠTĚNÁ ŠEDÁ, rám 0,14 alfa, odsazení 12/12
+   Tři recepty na jednu věc. Platí ten z panelu — bílé pole s čitelným
+   rámem je ten, který na webu převažuje — a odsazení 8/12, protože
+   12 px zleva drží text pole na stejné svislici jako text dlaždice
+   vedle něj. Velikost písma zůstává 16 px: pod ní iOS Safari při
+   klepnutí do pole stránku přiblíží.
+   Kdo tenhle recept změní, mění ho všem třem stránkám naráz — o to
+   jde; tři kopie se rozešly přesně proto, že to byly kopie. */
+.map-num, .hl-in,
+.add-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.add-form textarea{flex:1 1 0; min-width:0; width:100%; font:inherit; font-size:16px;
+  min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
   border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
-  -moz-appearance:textfield;}
+  box-sizing:border-box; -moz-appearance:textfield;}
 .map-num::-webkit-outer-spin-button, .map-num::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
-.map-num:focus{outline:2px solid var(--znacka-svetla); outline-offset:2px; border-color:var(--znacka-svetla);}
+.map-num:focus, .hl-in:focus,
+.add-form input:focus-visible, .add-form textarea:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px; border-color:var(--znacka-svetla);}
 /* Rychlé volby jsou zkratka, ne omezení — po klepnutí se čísla objeví
    v políčkách a dají se dál upravit. */
 /* Co je u pozemku zavedené. Pilulky jako u kategorií, ale s vlastním
@@ -2862,7 +2879,11 @@ h1 em{ color:var(--znacka-svetla);
    `grid-auto-rows:1fr` srovná řady podle té nejvyšší. Panel tím
    naroste, ale roluje se — a stejně velká políčka se dají přelétnout
    očima, kdežto roztřepená se musí číst. */
-.mcv-rada, .mcv-rada.mcv-sloupec{display:grid; grid-template-columns:minmax(0,1fr);
+/* Táž mřížka i na hlídání (.hl-dlazdice) a ve formuláři inzerátu
+   (.check-group). Ta poslední byla do 9. 11. řádka s obtékáním, takže
+   dlaždice měly každá jinou šířku a řádky se trhaly — vedle panelu
+   filtrů to vypadalo jako jiný web. */
+.mcv-rada, .mcv-rada.mcv-sloupec, .hl-dlazdice, .check-group{display:grid; grid-template-columns:minmax(0,1fr);
   grid-auto-rows:1fr; gap:4px; margin-top:8px;}
 /* NA TELEFONU DVA SLOUPCE, NE OSM ŘÁDKŮ POD SEBOU.
    Osm voleb druhu pozemku pod sebou dělalo z panelu filtrů dlouhý
@@ -2879,7 +2900,8 @@ h1 em{ color:var(--znacka-svetla);
    1 070 px a sloupce si počítá sám (viz .map-controls níž). */
 @media (min-width:360px) and (max-width:1040px){
   .map-controls-panel .mcv-rada,
-  .map-controls-panel .mcv-rada.mcv-sloupec{grid-template-columns:repeat(2, minmax(0,1fr));}
+  .map-controls-panel .mcv-rada.mcv-sloupec,
+  .hl-dlazdice, .check-group{grid-template-columns:repeat(2, minmax(0,1fr));}
   .map-controls-panel .mcp-t{white-space:normal; line-height:1.3;}
 }
 /* POD 360 px ZŮSTÁVÁ JEDEN SLOUPEC. Změřeno na 320 px: dlaždice má
@@ -2897,13 +2919,20 @@ h1 em{ color:var(--znacka-svetla);
    Když jsem jí dal width:100% a výšku řádku, roztáhlo se „Uložené" na
    302×232 px, ujedlo lištu i sloupec a na celý výpis pozemků zbylo
    31 px výšky při obsahu 9 836 px. Změřeno na 1280×900. */
-.mcv-btn, .mc-toggles .mc-prep{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+/* TÝŽ RECEPT I MIMO PANEL. Hlídání mělo vlastní .hl-dlazdice-b
+   a .hl-prep, formulář inzerátu zase .chip-check s pilulkovým
+   zaoblením a systémovým zaškrtávátkem — tři podoby jedné volby.
+   Majitel 9. 11.: „chci, aby to bylo identické vizuálně i na hlídání,
+   přidávání inzerátu a všude." Deklarace je proto jedna a jmenuje
+   všechny tři. */
+.mcv-btn, .mc-toggles .mc-prep, .hl-dlazdice-b, .hl-prep, .chip-check{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
   font:inherit; font-size:14px; font-weight:600;
   cursor:pointer; min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
   border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
-  transition:var(--prechod);}
-.mcv-btn:hover, .mc-toggles .mc-prep:hover{border-color:var(--znacka); background:var(--plocha-zapustena);}
-.mcv-btn.on, .mc-toggles .mc-prep.on{background:var(--plocha-znacka); border-color:var(--plocha-znacka); color:#fff;}
+  box-sizing:border-box; transition:var(--prechod);}
+.mcv-btn:hover, .mc-toggles .mc-prep:hover, .hl-dlazdice-b:hover, .hl-prep:hover, .chip-check:hover{border-color:var(--znacka); background:var(--plocha-zapustena);}
+.mcv-btn.on, .mc-toggles .mc-prep.on, .hl-dlazdice-b.on, .hl-prep.on,
+.chip-check:has(input:checked){background:var(--plocha-znacka); border-color:var(--plocha-znacka); color:#fff;}
 /* Popisek si bere místo, počet se drží vpravo — čísla tak stojí nad
    sebou v jednom sloupci a dají se porovnat očima. */
 .mcp-t{flex:1 1 auto; min-width:0; line-height:1.2;}
@@ -2924,7 +2953,7 @@ h1 em{ color:var(--znacka-svetla);
 .mcv-n{margin-left:auto; padding-left:8px; flex:none; font-size:12px; font-weight:700;
   min-width:4.5ch; text-align:right;
   color:var(--muted); font-variant-numeric:tabular-nums;}
-.mcv-btn.on .mcv-n{color:rgba(255,255,255,0.82);}
+.mcv-btn.on .mcv-n, .hl-prep.on .hl-prep-n{color:rgba(255,255,255,0.82);}
 /* Štítek, pod kterým při dnešním nastavení nic není. Neschovává se —
    schovaná možnost vypadá, jako by neexistovala; takhle je vidět, že
    existuje a je prázdná. Kliknout na něj jde dál: sám o sobě filtr
@@ -2962,11 +2991,14 @@ h1 em{ color:var(--znacka-svetla);
 .mc-prep.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
 /* Zaškrtnutí se nekreslí obrázkem, ale rámečkem s fajfkou: v zapnutém
    stavu je bílé na zelené, ve vypnutém je z něj prázdný čtvereček. */
-.mcp-v{flex:none; width:18px; height:18px; border-radius:var(--r-xs); position:relative;
-  border:1.5px solid var(--line-ui); background:var(--plocha-karta);
+.mcp-v, .hl-prep-v, .chip-check input[type="checkbox"]{flex:none; width:18px; height:18px; border-radius:var(--r-xs); position:relative;
+  border:1.5px solid var(--line-ui); background:var(--plocha-karta); margin:0;
+  appearance:none; -webkit-appearance:none;
   transition:var(--prechod);}
-.mcv-btn.on .mcp-v, .mc-prep.on .mcp-v{background:#fff; border-color:#fff;}
-.mcv-btn.on .mcp-v::after, .mc-prep.on .mcp-v::after{content:""; position:absolute; left:5.5px; top:2px; width:4px; height:9px;
+.mcv-btn.on .mcp-v, .mc-prep.on .mcp-v, .hl-prep.on .hl-prep-v,
+.chip-check input[type="checkbox"]:checked{background:#fff; border-color:#fff;}
+.mcv-btn.on .mcp-v::after, .mc-prep.on .mcp-v::after, .hl-prep.on .hl-prep-v::after,
+.chip-check input[type="checkbox"]:checked::after{content:""; position:absolute; left:5.5px; top:2px; width:4px; height:9px;
   border:solid var(--plocha-znacka); border-width:0 2px 2px 0; transform:rotate(43deg);}
 
 /* Řada nad výsledky: počet, „Uložené" a řazení.
@@ -3153,14 +3185,19 @@ h1 em{ color:var(--znacka-svetla);
 }
 /* Okraj musí být vidět. S linkou na 18 % splývalo bílé políčko s bílým
    panelem a vypadalo to, že tam žádné pole není. */
-.map-select{width:100%; background:var(--plocha-karta); border:1px solid var(--line-ui); color:var(--text); border-radius:var(--r-ovladani); padding:8px 28px 8px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
+/* Rozbalovátko má týž recept jako pole výš — a platí i pro hlídání
+   (.hl-sel) a pro formulář inzerátu, kde bylo do 9. 11. zapuštěné
+   šedé s odsazením 12 px. Šipku si kreslí samo, takže musí mít vpravo
+   místo (28 px); tím se liší od textového pole, ničím jiným. */
+.map-select, .hl-sel, .add-form select{width:100%; min-height:44px; box-sizing:border-box;
+  background:var(--plocha-karta); border:1px solid var(--line-ui); color:var(--text); border-radius:var(--r-ovladani); padding:8px 28px 8px 12px; font-size:16px; font-weight:600; font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
   /* Šipka byla modrá (#6E9BFF) — zadrátovaná v adrese obrázku, takže
    si jí nevšimlo ani hledání barev. Je zelená jako všechno ostatní. */
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%230F5C3B' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 11px center;}
 /* Zaostření klávesnicí vypadalo na seznamech jinak než na políčku hledání —
    jen změna okraje, žádný prstenec. Teď je to stejné všude. */
-.map-select:focus-visible{border-color:var(--znacka-svetla); box-shadow:var(--prstenec-pole);}
-.map-select option{background:var(--plocha-zapustena); color:var(--text);}
+.map-select:focus-visible, .hl-sel:focus-visible, .add-form select:focus-visible{border-color:var(--znacka-svetla); box-shadow:var(--prstenec-pole);}
+.map-select option, .hl-sel option, .add-form select option{background:var(--plocha-zapustena); color:var(--text);}
 /* Vlastní rozbalovací seznam (místo ošklivého systémového na iPhonu) */
 .cdd{position:relative; width:100%;}
 .cdd-native{position:absolute; width:1px; height:1px; padding:0; margin:0; overflow:hidden; clip:rect(0 0 0 0); border:0; opacity:0; pointer-events:none;}
@@ -4819,7 +4856,8 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 .loc-btn{transition:var(--prechod);}
 .loc-btn:active{transform:translateY(1px);}
 .loc-btn.primary{box-shadow:var(--e2);}
-.loc-input{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:16px; background:var(--plocha-zapustena); color:var(--text); transition:var(--prechod); -webkit-appearance:none; appearance:none;}
+/* Políčko hlídaného místa — týž recept jako všechna ostatní pole. */
+.loc-input{width:100%; box-sizing:border-box; min-height:44px; padding:8px 12px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:16px; background:var(--plocha-karta); color:var(--text); transition:var(--prechod); -webkit-appearance:none; appearance:none;}
 .loc-input::placeholder{color:var(--text-zastupny);}
 .loc-input:focus{border-color:var(--znacka-svetla); background:var(--plocha-karta); box-shadow:var(--prstenec-pole);}
 .loc-err{color:var(--c-exekuce-ink); font-size:13px; margin:8px 2px 0; text-align:left;}
@@ -6354,7 +6392,12 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
 .add-more .add-more-body{padding:16px; display:flex; flex-direction:column; gap:16px;}
 .add-more summary:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:-2px; border-radius:var(--r-sm);}
 .add-field{display:flex; flex-direction:column; gap:4px;}
-.add-field label{font-size:13px; font-weight:600; color:var(--text);}
+/* Popisek NAD polem (ne název oddílu): tmavý, 14 px, bez verzálek —
+   týž, jaký má panel filtrů u „Cena (Kč)" a „Výměra (m²)"
+   (.mc-hodnoty .mc-rozsah > .mc-cap). Do 9. 11. tu byl o pixel menší,
+   což je přesně ten druh rozdílu, který nikdo nepojmenuje a každý
+   vidí. */
+.add-field label{font-size:14px; font-weight:600; color:var(--text);}
 .add-field .req{color:var(--znacka-svetla);}
 .add-field .hint{font-size:12px; color:var(--muted); font-weight:400;}
 /* MIN-WIDTH:0 NENÍ KOSMETIKA. Políčko formuláře si bez ní drží vlastní
@@ -6371,13 +6414,12 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
    a hypoteční kalkulačka), 2× nula a 1× 6 px. Remíza 28:28 znamená, že
    o tom nikdo nerozhodl; rozhoduje se to teď na 14, protože tak je
    zaoblené všechno ostatní, čím se na webu ovládá. */
-.add-form input, .add-form select, .add-form textarea{
-  background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-ovladani); padding:12px 12px;
-  font-size:16px; color:var(--text); font-family:inherit; width:100%; min-width:0;
-}
-.add-form textarea{resize:vertical; min-height:96px;}
+/* TVAR POLÍ UŽ TU NESTOJÍ. Byl to třetí recept na totéž (zapuštěná
+   šedá, rám 0,14 alfa, odsazení 12 px) a od 9. 11. má celý web jeden —
+   viz „JEDNA ŘEČ POLÍ" u .map-num. Zbývá tu jen to, co platí opravdu
+   jen pro tenhle formulář. */
+.add-form textarea{resize:vertical; min-height:96px; padding-top:12px; padding-bottom:12px;}
 .add-form input::placeholder, .add-form textarea::placeholder{color:var(--text-zastupny);}
-.add-form input:focus-visible, .add-form select:focus-visible, .add-form textarea:focus-visible{border-color:var(--znacka-svetla);}
 .add-row{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
 .add-check{display:flex; align-items:flex-start; gap:8px; font-size:13px; color:var(--muted); line-height:1.5;}
 .add-check input{width:18px; height:18px; flex:none; margin-top:1px; accent-color:var(--znacka);}
@@ -6438,7 +6480,12 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
 .auth-field .hint{font-size:12px; font-weight:400; color:var(--muted);}
 .auth-inp{position:relative; display:flex; align-items:center;}
 .auth-inp .auth-ico{position:absolute; left:14px; width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah); color:var(--muted); pointer-events:none; transition:var(--prechod); z-index:1;}
-.auth-inp input{width:100%; min-height:48px; background:var(--plocha-zapustena); border:1px solid var(--line-ui); border-radius:var(--r-ovladani); padding:12px 40px; font-size:16px; color:var(--text); font-family:inherit; transition:var(--prechod);}
+/* Přihlašovací pole má týž tvar jako ostatní pole na webu („JEDNA ŘEČ
+   POLÍ" u .map-num): bílá plocha, 44 px, odsazení 8 px. Navíc má jen
+   místo pro ikonu vlevo a pro oko vpravo, tedy 40 px po stranách.
+   Do 9. 11. bylo zapuštěné šedé a o čtyři pixely vyšší než všechno
+   ostatní. */
+.auth-inp input{width:100%; min-height:44px; box-sizing:border-box; background:var(--plocha-karta); border:1px solid var(--line-ui); border-radius:var(--r-ovladani); padding:8px 40px; font-size:16px; color:var(--text); font-family:inherit; transition:var(--prechod);}
 .auth-inp input::placeholder{color:var(--text-zastupny);}
 .auth-inp input:focus{border-color:var(--znacka-svetla); background:var(--plocha-karta); box-shadow:var(--prstenec-pole);}
 .auth-inp:focus-within .auth-ico{color:var(--znacka-svetla);}
@@ -6704,11 +6751,10 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
 .pp-stav.spatne{color:var(--c-danger);}
 .photo-preview .pp img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block;}
 /* Skupina štítků (sítě) */
-.check-group{display:flex; flex-wrap:wrap; gap:8px;}
-.chip-check{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--line); border-radius:var(--r-pill); font-size:13px; color:var(--text); cursor:pointer; transition:var(--prechod);}
-.chip-check input{width:16px; height:16px; accent-color:var(--znacka); margin:0;}
-.chip-check:hover{border-color:var(--znacka);}
-.chip-check:has(input:checked){border-color:var(--znacka); background:rgba(var(--brand-live-rgb),0.12);}
+/* Tvar (rám, zaoblení, výška, zaškrtávátko) je společný s dlaždicí
+   v panelu filtrů a na hlídání — viz .mcv-btn. Tady zbývá jen to, co
+   má tenhle výčet navíc: na široké stránce se vejdou dvě do řádku. */
+.chip-check:focus-within{border-color:var(--znacka-svetla); box-shadow:var(--prstenec-pole);}
 /* Náhled místa ve formuláři „přidat pozemek". Rám drží poměr stran,
    aby karta neposkakovala, než se snímek stáhne. Barvy jsou tytéž jako
    u hlášky pod formulářem (.add-msg) — stejná zpráva má vypadat stejně,
@@ -9419,8 +9465,9 @@ body > footer{flex:none;}
      Výška se dává odkazu, ne řádku: řádek se tím na telefonu zvedne
      o pár pixelů, zato se dá trefit. */
   .okr-item .okr-src{min-height:44px; display:inline-flex; align-items:center;}
-  /* Zaškrtávací pilulky ve formuláři („Elektřina") měly 41 px. */
-  .chip-check{min-height:44px;}
+  /* Zaškrtávací dlaždice ve formuláři („Elektřina") měly 41 px; od
+     9. 11. je výška ve společném receptu (.mcv-btn), tak už tu mez
+     nemusí stát podruhé. */
   /* Odznaky „Naposledy prohlédnuté" měly 31 px. Dosud to nikomu nevadilo,
      protože se ten pruh NIKDY neukázal: zapisovala do něj jen funkce, ke
      které se nedalo dostat. Teď se ukazuje, tak platí táž mez jako pro

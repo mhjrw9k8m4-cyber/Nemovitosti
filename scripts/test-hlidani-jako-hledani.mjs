@@ -20,13 +20,19 @@
 // vypočtený styl a zase se zahodí. Pravidla platí stejně, ať je prvek
 // na obrazovce, nebo ne — a srovnávají se tak recepty, ne náhoda.
 //
-// JEDINÁ DOVOLENÁ ODCHYLKA je velikost a řez písma v políčku a výběru.
-// Hledání má v číselném poli 14 px a ve výběru 13/600; hlídání má
-// v obojím 16/400. Důvody: pod 16 px iPhone při klepnutí do pole
-// zvětší celou stránku (hledání tu vadu má taky, ale opravit se musí
-// tam, ne opsat sem), a uvnitř jednoho formuláře má mít políčko
-// a výběr tutéž velikost. Všechno ostatní — tvar, rám, plochy, barvy
-// i výška — se musí shodovat.
+// ODCHYLKA UŽ ŽÁDNÁ NENÍ. Do 9. 11. se tolerovala velikost písma
+// v políčku a výběru (hledání 14 px, hlídání 16) s odůvodněním, že pod
+// 16 px iPhone stránku při klepnutí zvětší a hledání tu vadu teprve má
+// opravit. Opravená je: 16 px má celý web, a tak se i písmo porovnává.
+//
+// A TŘETÍ STRANA: PŘIDÁNÍ INZERÁTU. Majitel 9. 11. nad snímkem panelu
+// filtrů: „toto řazení chci všude, chci, aby to bylo identické
+// vizuálně i na hlídání, přidávání inzerátu a všude." Naměřeno tehdy
+// na 390 px: formulář inzerátu měl pole v ZAPUŠTĚNÉ ŠEDI s rámem
+// 0,14 alfa a odsazením 12 px (hledání bílé, 0,55 alfa, 8 px),
+// popisek o pixel menší a volby jako pilulky se systémovým
+// zaškrtávátkem. Role, které ta stránka má, se proto srovnávají
+// s hledáním stejně jako hlídání.
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
@@ -42,11 +48,16 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 
-/* Role → třída na jedné a na druhé straně, a jaký prvek ji nese. */
+/* Role → třída na jedné, na druhé a na třetí straně, a jaký prvek ji
+   nese. Hodnota je buď jméno třídy, nebo { trida, obal }, když
+   pravidlo platí jen uvnitř něčeho (ve formuláři inzerátu se pole
+   popisuje `.add-form input`, tedy bez obalu by se nenašlo). */
 const ROLE = [
   { jm: 'popisek pole',    tag: 'span',   hledani: 'mc-cap',      hlidani: 'hl-lbl',    pismo: true },
-  { jm: 'textové pole',    tag: 'input',  hledani: 'map-num',     hlidani: 'hl-in',     pismo: false },
-  { jm: 'výběr',           tag: 'select', hledani: 'map-select',  hlidani: 'hl-sel',    pismo: false },
+  { jm: 'textové pole',    tag: 'input',  hledani: 'map-num',     hlidani: 'hl-in',     pismo: true,
+    pridat: { trida: '', obal: 'add-form' } },
+  { jm: 'výběr',           tag: 'select', hledani: 'map-select',  hlidani: 'hl-sel',    pismo: true,
+    pridat: { trida: '', obal: 'add-form' } },
   { jm: 'rychlá volba',    tag: 'button', hledani: 'filter-chip', hlidani: 'hl-rychle', pismo: true },
   { jm: 'pilulka „musí mít"', tag: 'button', hledani: 'filter-chip', hlidani: 'hl-chip', pismo: true },
   { jm: 'hlavní tlačítko', tag: 'button', hledani: 'mcf-hotovo',  hlidani: 'hl-btn',    pismo: true },
@@ -58,8 +69,28 @@ const ROLE = [
      drobného písma místo kolečka „i". Všechny tři věci teď mají
      v hlídání protějšek a hlídají se stejně jako zbytek. */
   { jm: 'dlaždice typu nabídky', tag: 'button', hledani: 'filter-chip', hlidani: 'hl-dlazdice-b', pismo: true },
-  { jm: 'přepínač',        tag: 'button', hledani: 'mc-prep',     hlidani: 'hl-prep',   pismo: true },
+  /* PŘEPÍNAČ SE SROVNÁVÁ S TÍM V PANELU, NE SE ŠTÍTKEM NAD VÝPISEM.
+     Třída .mc-prep má dvě podoby: uvnitř panelu je to dlaždice přes
+     celou šířku (.mc-toggles .mc-prep), nad výsledky drobný štítek
+     („Uložené", „Porovnat"). Do 9. 11. se hlídání srovnávalo s tím
+     štítkem, a tak bylo „Jen celé nemovitosti" pilulka s průhlednou
+     plochou. V panelu je to přitom dlaždice jako každá jiná volba —
+     a tou je teď i na hlídání. */
+  { jm: 'přepínač',        tag: 'button', hledani: { trida: 'mc-prep', obal: 'mc-toggles' },
+    hlidani: 'hl-prep',   pismo: true },
+  /* VOLBA SE ZAŠKRTNUTÍM. V panelu je to dlaždice v řadě „Co uvádí
+     inzerát" (.mcv-btn), na hlídání .hl-dlazdice-b a ve formuláři
+     inzerátu .chip-check u sítí („Elektřina", „Voda"). Táž otázka,
+     tatáž odpověď, tak i týž tvar. */
+  { jm: 'volba se zaškrtnutím', tag: 'button', hledani: 'mcv-btn', hlidani: 'hl-dlazdice-b',
+    pridat: 'chip-check', pismo: true },
   { jm: 'kolečko „i"',     tag: 'button', hledani: 'mc-info',     hlidani: 'hl-info',   pismo: false },
+  /* Popisek NAD polem (ne název oddílu). V panelu je to .mc-cap uvnitř
+     .mc-hodnoty > .mc-rozsah — tam ho pravidlo přepíná na tmavých
+     14 px; ve formuláři inzerátu je to prosté <label> v .add-field,
+     které bylo do 9. 11. o pixel menší. */
+  { jm: 'popisek nad polem', tag: 'span', hledani: { trida: 'mc-cap', obal: 'mc-hodnoty mc-rozsah' },
+    pridat: { tag: 'label', trida: '', obal: 'add-field' }, pismo: true },
 ];
 
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },
@@ -84,9 +115,23 @@ const p = await ctx.newPage();
 const recepty = (strana) => p.evaluate(([role, kam]) => {
   const ven = {};
   for (const r of role) {
-    const e = document.createElement(r.tag);
-    e.className = r[kam];
-    document.body.appendChild(e);
+    const spec = r[kam];
+    if (!spec) continue;                       // tuhle roli ta stránka nemá
+    const popis = typeof spec === 'string' ? { trida: spec } : spec;
+    /* OBAL MŮŽE BÝT I ŘETĚZ. Některé recepty platí až uvnitř něčeho
+       („.add-form input", „.mc-hodnoty .mc-rozsah > .mc-cap"), takže
+       se kolem prvku postaví tytéž vrstvy; bez nich by se měřil recept,
+       který na stránce nikdy nenastane. */
+    const vrstvy = String(popis.obal || '').split(/\s+/).filter(Boolean);
+    let kam2 = document.body;
+    const koren = [];
+    for (const tr of vrstvy) {
+      const o = document.createElement('div'); o.className = tr;
+      kam2.appendChild(o); koren.push(o); kam2 = o;
+    }
+    const e = document.createElement(popis.tag || r.tag);
+    e.className = popis.trida || '';
+    kam2.appendChild(e);
     const c = getComputedStyle(e);
     ven[r.jm] = {
       tvar: c.borderRadius,
@@ -101,6 +146,7 @@ const recepty = (strana) => p.evaluate(([role, kam]) => {
       pismo: c.fontSize + '/' + c.fontWeight,
     };
     e.remove();
+    if (koren.length) koren[0].remove();
   }
   return ven;
 }, [role, strana]);
@@ -121,20 +167,41 @@ const B = await recepty('hlidani');
 const jeFormular = await p.evaluate(() => !!document.getElementById('ns-okres'));
 const jednotky = await p.evaluate(() => [...document.querySelectorAll('.hl-lbl .jednotka, .mc-cap .jednotka')]
   .map((e) => getComputedStyle(e).textTransform));
+
+await p.goto(BASE + '/pridat.html', { waitUntil: 'load' });
+await p.waitForTimeout(800);
+const C = await recepty('pridat');
+/* Že jsme opravdu na stránce inzerátu: recept by se přečetl i jinde
+   (pravidla jsou ve společném stylopisu), takže bez téhle kontroly by
+   se mohlo srovnávat nad kteroukoli stránkou. */
+const jePridat = await p.evaluate(() => !!document.querySelector('form.add-form, .add-sekce'));
 await prohlizec.close();
 
 pravda('formulář hlídání se vykreslil (jinak by se recepty četly nad prázdnem)',
   jeFormular === true, 'ns-okres v dokumentu není');
 
+pravda('stránka s inzerátem se vykreslila (jinak by se recepty četly jinde)',
+  jePridat === true, 'form.add-form ani .add-sekce v dokumentu není');
+
 const VLASTNOSTI = ['tvar', 'ram', 'plocha', 'ink', 'vyska', 'sirka'];
-for (const r of ROLE) {
-  const a = A[r.jm], b = B[r.jm];
-  const rozdily = VLASTNOSTI.filter((k) => a[k] !== b[k])
-    .map((k) => k + ': hledání „' + a[k] + '" · hlídání „' + b[k] + '"');
-  if (r.pismo && a.pismo !== b.pismo) rozdily.push('písmo: hledání ' + a.pismo + ' · hlídání ' + b.pismo);
-  pravda(`${r.jm}: tentýž recept (.${r.hledani} = .${r.hlidani})`,
+const jmenoTridy = (spec) => (typeof spec === 'string' ? spec : spec && spec.trida) || '(bez třídy)';
+function srovnej(r, a, druha, jmeno, spec) {
+  if (!a || !druha) return;
+  const rozdily = VLASTNOSTI.filter((k) => a[k] !== druha[k])
+    .map((k) => k + ': hledání „' + a[k] + '" · ' + jmeno + ' „' + druha[k] + '"');
+  if (r.pismo && a.pismo !== druha.pismo) rozdily.push('písmo: hledání ' + a.pismo + ' · ' + jmeno + ' ' + druha.pismo);
+  pravda(`${r.jm}: tentýž recept na ${jmeno} (.${jmenoTridy(r.hledani)} = .${jmenoTridy(spec)})`,
     rozdily.length === 0, rozdily.join('\n      '));
 }
+let sPridanim = 0;
+for (const r of ROLE) {
+  srovnej(r, A[r.jm], B[r.jm], 'hlídání', r.hlidani);
+  if (r.pridat) { srovnej(r, A[r.jm], C[r.jm], 'inzerát', r.pridat); sPridanim++; }
+}
+/* PŘEDPOKLAD: bez rolí, které má i formulář inzerátu, by se o té
+   stránce netvrdilo nic a kontroly výš by platily jen o dvou. */
+pravda(`a formulář inzerátu se srovnává aspoň ve třech rolích (${sPridanim})`,
+  sPridanim >= 3, 'rolí s protějškem na pridat.html je ' + sPridanim);
 
 /* A ještě jedna vada, kterou tahle práce odkryla: popisek pole je
    verzálkami, takže „Cena (Kč)" se vysázelo jako „CENA (KČ)"
@@ -145,7 +212,7 @@ pravda(`jednotka v popisku se nepíše verzálkami (${jednotky.length} nalezeno)
   jednotky.length > 0 && jednotky.every((t) => t === 'none'),
   JSON.stringify(jednotky));
 
-console.log('\nHlídání jako hledání: jeden recept na jednu roli');
+console.log('\nJedna řeč ovládání: hledání, hlídání i přidání inzerátu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {

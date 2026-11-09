@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=33b95160">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=fa0a1b9f">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -166,28 +166,14 @@
        je u sebe scripts/test-hlidani-jako-hledani.mjs, který obě
        stránky načte a porovná VYPOČTENÉ hodnoty. Kdo změní jednu
        stranu, dozví se o druhé.
-       JEDINÁ ÚMYSLNÁ ODCHYLKA: písmo v políčkách je 16 px, kdežto
-       .map-num má 14. Pod 16 px iPhone při klepnutí do pole zvětší
-       celou stránku. Hledání má tutéž vadu, ale tu je potřeba spravit
-       tam, ne ji sem opisovat. */
-    .hl-in,.hl-sel{width:100%; box-sizing:border-box; min-height:44px; padding:8px 12px;
-      border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:16px;
-      background:var(--plocha-karta); color:var(--text); margin-bottom:8px; font-family:inherit;}
-    /* MIN-WIDTH:0 JAKO U .map-num V PANELU. V živém řádku „od – do"
-       to nic nemění (změřeno: pole 112 px, řada 246, nepřeteče ani
-       s devítimístným číslem — protože min-width:auto se u ohebného
-       prvku chová jako nula). Deklaruje se proto, aby ten recept byl
-       s panelem shodný i mimo ohebný řádek a aby to hlídač porovnání
-       nemusel brát jako rozdíl. Na .hl-sel se to NEVZTAHUJE: .map-select
-       má min-width:0 jen uvnitř .mc-hodnota-radek, jinak taky auto. */
-    .hl-in{min-width:0;}
-    /* Šipka u výběru: tatáž kresba i barva jako u .map-select v hledání
-       (zelená #0F5C3B, 10×7, 11 px od pravého okraje). Systémová šipka
-       vypadá na každém telefonu jinak — tahle všude stejně. */
-    .hl-sel{appearance:none; -webkit-appearance:none; padding-right:28px; cursor:pointer;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23175A40' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat:no-repeat; background-position:right 11px center;}
-    .hl-in:focus,.hl-sel:focus{border-color:var(--znacka-svetla); box-shadow:var(--prstenec-pole);}
+       ŽÁDNÁ ODCHYLKA UŽ NENÍ. Do 9. 11. tu stál vlastní opis receptu
+       políčka a výběru, protože hledání mělo v poli 14 px a pod 16 px
+       iPhone stránku při klepnutí zvětší. Tu vadu teď má hledání
+       opravenou (16 px má celý web) a recept je jeden, v css/styles.css
+       („JEDNA ŘEČ POLÍ" u .map-num a .map-select) — tenhle soubor si
+       ho už neopisuje. Zbývá tu jen odstup pod polem, který panel nemá:
+       v panelu jsou pole v mřížce s mezerou, tady stojí pod sebou. */
+    .hl-in,.hl-sel{margin-bottom:8px;}
     /* Recept tlačítka „Hotovo" z panelu filtrů (.mcf-hotovo): 46 px,
        16/700, zaoblení ovládání. Mělo 48 px a 14/700 — o dva pixely
        vyšší a o dva menším písmem, tedy skoro stejné, a právě proto to
@@ -309,20 +295,15 @@
        „Od majitele" se do nich nevejde na jeden řádek — naměřeno,
        že se zalomí a řada vyroste ze 44 na 63 px. Panel to má
        vyřešené touž hranicí, tak ji neobcházím vlastní. */
-    .hl-dlazdice{display:grid; grid-template-columns:minmax(0,1fr);
-      grid-auto-rows:1fr; gap:4px; margin:2px 0 4px;}
-    @media (min-width:360px){ .hl-dlazdice{grid-template-columns:repeat(2, minmax(0,1fr));} }
-    .hl-dlazdice-b{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
-      font:inherit; font-size:14px; font-weight:600; cursor:pointer;
-      min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
-      border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
-      transition:var(--prechod);}
+    /* ROZVRŽENÍ MŘÍŽKY JE OD 9. 11. SPOLEČNÉ (.mcv-rada v css/styles.css).
+       Tady zbývá jen odstup nad ní. */
+    .hl-dlazdice{margin:2px 0 4px;}
+    /* Tvar dlaždice (rám, výška, odsazení, zapnutý stav) je od 9. 11.
+       společný s panelem filtrů i s formulářem inzerátu — viz .mcv-btn
+       v css/styles.css. Tady zbývá jen ikona uvnitř, kterou panel nemá. */
     .hl-dlazdice-b .ik{width:var(--ik-s); height:var(--ik-s); flex:none; fill:none; stroke:currentColor;
       stroke-width:var(--ik-s-tah); stroke-linecap:round; stroke-linejoin:round; color:var(--znacka);}
-    .hl-dlazdice-b:hover{border-color:var(--znacka-svetla);}
-    .hl-dlazdice-b.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12);
-      color:var(--znacka-svetla); font-weight:700;}
-    .hl-dlazdice-b.on .ik{color:var(--znacka-svetla);}
+    .hl-dlazdice-b.on .ik{color:#fff;}
     .hl-dlazdice-b:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
     /* Rozbalovátko a zaškrtávátko zůstávají ve stromu jako zdroj
        pravdy, ale nekreslí se. `display:none` by je vyřadilo
@@ -330,12 +311,9 @@
     .hl-skryty-sel, .hl-skryty-vstup{position:absolute; width:1px; height:1px; margin:-1px;
       padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;}
     /* PŘEPÍNAČ — recept .mc-prep ze skupiny „Příležitosti" v panelu. */
-    .hl-prep{display:inline-flex; align-items:center; gap:4px; font:inherit; font-size:13px; font-weight:600;
-      cursor:pointer; min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
-      border:1px solid var(--line-ui); background:none; color:var(--muted);
-      transition:var(--prechod);}
-    .hl-prep:hover{border-color:var(--znacka); color:var(--znacka);}
-    .hl-prep.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+    /* Tvar je společný s dlaždicí v panelu (.mcv-btn v css/styles.css).
+       Do 9. 11. to tu byla pilulka 13/600 s průhlednou plochou, tedy
+       čtvrtá podoba téže volby na webu. */
     .hl-prep:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
     /* Počet u popisku — recept .chip-n z panelu, bez margin-left:auto:
        pilulka se šířce nepřizpůsobuje, takže číslo stojí hned za textem. */
@@ -352,11 +330,10 @@
       .hl-prep{min-height:44px;}
       .hl-info{min-width:44px; min-height:44px;}
     }
-    .hl-prep-v{flex:none; width:18px; height:18px; border-radius:var(--r-xs); position:relative;
-      border:1.5px solid var(--line-ui); background:var(--plocha-karta); transition:var(--prechod);}
-    .hl-prep.on .hl-prep-v{background:#fff; border-color:#fff;}
-    .hl-prep.on .hl-prep-v::after{content:""; position:absolute; left:5.5px; top:2px; width:4px; height:9px;
-      border:solid var(--plocha-znacka); border-width:0 2px 2px 0; transform:rotate(45deg);}
+    /* Zaškrtávátko: recept .mcp-v v css/styles.css, společný s panelem
+       i s formulářem inzerátu. Opis tu měl fajfku otočenou o 45°,
+       kdežto panel o 43° — dva pixely rozdílu, které nikdo nepojmenuje
+       a oko je vidí. */
     /* KOLEČKO „i" — recept .mc-info z panelu, i s tím, že chytací
        plocha je 36 px, ale KRESBA jen 18 px kolečko uvnitř. První
        verze tady udělala rámeček rovnou z tlačítka a hlídač to
