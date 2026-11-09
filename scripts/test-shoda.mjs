@@ -226,7 +226,19 @@ const cil = await p.evaluate((D) => {
      429 nabídek a nejhlubší „sleva" vyšla právě u ní. */
   const n = D.filter((d) => {
     if (window.PK_CENY.spravniCena && window.PK_CENY.spravniCena(d)) return false;
-    const o = M.odhad(d); return o && o.podleVelikosti && o.podOdhadem >= 15;
+    const o = M.odhad(d);
+    if (!o || !o.podleVelikosti || o.podOdhadem < 15) return false;
+    /* A SPOLUVLASTNICKÝ PODÍL TAKY NE, ze stejného důvodu jako státní
+       půda o kus výš: u podílu se blok odhadu schválně nekreslí
+       s částkou, ale větou „Srovnání s okolím tu neděláme — v ceně je
+       jen spoluvlastnický podíl, kdežto výměra v inzerátu je celá
+       parcela." Zkouška by hledala číslo tam, kde žádné být nemá.
+       Naměřeno 9. 11.: nejhlubší „sleva" vyšla právě u podílu
+       (pozemek-litomerice-ustek-159se0o), protože procento se u nich
+       počítá z výměry celé parcely — a to je důvod, proč se o nich
+       takhle mluví. */
+    if (o.podil) return false;
+    return true;
   })
     .sort((a, b) => M.odhad(b).podOdhadem - M.odhad(a).podOdhadem)[0];
   return n ? { klic: [n.place, n.parcel, n.okres, n.lat.toFixed(3), n.lng.toFixed(3)].join('|'),

@@ -1181,9 +1181,36 @@ if (DRAZBA) {
   const koliziD = Object.values(dlouhe).filter((n) => n > 1).length;
   pravda(`vzorek dat na to srovnání je (${vsechny.length} pozemků)`, vsechny.length > 500,
     `pozemků ${vsechny.length}`);
-  pravda(`krátký klíč pozemky nerozlišuje (${koliziK} kolizí), klíč se souřadnicemi ano (${koliziD})`,
-    koliziK > 50 && koliziD < koliziK / 5,
+  /* POMĚR „PĚTKRÁT MÍŇ" TU STÁL DO 9. 11. A ZESTÁRL.
+     Nebyl to špatný odhad, ale měřil něco, co se mění s každým novým
+     zdrojem: souřadnice se zaokrouhlují na tři desetinná místa (asi
+     110 m) a zdroje, které polohu znají jen podle obce — dražby
+     z registrů, nabídky státu —, tím padnou na týž bod bez ohledu na
+     délku klíče. Naměřeno 9. 11.: krátký 429 kolizí, dlouhý 189,
+     tedy 2,3× líp místo pěti.
+     Měří se proto to, o co doopravdy jde: delší klíč musí rozlišovat
+     LÉPE, a zbylé kolize smí být jen mezi nabídkami BEZ parcelního
+     čísla. Kdyby se na jeden klíč sešly dvě nabídky, z nichž aspoň
+     jedna parcelní číslo má, znamená to, že se dvě KONKRÉTNÍ parcely
+     slily v jednu — a uložený pozemek by vedl na cizí nabídku.
+     Naměřeno: 189 kolizních skupin, 705 nabídek, a ani v jedné
+     skupině není nabídka s parcelním číslem. */
+  const beParcely = (o) => { const p = String(o.parcel || '').trim(); return !p || p === '—'; };
+  const sklouzle = {};
+  vsechny.forEach((d) => {
+    const la = (typeof d.lat === 'number') ? d.lat.toFixed(3) : '';
+    const ln = (typeof d.lng === 'number') ? d.lng.toFixed(3) : '';
+    const k5 = [d.place || '', d.parcel || '', d.okres || '', la, ln].join('|');
+    (sklouzle[k5] = sklouzle[k5] || []).push(d);
+  });
+  const skupiny = Object.entries(sklouzle).filter(([, v]) => v.length > 1);
+  const sCislem = skupiny.filter(([, v]) => v.some((o) => !beParcely(o)));
+  pravda(`krátký klíč pozemky nerozlišuje (${koliziK} kolizí), klíč se souřadnicemi líp (${koliziD})`,
+    koliziK > 50 && koliziD < koliziK,
     `krátký ${koliziK}, dlouhý ${koliziD} — pokud se to srovnalo, přepiš tuhle zkoušku`);
+  pravda(`a žádná z ${skupiny.length} zbylých kolizí neslučuje nabídky s parcelním číslem`,
+    sCislem.length === 0,
+    'slučuje: ' + sCislem.slice(0, 3).map(([k, v]) => k + ' → ' + v.map((o) => o.parcel).join(', ')).join(' | '));
 
   /* A TOTÉŽ CHOVÁNÍM, ne čtením zdroje: stránka se otevře jen s klíčem
      v adrese a BEZ souřadnic (&ll=). Pak je porovnání klíče jediná cesta,

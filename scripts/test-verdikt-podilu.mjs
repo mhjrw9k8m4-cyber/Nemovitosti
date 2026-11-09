@@ -87,9 +87,21 @@ for (const [skupina, kde] of [['podílová výměra', podilove], ['výměra cel�
    tvrdí opak — ať už ji napíše kterýkoli z generátorů. */
 for (const { soubor } of podilove.slice(0, 6)) {
   const h = readFileSync(path.join(KOREN, soubor), 'utf8').replace(/\u00a0/g, ' ');
+  /* VĚTA O SOUSEDECH NENÍ VĚTA O TÉHLE PARCELE.
+     Odstavec „Pozemky v okolí" umí napsat „2 z nich jsou
+     spoluvlastnické podíly. U jednoho z nich je výměra za celou
+     parcelu, ne za to, co se prodává." (generate-parcel-pages.mjs,
+     hledej `podiluCele`). To je pravda o JINÝCH nabídkách a je to
+     užitečné — jenže hlídač hledal ten obrat kdekoli na stránce,
+     takže ho četl jako tvrzení o parcele, na kterou se člověk dívá.
+     Naměřeno 9. 11. na pozemek-litomerice-ustek-159se0o.
+     Souvětí o sousedech se proto odřízne; zbytek stránky se hlídá
+     dál, tedy i to, co napíše kterýkoli generátor. */
+  const bezSousedu = h.replace(
+    /U (?:jednoho|[\d ]+) z nich (?:je|jsou) výměra za cel(?:ou parcelu|é parcely), ne za to, co se prodává\./g, ' ');
   pravda(`${soubor}: nikde netvrdí, že výměra je celé parcely`,
-    !/výměra za celou parcelu|patří celé parcele|výměra je uvedená celá/.test(h),
-    (h.match(/.{0,60}(?:výměra za celou parcelu|patří celé parcele|výměra je uvedená celá).{0,20}/) || [''])[0]);
+    !/výměra za celou parcelu|patří celé parcele|výměra je uvedená celá/.test(bezSousedu),
+    (bezSousedu.match(/.{0,60}(?:výměra za celou parcelu|patří celé parcele|výměra je uvedená celá).{0,20}/) || [''])[0]);
 }
 
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
