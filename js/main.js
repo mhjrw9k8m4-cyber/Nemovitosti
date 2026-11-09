@@ -4702,7 +4702,11 @@
             }).join('') +
           '</fieldset>' +
           '<div class="vm-pocet" id="vm-pocet" aria-live="polite"></div>' +
-          '<button class="vm-ok" type="button" id="vm-ok">Zobrazit pozemky</button>' +
+          /* „Zobrazit nabídky", ne „pozemky": v okně se vybírá okolí pro
+             VŠECHNY nabídky a řádek přímo nad tlačítkem už správně hlásí
+             „23 nemovitostí v okruhu 10 km". Dvě slova o téže množině
+             na dvou řádcích pod sebou si odporovala. */
+          '<button class="vm-ok" type="button" id="vm-ok">Zobrazit nabídky</button>' +
         '</div>' +
       '</div>';
     /* Zaměření do okna, zámek tabulátoru a vrácení na otvírač —
@@ -4768,8 +4772,19 @@
        poslouchá gesto „zpět". Kdo tam chtěl přiblížit nebo jen posunout
        mapu, pral se s prohlížečem. Zároveň tam překážel nadpisu okna.
        Popisky česky: Leaflet je jinak pojmenuje anglicky. */
+    /* ČTVRTINOVÉ KROKY PŘIBLÍŽENÍ, jako na hlavní mapě. Leaflet umí
+       bez tohohle jen celé stupně, a protože jeden stupeň je dvojnásobek,
+       „srovnej na okruh" muselo vždycky zaokrouhlit DOLŮ — tedy až
+       dvakrát dál, než je potřeba. Naměřeno na telefonu 390 px po
+       výběru obce a přepnutí na 2 km: kruh měl v průměru 40 px, ačkoli
+       se do mapy vejde 290. Ze čtyřiceti pixelů se velikost okolí
+       odhadnout nedá, a přesně na tohle majitel ukazoval.
+       Se čtvrtinovými kroky vyjde rám tak, jak je spočítaný; `zoomDelta`
+       zůstává 1, aby tlačítka +/− skákala po celých stupních jako
+       všude jinde. */
     var m = L.map(ov.querySelector('#vm-mapa'), {
       zoomControl: false, attributionControl: false, preferCanvas: true,
+      zoomSnap: 0.25, zoomDelta: 1,
     }).setView([start.lat, start.lng], zoomStart);
     L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(m);
     // Stejné okno ven jako u hlavní mapy (PK_MAPA) — testy se odsud musí umět
@@ -5449,16 +5464,32 @@
     kmVstupy.forEach(function (r) {
       r.addEventListener('change', function () {
         prepocti();
-        /* PŘEPNUTÍ OKRUHU MAPOU NEHNE. NIKDY.
-           Nejdřív se mapa přerovnávala při každé změně okruhu. To se
-           zúžilo na „jen když se nový kruh do okna nevejde" — a i to
-           bylo pořád špatně: člověk si přiblíží, kam chce, přepne
-           z 10 km na 50 km a pohled mu uteče. Stížnost zněla doslova
-           „ať mě to nechá tam, kde mám přiblíženo, bez ohledu na to,
-           jak přepínám velikost kruhu".
-           Když okruh není vidět, řekne to tlačítko „Ukázat okruh"
-           (hlidejVidet() volá prepocti() o řádek výš) a přerovná se
-           teprve tehdy, když o to člověk sám požádá. */
+        /* PŘEPNUTÍ OKRUHU MAPOU NEHNE, DOKUD JE OKRUH VIDĚT.
+           Dřív tu stálo „nikdy, za žádnou cenu". Důvod byl dobrý: kdo
+           si přiblíží, kam chce, a přepne z 10 km na 50 km, nechce, aby
+           mu pohled utekl. Jenže platilo to i ve stavu, kdy z okruhu
+           nebylo co vidět — a pak mapa ukazuje celou republiku s pěti
+           sty tečkami, zatímco pod ní stojí „23 nemovitostí v okruhu
+           10 km u obce Jílové u Prahy". To okno pak nevybírá okolí,
+           jen jím jezdí. Majitel 9. 11.: „tohle ježdění po mapě mě
+           fakt sere… občas se to bere, jak je to malé, je to špatně
+           vidět a je to takové málo profesionální."
+           Pravidlo je teď podmíněné, a ta podmínka je úzká schválně:
+           mapa se srovná JEN TEHDY, KDYŽ JE Z OKRUHU TEČKA — tedy když
+           je menší než NEJMENSI_OKRUH_PX a z obrazovky se o velikosti
+           okolí nedá poznat nic. To byl stav z majitelova snímku.
+           PŘETÉKÁNÍ SE TÍM NEŘEŠÍ, a to je úmysl: kdo si přiblíží
+           a přepne z 10 na 50 km, kruh mu přeteče ven — ale pohled mu
+           zůstane, přesně jak si vymínil. Na ten případ je tlačítko
+           „Ukázat okruh", které se v něm samo nabídne. Jinými slovy:
+           mapa sama opravuje jen to, co nejde vidět vůbec; co jde vidět
+           aspoň zčásti, je volba člověka a ta se nepřebíjí. */
+        if (!vybranoMisto) return;
+        var c = stred();
+        if (okruhJeTecka(c.lat, c.lng)) {
+          jdiNa(c.lat, c.lng, true);
+          hlidejVidet();
+        }
       });
     });
     prepocti();

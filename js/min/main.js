@@ -2720,7 +2720,8 @@
             }).join('') +
           '</fieldset>' +
           '<div class="vm-pocet" id="vm-pocet" aria-live="polite"></div>' +
-          '<button class="vm-ok" type="button" id="vm-ok">Zobrazit pozemky</button>' +
+
+          '<button class="vm-ok" type="button" id="vm-ok">Zobrazit nabídky</button>' +
         '</div>' +
       '</div>';
 
@@ -2749,6 +2750,7 @@
 
     var m = L.map(ov.querySelector('#vm-mapa'), {
       zoomControl: false, attributionControl: false, preferCanvas: true,
+      zoomSnap: 0.25, zoomDelta: 1,
     }).setView([start.lat, start.lng], zoomStart);
     L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(m);
 
@@ -3200,6 +3202,12 @@
       r.addEventListener('change', function () {
         prepocti();
 
+        if (!vybranoMisto) return;
+        var c = stred();
+        if (okruhJeTecka(c.lat, c.lng)) {
+          jdiNa(c.lat, c.lng, true);
+          hlidejVidet();
+        }
       });
     });
     prepocti();

@@ -1486,14 +1486,27 @@ body.vm-otevreno{overflow:hidden;}
 /* „Ukázat okruh". Visí nad mapou dole uprostřed — tam, kam dosáhne
    palec a kde nepřekrývá to, na co se člověk dívá. Je vidět jen ve
    chvíli, kdy vybraný okruh není na mapě k rozeznání. */
-.vm-zpet{position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:500;
-  display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px;
-  font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap;
-  border:0; border-radius:var(--r-pill); background:var(--plocha-znacka); color:#fff;
-  box-shadow:var(--e2); transition:var(--prechod);}
+/* TLAČÍTKO „UKÁZAT OKRUH" JE VEDLEJŠÍ AKCE V ROHU, NE CEDULE PŘES MAPU.
+   Do 9. 11. stálo uprostřed dole, plné značkové zeleni, 44 px vysoké —
+   tedy vypadalo jako hlavní akce okna, ačkoli hlavní akce je „Zobrazit
+   nabídky" v patičce. A hlavně leželo přes to, na co se člověk dívá.
+   Majitel 9. 11. na snímku z telefonu: „je to takové málo
+   profesionální."
+   Teď je to bílá pilulka v levém horním rohu mapy — týž recept jako
+   „Zpět na nabídky" a „Okolí" na hlavní mapě (bílá plocha, obrys
+   v barvě značky, stín e1). Levý horní roh je volný: přiblížení sedí
+   vpravo dole, značka místa uprostřed. A hlavně se objevuje mnohem
+   řidčeji než dřív — mapa se při přepnutí okruhu srovná sama, takže
+   tlačítko zbývá jen na stav, kdy si člověk odjel sám. */
+.vm-zpet{position:absolute; left:10px; top:10px; z-index:500;
+  display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:0 12px;
+  font:inherit; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;
+  border:1.5px solid var(--obrys-tlacitka); border-radius:var(--r-pill);
+  background:#fff; color:var(--znacka-svetla);
+  box-shadow:var(--e1); transition:var(--prechod);}
 .vm-zpet[hidden]{display:none;}
-.vm-zpet:hover{filter:brightness(1.06);}
-.vm-zpet:active{transform:translateX(-50%) translateY(1px);}
+.vm-zpet:hover{border-color:var(--znacka-svetla); background:var(--surface-2);}
+.vm-zpet:active{transform:translateY(1px);}
 .vm-zpet svg{width:var(--ik-xs); height:var(--ik-xs); flex:none; fill:none; stroke:currentColor;
   stroke-width:var(--ik-xs-tah); stroke-linecap:round; stroke-linejoin:round;}
 /* Značka se dá chytit a posunout, takže potřebuje plochu na prst.
@@ -11184,6 +11197,11 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    ne: v úvodní ploše „Přidat pozemek" ho přebíjí pravidlo s vyšší
    specificitou, které mu dává barvu té desky — přeliv by se tedy
    nasadil jen na půlce míst, kde to kolečko stojí.
+   A .vm-zpet („Ukázat okruh" v mapě výběru okolí) z výčtu 9. 11.
+   ODEŠLO: tlačítko přestalo být zelené a stalo se bílou pilulkou
+   s obrysem, tedy vedlejší akcí. Značkový přeliv by mu přetřel
+   bílou plochu zelení a zbyl by z něj zpátky ten plný blok, kvůli
+   kterému se měnilo.
 
    A PROČ STOJÍ TOHLE PRAVIDLO AŽ ÚPLNĚ NA KONCI STYLOPISU. Většina
    těch tříd si barvu nastavuje ZKRATKOU `background`, a ta vynuluje
@@ -11191,4 +11209,4 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    z dvaadvaceti ploch přeliv nedostalo — na .filter-chip.active bylo
    změřeno background-image:none. Shoda specificity rozhoduje pořadím,
    takže tohle pravidlo musí být poslední. */
-.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .msr-hotovo, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet, .skip-link, .vm-zpet, .vm-vetsi, .vm-ok, .reset-btn, .copy-btn, .rv-uvod-ok, .vyv-ok, .st-btn-1, .zp-btn, .mc-toggles .mc-prep.on, .mcv-btn.mcv-nula.on, .mc-info[aria-expanded="true"] span, .map-podklad button.on, .mv-v.on, .ms-vysledky .msv-ulozene.on, .vm-km input:checked + span, .as-num, .uc-tab-pocet, .msch, .pp-titulka, .msf-badge{background-image:var(--preliv-znacka);}
+.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .msr-hotovo, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet, .skip-link, .vm-vetsi, .vm-ok, .reset-btn, .copy-btn, .rv-uvod-ok, .vyv-ok, .st-btn-1, .zp-btn, .mc-toggles .mc-prep.on, .mcv-btn.mcv-nula.on, .mc-info[aria-expanded="true"] span, .map-podklad button.on, .mv-v.on, .ms-vysledky .msv-ulozene.on, .vm-km input:checked + span, .as-num, .uc-tab-pocet, .msch, .pp-titulka, .msf-badge{background-image:var(--preliv-znacka);}

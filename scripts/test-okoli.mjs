@@ -830,14 +830,21 @@ const stavVybiraku = (p) => p.evaluate(() => {
            ať visí jakkoli, a kontrola by prošla i s původním zavěšením
            (přistihla mě tím pojistka „je mezi nimi i malý kruh"). Měří
            se proto z výšky, ve které přišla stížnost. */
-        await p.evaluate(() => { window.PK_VM_MAPA.setZoom(8); });
-        await p.waitForTimeout(700);
+        /* POŘADÍ JE DŮLEŽITÉ: nejdřív okruh, teprve pak oddálit.
+           Od 9. 11. si mapa sama srovná pohled, když je z okruhu tečka
+           (viz přepínač okruhu v js/main.js) — takže kdyby se oddálilo
+           první a okruh se přepínal potom, mapa by se vrátila zpátky
+           a všechny měřené kruhy by byly velké. Přistihla mě tím
+           pojistka „je mezi nimi i malý kruh": hlásila 284 až 2 832 px.
+           Oddálení RUKOU se nepřebíjí, proto takhle. */
         const nalezy = [];
         for (const v of ['5', '10', '20', '50']) {
           await p.evaluate((x) => {
             const r = document.querySelector(`input[name="vm-km"][value="${x}"]`);
             if (r) r.click();
           }, v);
+          await p.waitForTimeout(400);
+          await p.evaluate(() => { window.PK_VM_MAPA.setZoom(8); });
           await p.waitForTimeout(500);
           nalezy.push(await p.evaluate((x) => {
             const st = document.querySelector('.vm-meritko span');
@@ -1269,7 +1276,12 @@ const stavVybiraku = (p) => p.evaluate(() => {
     'hledání je zpátky v panelu');
   pravda('a nečeká se na to deset vteřin', cekani < 8,
     `okno přišlo až po ${cekani.toFixed(1)} s — tak dlouhé ticho se čte jako „nefunguje to"`);
-  pravda('tlačítko se potom dá zase zmáčknout', v.zakazano === false && /Pozemky[\s\u00a0]v[\s\u00a0]okolí/.test(v.tlacitko),
+  /* NÁPIS SE 9. 11. ZMĚNIL z „Pozemky v okolí" na „Nabídky v okolí".
+     Web tehdy vedl 3 441 nabídek a 1 311 z nich nebyl pozemek, takže
+     tlačítko slibovalo užší výběr, než co po něm přijde. Kontrola se
+     ptá na totéž co dřív — vrátil se tlačítku jeho nápis a dá se zase
+     zmáčknout? — jen s nápisem, který na něm opravdu stojí. */
+  pravda('tlačítko se potom dá zase zmáčknout', v.zakazano === false && /Nabídky[\s\u00a0]v[\s\u00a0]okolí/.test(v.tlacitko),
     `zůstalo „${v.tlacitko.trim()}", zakázané: ${v.zakazano}`);
   await ctx.close();
 }

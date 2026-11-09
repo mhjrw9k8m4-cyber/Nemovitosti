@@ -234,5 +234,80 @@ let slibenyPocet = null;
   await ctx.close();
 }
 
+/* ---- 8) VYBRANÝ OKRUH JE NA MAPĚ VIDĚT, AŤ JE JAKKOLI VELKÝ ----
+   Majitel 9. 11. poslal snímek z telefonu: pod mapou stálo „23
+   nemovitostí v okruhu 10 km u obce Jílové u Prahy", a na mapě byla
+   celá republika posetá pěti sty tečkami. Okruh na ní nebyl k nalezení
+   — deset kilometrů má při pohledu na celou zemi třináct pixelů.
+   „Tohle ježdění po mapě mě fakt sere… občas se to bere, jak je to
+   malé, je to špatně vidět a je to takové málo profesionální."
+   Příčina: přepnutí okruhu zásadně mapou nehýbalo (pravidlo z dřívější
+   stížnosti na uskakující mapu), takže se dalo snadno skončit u pohledu,
+   kde vybraná věc není vidět.
+
+   KONTROLA SI TO MĚŘÍ SAMA, ne přes funkci, kterou se web řídí.
+   Kruh je jediná čárkovaná křivka v mapě (stroke-dasharray), takže se
+   dá najít v DOM a změřit jeho obdélník v pixelech. Žádá se dvojí:
+     · není to TEČKA — průměr aspoň 30 px, tedy víc než špendlík místa;
+     · a kde kruh přeteče z mapy ven, nabízí se tlačítko „Ukázat okruh".
+
+   PROČ TŘICET A NE VÍC, A PROČ SE PŘETÉKÁNÍ JEN NABÍZÍ. Majitel si
+   dřív stěžoval opačně — „ať mě to nechá tam, kde mám přiblíženo, bez
+   ohledu na to, jak přepínám velikost kruhu" — a web ho poslechl. Obě
+   stížnosti platí naráz a tohle je jejich společný jmenovatel: co
+   nejde vidět VŮBEC, mapa opraví sama; co jde vidět aspoň zčásti,
+   zůstane na člověku a web mu jen podá tlačítko. Kdyby se tu žádalo
+   třeba 150 px nebo „nikdy nepřetéká", zkouška by vynucovala přesně to
+   přerovnávání, na které si stěžoval.
+   Kdyby se web vrátil k „mapou nehýbat nikdy", spadne tahle kontrola
+   na cestě stupnicí DOLŮ: z rámu padesáti kilometrů má dvoukilometrový
+   okruh jedenáct pixelů. Nahoru se takhle přistihnout nedá — kruh,
+   který se zvětšuje, tečkou nebude —, a proto se stupnice projde
+   oběma směry. */
+{
+  const ctx = await prohlizec.newContext(TELEFON);
+  const { p, otevreno } = await otevri(ctx);
+  if (!otevreno) {
+    pravda('vybraný okruh je na mapě vidět při každé velikosti', false, 'okno se neotevřelo');
+  } else {
+    await p.fill('#vm-q', 'Tišnov');
+    await p.waitForTimeout(900);
+    const navrh = await p.$('#vm-navrhy li');
+    if (navrh) { await navrh.click(); await p.waitForTimeout(1500); }
+    const zmer = () => p.evaluate(() => {
+      const mapa = document.querySelector('.vm-mapa');
+      const r = mapa.getBoundingClientRect();
+      const kruhy = [].slice.call(mapa.querySelectorAll('path'))
+        .filter((e) => (e.getAttribute('stroke-dasharray') || '').trim() !== '');
+      if (kruhy.length !== 1) return { chyba: 'čárkovaných křivek v mapě: ' + kruhy.length };
+      const b = kruhy[0].getBoundingClientRect();
+      const btn = document.querySelector('#vm-zpet');
+      return { prumer: Math.round(b.width), mapa: Math.round(Math.min(r.width, r.height)),
+        tlacitko: !!(btn && !btn.hidden) };
+    });
+    const male = [], bezTlacitka = [], nenalezeno = [];
+    /* Obě pořadí: nahoru po stupnici i dolů. Jen jedním směrem by se
+       dalo projít i s polovinou pravidla — kruh, který se zvětšuje,
+       tečkou nikdy nebude. */
+    for (const km of [2, 5, 10, 20, 50, 20, 10, 5, 2]) {
+      await p.click('input[name="vm-km"][value="' + km + '"]', { force: true });
+      await p.waitForTimeout(1200);
+      const v = await zmer();
+      if (v.chyba) { nenalezeno.push(km + ' km: ' + v.chyba); continue; }
+      if (v.prumer < 30) male.push(km + ' km → ' + v.prumer + ' px');
+      if (v.prumer > v.mapa && !v.tlacitko) {
+        bezTlacitka.push(km + ' km → ' + v.prumer + ' px v mapě ' + v.mapa + ' px');
+      }
+    }
+    pravda('kruh okruhu se na mapě našel u každé velikosti',
+      nenalezeno.length === 0, nenalezeno.join(' | '));
+    pravda('vybraný okruh není tečka (aspoň 30 px v průměru)',
+      male.length === 0, male.join(' | '));
+    pravda('a kde přeteče z mapy ven, nabízí se „Ukázat okruh"',
+      bezTlacitka.length === 0, bezTlacitka.join(' | '));
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 hotovo();
