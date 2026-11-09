@@ -197,6 +197,7 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .section-head{max-width:var(--m-sloupec);margin:0 0 28px;text-align:left}
 .section-head .eyebrow{margin-bottom:16px}
 .section-head h2{font-family:var(--font-nadpis);font-weight:700;font-size:32px;line-height:1.2;letter-spacing:-0.03em;color:var(--text)}
+.opp-item:active{transform:translateY(1px)}
 
 @keyframes msnPrijed{from{opacity:0;transform:translateY(-3px)}
 to{opacity:1;transform:none}
@@ -230,8 +231,23 @@ to{opacity:1;transform:none}
 }
 @media (prefers-reduced-motion:reduce){.sk{animation:none}
 }
+.opp-item{position:relative;display:block;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta);box-shadow:var(--e1);margin-bottom:16px;cursor:pointer;transition:var(--prechod)}
+.opp-item:hover{box-shadow:var(--e2)}
+.opp-item:hover,.opp-item.hl{transform:translateY(-2px)}
+.opp-item.hl{box-shadow:var(--e3)}
 .opp-map-pod{fill:var(--plocha-tmava)}
+.opp-media{position:relative;width:100%;aspect-ratio:16/10;min-height:150px;overflow:hidden;border-radius:0;background:var(--plocha-tlumena) linear-gradient(135deg,rgba(110,150,130,0.12),rgba(110,150,130,0) 60%)}
 .opp-map{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;pointer-events:none}
+.opp-mgrad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--text-rgb),0.3) 0%,rgba(var(--text-rgb),0) 30%,rgba(var(--text-rgb),0) 56%,rgba(var(--text-rgb),0.55) 100%);pointer-events:none;z-index:1}
+.opp-badge{position:absolute;top:10px;left:10px;z-index:3;pointer-events:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;letter-spacing:0.02em;padding:4px 8px 4px 8px;border-radius:var(--r-sm);color:#fff;background:rgba(var(--text-rgb),0.74)}
+.opp-badge::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
+.opp-badge::before{background:var(--c-druh,var(--muted))}
+.opp-count{position:absolute;left:10px;bottom:10px;z-index:3;pointer-events:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px 2px 8px;border-radius:var(--r-sm);color:#fff;background:rgba(var(--text-rgb),0.74)}
+.opp-count svg{width:13px;height:13px;stroke-width:2.77}
+.opp-body{padding:12px 12px 12px}
+.opp-nadpis{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px}
+.opp-druh{font-family:var(--font-ui);font-size:18px;font-weight:600;letter-spacing:-0.01em;color:var(--text)}
+.opp-price{font-family:var(--font-ui);font-weight:700;font-size:24px;line-height:1.1;letter-spacing:-0.02em;color:var(--text);font-variant-numeric:tabular-nums;margin-top:8px}
 @keyframes rvPocet{0%{transform:scale(1)}
 40%{transform:scale(1.28)}
 100%{transform:scale(1)}
@@ -253,6 +269,19 @@ to{opacity:1;transform:none}
 }
 
 
+.opp-place{font-family:var(--font-ui);font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0;color:var(--text);max-width:100%}
+.opp-loc{font-size:12px;color:var(--muted)}
+.opp-meta{display:flex;align-items:center;flex-wrap:wrap;gap:2px 8px;margin:4px 0 0}
+.opp-place::before{content:"";display:inline-block;width:11px;height:11px;margin-right:4px;vertical-align:-1px;background:var(--znacka-svetla);-webkit-mask:var(--ikona-spendlik) center/contain no-repeat;mask:var(--ikona-spendlik) center/contain no-repeat}
+.opp-meta .opp-loc{margin:0;font-size:13px}
+.opp-meta>* + *::before{content:"·";margin-right:8px;color:var(--line-strong)}
+.opp-nadpis .opp-figures{display:inline-flex;margin:0}
+.opp-nadpis .opp-perm2{background:none;border:0;padding:0;font-weight:400}
+.opp-cenarad{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px}
+.opp-cenarad .opp-perm2{background:none;border:0;padding:0;font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted)}
+.opp-figures{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:8px;margin-bottom:2px}
+.opp-figures .m{font-size:14px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.opp-perm2{align-self:center;font-size:12px;font-weight:600;color:var(--muted);background:var(--plocha-jemna);border:1px solid var(--line);border-radius:var(--r-xs);padding:2px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .opp-cd{background:var(--plocha-jemna);border-color:var(--line);color:var(--muted)}
 .opp-cd.soon{color:var(--c-drazba-ink);background:rgba(var(--c-drazba-rgb),0.10);border-color:rgba(var(--c-drazba-rgb),0.3)}
 .opp-cd.urg{color:var(--c-exekuce-ink);background:rgba(var(--c-nalehave-rgb),0.10);border-color:rgba(var(--c-nalehave-rgb),0.3)}
@@ -321,6 +350,19 @@ to{opacity:1;transform:none}
 }
 @media (max-width:1040px){
 
+.opp-item{display:block;margin-bottom:12px}
+.opp-media{width:auto;aspect-ratio:16/10;min-height:0}
+.opp-badge{top:auto;bottom:9px;left:9px;font-size:13px;padding:4px 8px 4px 8px;gap:4px}
+.opp-badge::before{width:7px;height:7px}
+.opp-count{display:inline-flex}
+.opp-body{padding:12px 12px 12px}
+.opp-figures{gap:4px 8px}
+.opp-price{font-size:24px;margin-top:4px}
+.opp-druh{font-size:16px}
+.opp-place{font-size:14px}
+.opp-meta{margin-top:2px}
+.opp-meta .opp-loc,.opp-meta .opp-sub{font-size:14px}
+.opp-item::after{display:none}
 }
 @media (max-width:1040px){header .wrap{justify-content:flex-start}
 :root{--vyska-hlavicky:73px}
@@ -733,6 +775,9 @@ to{opacity:1;transform:none}
 .section-head{position:relative}
 .section-head::before{content:"";display:block;width:52px;height:2px;border-radius:2px;opacity:0.85;margin-bottom:16px}
 .section-head[style*="center"]::before,.section-head.stred::before{margin-left:auto;margin-right:auto}
+.opp-item,.okr-item{position:relative}
+.opp-item::after,.okr-item::after{content:"";position:absolute;top:8px;right:8px;width:13px;height:13px;border:1.5px solid var(--line-strong);border-left:0;border-bottom:0;border-top-right-radius:3px;pointer-events:none;opacity:0.85;transition:var(--prechod)}
+.opp-item:hover::after,.okr-item:hover::after{border-color:var(--accent-warm);opacity:1}
 body{background:var(--bg)}
 @media (hover:hover) and (pointer:fine){body{background-attachment:fixed}
 }

@@ -137,6 +137,8 @@
 
   return {
     mnozne: mnozne, cislovka: cislovka, cena: cena, vymera: vymera,
-    zeHlidani: zeHlidani, UKAZKA: UKAZKA
+    zeHlidani: zeHlidani, UKAZKA: UKAZKA,
+
+    terminPolozky: terminPolozky
   };
 });

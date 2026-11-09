@@ -244,13 +244,13 @@
       return v || zaloha;
     } catch (e) { return zaloha; }
   }
-  var TYPE = {
-    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), ink: tokenBarva('--c-sale-ink', '#364E95'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
-    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), ink: tokenBarva('--c-drazba-ink', '#7E3C18'), link: { label: 'Dražební portál',     url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), ink: tokenBarva('--c-exekuce-ink', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
-    obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), ink: tokenBarva('--c-obec-ink', '#0A626B'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), ink: tokenBarva('--c-majitel-ink', '#6E3EB1'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
-  };
+  /* DRUHY NABÍDEK SE ODSTĚHOVALY DO js/karta-nabidky.js. Tabulka tu
+     byla jediná na webu, jenže kartu dnes kreslí i stránka Hlídání,
+     kde main.js není — a druhá kopie téže tabulky by znamenala dvoje
+     barvy a dvoje popisky druhu, které se jednou rozejdou. Tady zůstal
+     jen odkaz na ni, takže se nic jiného v tomhle souboru měnit
+     nemuselo. */
+  var TYPE = (window.PKKarta && window.PKKarta.TYPY) || {};
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
     'Praha':            { c: [50.075, 14.44] },
@@ -2957,36 +2957,13 @@
   // Imagery), vycentrovaný na pozemek se špendlíkem. Když se snímek nenačte,
   // pod ním prosvítá záložní plán parcely, takže karta není nikdy prázdná.
   // Když ale majitel nahrál vlastní fotku pozemku, má přednost ta fotka.
+  /* NÁHLED KARTY JE TEĎ V js/karta-nabidky.js. Skládal se tu z fotky
+     inzerátu, leteckého výřezu, přelivu a odznaku druhu — a přesně
+     totéž potřebuje karta na stránce Hlídání, kde main.js není. Druhá
+     kopie by znamenala dvě místa, která se rozejdou; zůstal tedy jeden
+     řádek, který si o náhled řekne. */
   function mapThumb(d) {
-    var col = TYPE[d.type].color;
-    /* FOTKA, KDYŽ JE — A UŽ NEJEN OD MAJITELE.
-       Do 8. 11. 2026 měla fotku jen nabídka, kterou sem někdo vložil
-       sám; z 3 886 nabídek na webu to bylo nula (změřeno). Inzeráty
-       z Bezrealitek fotku mají a od §470 ji máme i my — v datech stojí
-       jen název souboru a adresu skládá js/fotka.js. Letecký snímek
-       zůstává pro nabídky, které fotku nemají (dražby, SPÚ, ÚZSVM). */
-    var F = window.PK_FOTKA;
-    var zInzeratu = (F && F.url) ? F.url(d) : null;
-    var fotky = (d.photos && d.photos.length) ? d.photos : (zInzeratu ? [zInzeratu] : []);
-    if (fotky.length) {
-      var p0 = fotky[0];
-      var cnt = fotky.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (fotky.length) + '</span>' : '';
-      /* Fotka majitele čeká v data-href ze stejného důvodu jako dlaždice
-         leteckého snímku (js/snimek.js): je to obrázek pro kartu, na
-         kterou člověk většinou ani nedojede, a je VĚTŠÍ než dlaždice —
-         nahrává ho majitel z telefonu. Probudí ji tentýž hlídač, který
-         si všímá `data-sn="ceka"`. */
-      return '<svg class="opp-map" data-sn="ceka" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-        /* Týž podklad jako u leteckého snímku, táž třída (§216). */
-        '<rect class="opp-map-pod" width="384" height="240"/>' +
-        '<image data-href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
-        '</svg>' +
-        '<span class="opp-mgrad"></span>' +
-        odznakDruhu(d) + cnt;
-    }
-    return window.PK_SNIMEK.html(d, { sirka: 384, vyska: 240, barva: col, id: 'ts' + d._id }) +
-      '<span class="opp-mgrad"></span>' +
-      odznakDruhu(d);
+    return (window.PKKarta && window.PKKarta.nahled) ? window.PKKarta.nahled(d) : '';
   }
   /* Odznak kategorie na náhledu. Barvu puntíku si nese s sebou, ze TÉŽE
      proměnné jako tečka na mapě (TYPE[].color čte --c-*). Dřív ji vypisovalo
@@ -9605,55 +9582,19 @@
        Vlastní zůstává jedna věc — věta o tom, proč je to tip. */
     grid.innerHTML = top.map(function (o) {
       var d = o.d;
-      var perM2 = zaMetr(d);
-      /* U POZEMKU DĚLÁ NADPIS DRUH, u ostatního kategorie — a to není
-         nedůslednost. „Orná půda" řekne kupujícímu víc než „Pozemek",
-         kdežto u bytu `druh` nemá smysl vůbec a u domu je to nanejvýš
-         druh pozemku POD ním, takže by v nadpisu stála „Zastavěná
-         plocha a nádvoří" tam, kde se prodává dům. Celé odůvodnění je
-         u nadpisKategorie() v js/kategorie.js. */
-      var druhCap = katNadpis(d)
-        || (d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '');
-      return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
-        /* Odznak druhu sem nepatří ZVLÁŠŤ: mapThumb() ho do náhledu
-           přidává sám, a když jsem ho připsal, byl na kartě dvakrát. */
-        '<div class="opp-media">' + mapThumb(d) + '</div>' +
-        '<div class="opp-body">' +
-          '<div class="opp-nadpis">' +
-            '<b class="opp-druh">'
-              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
-            (hasArea(d) ? '<span class="opp-figures"><span class="m">' + fmt(d.area) + '\u00a0m²</span></span>' : '') +
-          '</div>' +
-          '<div class="opp-meta">' +
-            '<span class="opp-place">' + PKCisteni.sazba(d.place) + '</span>' +
-            /* Mezera v HTML — viz karta ve výpisu výš. */
-            (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
-          '</div>' +
-          '<div class="opp-cenarad">' +
-            /* Nezlomitelná mezera před jednotkou, jako ve výpisu: „457 248"
-               a „Kč" se nesmí rozejít na dva řádky. */
-            '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
-            (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
-          '</div>' +
-          /* PROČ JE TO TIP — jediné, co má tahle karta navíc proti
-             výpisu. Stojí pod cenou, protože se podle něj nevybírá
-             nabídka, ale vysvětluje se, proč tu vůbec je. */
-          /* KDE se to srovnávalo, patří do té věty. Percentil se počítá
-             nejdřív v okrese, a když tam není dost nabídek, v kraji —
-             naměřeno na ostrých datech: ze 1 213 verdiktů jich 566
-             (47 %) vzniklo v KRAJI. Karta přitom pod tím psala „okres
-             Jablonec nad Nisou", takže „levnější než 98 % podobných"
-             vypadalo jako srovnání v okrese. */
-          /* „Podobných" ještě neznamená „na trhu": percentil srovnává
-             jen v rámci téhož typu, takže u dražby jde o vyvolávací
-             ceny. Mezi tipy se dražba dostat může, a pak by „levnější
-             než 92 % podobných" znamenalo něco jiného, než co si
-             člověk přečte. */
+      /* Cena za metr i nadpis podle kategorie se počítaly tady; obojí
+         teď dělá karta sama (js/karta-nabidky.js), takže ty dva výpočty
+         odsud zmizely — zůstaly by nepoužité. */
+      /* TÁŽ KARTA JAKO VE VÝPISU — a od 9. 11. doslova: náhled i tělo
+         skládá js/karta-nabidky.js, takže se nemají kde rozejít.
+         Vlastní zůstala jedna věc: věta o tom, proč je to tip. */
+      var verdiktHtml =
           '<div class="deal-verdikt">levnější než ' + o.di.cheaper + '\u00a0% pozemků'
             + (window.PK_CENY && window.PK_CENY.skupinaText
               ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
-            + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
-        '</div>' +
+            + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>';
+      return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
+        window.PKKarta.vnitrek(d, verdiktHtml) +
       '</button>';
     }).join('');
     sec.hidden = false;

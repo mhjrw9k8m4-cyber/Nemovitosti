@@ -376,8 +376,36 @@ await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
       'v kartě není .hl-nove ani s jedním řádkem');
     pravda('a je mezi nimi ten nový', vypsane.some((t) => /Sendražice/.test(t)),
       JSON.stringify(vypsane.slice(0, 4)));
+    /* Staré se jako nové nehlásí. Měří se OBEC z karty, ne celý text:
+       dokud byl výpis jen řádek „obec · výměra · cena", poznala se
+       stará nabídka podle parcelního čísla 1/1 — jenže karta parcelní
+       číslo nekreslí a podmínka by od 9. 11. platila vždycky, tedy
+       nehlídala nic (§436). Obec „Kolín" má ze čtyř nabídek jen ta
+       stará; nové jsou Kolín-Sendražice, Kolín-Štítary a
+       Kolín-Zibohlavy, takže shoda musí být přesná, ne podřetězcem. */
+    const obce = await p.evaluate(() => [...document.querySelectorAll('.hl-nove li .opp-place')]
+      .map((e) => (e.textContent || '').trim()));
+    pravda('obce se z karet přečetly (jinak by kontrola níž platila naprázdno)',
+      obce.length > 0, 'v .hl-nove není ani jedna .opp-place');
     pravda('kdežto staré se jako nové nehlásí',
-      !vypsane.some((t) => /Kolín/.test(t) && /1\/1/.test(t)), JSON.stringify(vypsane.slice(0, 4)));
+      !obce.includes('Kolín'), JSON.stringify(obce));
+
+    /* KARTA JE TÁŽ KARTA JAKO VE VÝPISU. Vykresluje ji js/karta-nabidky.js
+       a tenhle hlídač jde za ním: vytáhne si z modulu VŠECHNY třídy
+       `opp-*`, které kreslí, a chce je vidět v nálezu na Hlídání. Kdyby
+       se seznam na Hlídání vrátil k vlastnímu vykreslování nebo kdyby
+       do karty přibyl díl, který Hlídání nedostane, spadne to tady.
+       Seznam tříd se nepíše ručně schválně — ručně psaný by zastaral
+       první změnou karty a mlčel by. */
+    const KARTA = readFileSync(new URL('../js/karta-nabidky.js', import.meta.url), 'utf8');
+    const dily = [...new Set((KARTA.match(/class="(opp-[a-z0-9-]+)/g) || [])
+      .map((x) => x.slice(7)))].filter((t) => t !== 'opp-count');
+    pravda('z js/karta-nabidky.js se vyčetly díly karty', dily.length >= 6,
+      JSON.stringify(dily));
+    const chybi = await p.evaluate((t) => t.filter((tr) =>
+      !document.querySelector('.hl-nove li .' + tr)), dily);
+    pravda('nález na Hlídání kreslí táž karta jako výpis nabídek',
+      chybi.length === 0, 'chybí díly: ' + JSON.stringify(chybi));
 
     /* TERMÍN DRAŽBY MUSÍ BÝT VIDĚT. Ze 109 dražeb a exekucí v ostrých
        datech je 64 do týdne; u dražby je termín to jediné, co nutí

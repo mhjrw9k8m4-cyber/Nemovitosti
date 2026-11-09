@@ -236,6 +236,10 @@
      počítání druhů — patřil centru upozornění a šel s ním. */
   return {
     mnozne: mnozne, cislovka: cislovka, cena: cena, vymera: vymera,
-    zeHlidani: zeHlidani, UKAZKA: UKAZKA
+    zeHlidani: zeHlidani, UKAZKA: UKAZKA,
+    /* Termín dražby pod kartou na stránce Hlídání. Vydává se ven,
+       aby si ho tam nikdo nepsal podruhé — je to týž text, jaký
+       chodí v upozorněních. */
+    terminPolozky: terminPolozky
   };
 });

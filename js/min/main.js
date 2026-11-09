@@ -125,13 +125,8 @@
       return v || zaloha;
     } catch (e) { return zaloha; }
   }
-  var TYPE = {
-    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), ink: tokenBarva('--c-sale-ink', '#364E95'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
-    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), ink: tokenBarva('--c-drazba-ink', '#7E3C18'), link: { label: 'Dražební portál',     url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), ink: tokenBarva('--c-exekuce-ink', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
-    obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), ink: tokenBarva('--c-obec-ink', '#0A626B'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), ink: tokenBarva('--c-majitel-ink', '#6E3EB1'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
-  };
+
+  var TYPE = (window.PKKarta && window.PKKarta.TYPY) || {};
 
   var KRAJE = {
     'Praha':            { c: [50.075, 14.44] },
@@ -1660,26 +1655,7 @@
   var GALLERY_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-fotky"/></svg>';
 
   function mapThumb(d) {
-    var col = TYPE[d.type].color;
-
-    var F = window.PK_FOTKA;
-    var zInzeratu = (F && F.url) ? F.url(d) : null;
-    var fotky = (d.photos && d.photos.length) ? d.photos : (zInzeratu ? [zInzeratu] : []);
-    if (fotky.length) {
-      var p0 = fotky[0];
-      var cnt = fotky.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (fotky.length) + '</span>' : '';
-
-      return '<svg class="opp-map" data-sn="ceka" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-
-        '<rect class="opp-map-pod" width="384" height="240"/>' +
-        '<image data-href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
-        '</svg>' +
-        '<span class="opp-mgrad"></span>' +
-        odznakDruhu(d) + cnt;
-    }
-    return window.PK_SNIMEK.html(d, { sirka: 384, vyska: 240, barva: col, id: 'ts' + d._id }) +
-      '<span class="opp-mgrad"></span>' +
-      odznakDruhu(d);
+    return (window.PKKarta && window.PKKarta.nahled) ? window.PKKarta.nahled(d) : '';
   }
 
   function odznakDruhu(d) {
@@ -5758,35 +5734,14 @@
 
     grid.innerHTML = top.map(function (o) {
       var d = o.d;
-      var perM2 = zaMetr(d);
 
-      var druhCap = katNadpis(d)
-        || (d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '');
-      return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
-
-        '<div class="opp-media">' + mapThumb(d) + '</div>' +
-        '<div class="opp-body">' +
-          '<div class="opp-nadpis">' +
-            '<b class="opp-druh">'
-              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
-            (hasArea(d) ? '<span class="opp-figures"><span class="m">' + fmt(d.area) + '\u00a0m²</span></span>' : '') +
-          '</div>' +
-          '<div class="opp-meta">' +
-            '<span class="opp-place">' + PKCisteni.sazba(d.place) + '</span>' +
-
-            (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
-          '</div>' +
-          '<div class="opp-cenarad">' +
-
-            '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
-            (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
-          '</div>' +
-
+      var verdiktHtml =
           '<div class="deal-verdikt">levnější než ' + o.di.cheaper + '\u00a0% pozemků'
             + (window.PK_CENY && window.PK_CENY.skupinaText
               ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
-            + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
-        '</div>' +
+            + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>';
+      return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
+        window.PKKarta.vnitrek(d, verdiktHtml) +
       '</button>';
     }).join('');
     sec.hidden = false;
