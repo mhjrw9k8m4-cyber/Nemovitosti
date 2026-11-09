@@ -126,7 +126,15 @@ const rozesilani = cti('.github/workflows/rozesilani.yml');
 const prikazy = rozesilani.split('\n')
   .filter((l) => /^\s*run:/.test(l) && /send-(alerts|push)\.mjs/.test(l));
 const sOpravdu = prikazy.filter((l) => l.includes('--opravdu'));
-const jenRucne = sOpravdu.filter((l) => /workflow_dispatch/.test(l));
+/* „JEN NA RUČNÍ SPUŠTĚNÍ" POZNÁ ROVNÍTKO, NE SLOVO.
+   Stálo tu /workflow_dispatch/ — tedy pouhá zmínka. Jenže 9. 11. 2026
+   dostal rozesílač podmínku `event_name != 'workflow_dispatch' ||
+   inputs.opravdu` (odesílá i podle hodin, ruční běh bez zaškrtnutí
+   zůstává nasucho) a ta slovo „workflow_dispatch" taky obsahuje —
+   takže kontrola hlásila „jede nasucho" o úloze, která odesílá.
+   Rozhoduje porovnání: `==` znamená JEN při ručním spuštění, `!=`
+   naopak při všech ostatních. */
+const jenRucne = sOpravdu.filter((l) => /event_name\s*==\s*'workflow_dispatch'/.test(l));
 if (!prikazy.length) SKODA('rozesílač', 've .github/workflows/rozesilani.yml se nepouští send-alerts ani send-push');
 else if (!sOpravdu.length) SKODA('rozesílač',
   'v příkazu chybí --opravdu, takže běh jen vypíše, co by odešlo');
