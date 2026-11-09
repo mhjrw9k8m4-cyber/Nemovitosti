@@ -103,8 +103,13 @@ for (const s of STROPY) {
   const okresy = new Set(moje.map((o) => o.okres).filter(Boolean));
 
   // --- 1) Hlavička: nadpis a čísla v podtitulku --------------------
+  /* SLOVO V NADPISU UŽ NENÍ VŽDY „Pozemky" — cenové stránky se 9. 11.
+     začaly řídit tím, co vypisují („Nemovitosti do 500 000 Kč", je-li
+     mezi nimi dům nebo byt; nadpisMnoziny v generate-region-pages.mjs).
+     Kontrola se ptá na totéž co dřív — stojí v nadpisu ten strop? —,
+     jen už nepředepisuje první slovo. */
   pravda(`${s.soubor}: nadpis uvádí strop`,
-    new RegExp('<h1>Pozemky do ' + s.popis.replace(/ /g, '\\s') + '\\sKč').test(h),
+    new RegExp('<h1>(?:Pozemky|Nemovitosti) do ' + s.popis.replace(/ /g, '\\s') + '\\sKč').test(h),
     'nadpis: ' + mezery((/<h1>([^<]*)<\/h1>/.exec(h) || [])[1] || '—'));
   /* Čísla jsou v hlavičce (.okr-cisla), ne v podtitulku: ten tytéž
      počty jen opisoval a 26. 10. odešel — viz hlavickaCisla()

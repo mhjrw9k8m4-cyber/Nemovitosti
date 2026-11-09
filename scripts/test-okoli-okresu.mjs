@@ -86,7 +86,13 @@ for (const f of readdirSync(KOREN)) {
 const nazevPodleSouboru = {};
 for (const f of Object.keys(souborOkresu)) {
   const h = readFileSync(path.join(KOREN, f), 'utf8').replace(/ /g, ' ');
-  const m = /<h1>Pozemky v okrese ([^<.]+)\.<\/h1>/.exec(h);
+/* SLOVO V NADPISU UŽ NENÍ VŽDY „Pozemky". Nadpis se 9. 11. začal řídit
+   tím, co stránka opravdu vypisuje: okres se samými pozemky má v <h1>
+   „Pozemky v okrese X", okres s domy a byty „Nemovitosti v okrese X"
+   (viz nadpisMnoziny v scripts/generate-region-pages.mjs). Vzorek s
+   napsaným „Pozemky" tím pádem u části okresů nenašel NIC — a kontrola
+   pod ním tiše přeskočila stránku místo toho, aby ji změřila. */
+  const m = /<h1>(?:Pozemky|Nemovitosti) v okrese ([^<.]+)\.<\/h1>/.exec(h);
   if (m) nazevPodleSouboru[f] = m[1].trim();
 }
 pravda(`stránky okresů se našly (${Object.keys(nazevPodleSouboru).length})`,

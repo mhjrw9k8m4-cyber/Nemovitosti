@@ -213,6 +213,35 @@ function pluralNabidky(n, nabidky){
   return sklon(n, s[0], s[1], s[2]);
 }
 
+/* NADPIS MNOŽINY — „Pozemky", nebo „Nemovitosti"?
+   ====================================================================
+   Týž zdroj jako u počtů o pár řádků výš, jen jiný tvar: do nadpisu
+   patří první pád množného čísla s velkým písmenem.
+
+   PROČ TO VZNIKLO. Okresní stránka měla v nadpisu napevno „Pozemky
+   v okrese Benešov." a pod ním vypisovala 8 domů, 3 chaty a byt z 58
+   nabídek. Majitel 9. 11.: „nápisy, které nedávají smysl v tomhle
+   stádiu webu." Počty pod nadpisem přitom už dávno mluvily správně
+   („58 nemovitostí"), takže si stránka sama se sebou odporovala
+   o jeden řádek.
+
+   CO SE NEMĚNÍ: <title>, popis pro vyhledávače ani adresa stránky.
+   Tam je „pozemky" klíčové slovo, podle kterého sem lidé chodí
+   z Googlu, a na rozdíl od nadpisu nad výpisem nelže o tom, co pod
+   ním je — stránka pozemky opravdu nese, jen nejen je. */
+function nadpisMnoziny(nabidky){
+  const s = KATEGORIE.slovaPoctu(nabidky);
+  return s[1].charAt(0).toUpperCase() + s[1].slice(1);
+}
+/** Druhý pád množného čísla: „dražby POZEMKŮ" / „dražby NEMOVITOSTÍ". */
+function druhyPadMnoziny(nabidky){
+  return KATEGORIE.slovaPoctu(nabidky)[2];
+}
+/** První pád množného čísla malým: „nejlevnější POZEMKY" / „NEMOVITOSTI". */
+function mnozneCislo(nabidky){
+  return KATEGORIE.slovaPoctu(nabidky)[1];
+}
+
 /* ČÍSLA DO HLAVIČKY MÍSTO VĚTY, KTERÁ JE OPISUJE.
    ==================================================================
    Naměřeno 26. 10. na okrese Tábor, telefon 390×844: tmavý pás měl
@@ -1226,7 +1255,7 @@ for(const okres of eligibleOkres){
            „kde jsem", a hned za ní „kudy ven". -->
       <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
-      <h1>Pozemky v okrese ${esc(okres)}.</h1>
+      <h1>${nadpisMnoziny(list)} v okrese ${esc(okres)}.</h1>
       ${hlavickaCisla([
         [count, pluralNabidky(count, list)],
         ...(Object.keys(byType).length > 1 && byType.sale ? [[byType.sale, 'na prodej']] : []),
@@ -1268,7 +1297,7 @@ for(const okres of eligibleOkres){
            člověk. -->
       <div class="okr-blok">
         <div class="rules-sect">
-          <h2>Nabídky pozemků v okrese ${esc(okres)}</h2>
+          <h2>Nabídky v okrese ${esc(okres)}</h2>
           <!-- NAD VÝPISEM JEN TO, CO MĚNÍ ČTENÍ ŘÁDKŮ. Stál tu odstavec
                na šest řádků (naměřeno 230 px na telefonu): řazení, výchozí
                typ A celá věta o tom, odkud data jsou a že je třeba je
@@ -1425,7 +1454,7 @@ for(const kraj of eligibleKraj){
            „kde jsem", a hned za ní „kudy ven". -->
       <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
-      <h1>Pozemky ${esc(meta.loc)}.</h1>
+      <h1>${nadpisMnoziny(list)} ${esc(meta.loc)}.</h1>
       ${hlavickaCisla([
         [count, pluralNabidky(count, list)],
         [okresList.length, sklon(okresList.length,'okres','okresy','okresů')],
@@ -1449,7 +1478,7 @@ for(const kraj of eligibleKraj){
            kraji", chce vidět pozemky, ne nejdřív volit okres. -->
       <div class="okr-blok">
         <div class="rules-sect">
-          <h2>Nejlevnější pozemky ${esc(meta.loc)}</h2>
+          <h2>Nejlevnější ${mnozneCislo(vypsane)} ${esc(meta.loc)}</h2>
           <p class="rules-note">Ukázka nejnižších cen napříč krajem.${tS.veta ? ' ' + tS.veta : ''}</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
@@ -1550,9 +1579,13 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
            Stojí nad obočím, ne pod nadpisem: první věc v pásu je
            „kde jsem", a hned za ní „kudy ven". -->
       <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
-      <div class="eyebrow"><span class="live-dot"></span>Dražby pozemků · celá ČR</div>
-      <h1>Dražby pozemků — aktuální nabídky.</h1>
-      <p class="sub">Evidujeme <b>${count} ${sklon(count,'dražbu','dražby','dražeb')}</b> pozemků z celé České republiky, z <b>veřejné evidence dražeb</b>. ${minP?('Vyvolávací ceny od <b>'+fmt(minP)+' Kč</b>. '):''}V dražbě jde často pořídit pozemek pod tržní cenou — ale je potřeba znát pravidla.</p>
+      <div class="eyebrow"><span class="live-dot"></span>Dražby ${druhyPadMnoziny(drazby)} · celá ČR</div>
+      <!-- Slovo se řídí tím, co na stránce opravdu je: mezi dražbami
+           jsou i domy a chaty, takže „dražby pozemků" by o výpisu pod
+           sebou lhalo. Titulek a adresa stránky zůstávají — tam je to
+           klíčové slovo, podle kterého sem lidé chodí z Googlu. -->
+      <h1>Dražby ${druhyPadMnoziny(drazby)} — aktuální nabídky.</h1>
+      <p class="sub">Evidujeme <b>${count} ${sklon(count,'dražbu','dražby','dražeb')}</b> ${druhyPadMnoziny(drazby)} z celé České republiky, z <b>veřejné evidence dražeb</b>. ${minP?('Vyvolávací ceny od <b>'+fmt(minP)+' Kč</b>. '):''}V dražbě jde často pořídit ${KATEGORIE.slovaPoctu(drazby)[0]} pod tržní cenou — ale je potřeba znát pravidla.</p>
     </div>
     </div>
   </section>
@@ -1570,7 +1603,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
 
       <div class="okr-blok">
         <div class="rules-sect">
-          <h2>Pozemky v dražbě</h2>
+          <h2>${nadpisMnoziny(drazby)} v dražbě</h2>
           <p class="rules-note">${tS.veta ? tS.veta + ' ' : ''}Seřazeno <b>podle termínu</b> — nejdřív to, co se draží nejblíž. Údaje pocházejí z veřejné evidence dražeb a mohou se v čase měnit — konání, podmínky a aktuální stav vždy ověřte přímo v dražební vyhlášce a v katastru nemovitostí.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
@@ -1883,7 +1916,7 @@ for (const r of rozpocetVznikne) {
            „kde jsem", a hned za ní „kudy ven". -->
       <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na nabídky</a>
       <div class="eyebrow"><span class="live-dot"></span>Rozpočet do ${esc(r.popis)} · celá ČR</div>
-      <h1>Pozemky do ${esc(r.popis)}.</h1>
+      <h1>${nadpisMnoziny(list)} do ${esc(r.popis)}.</h1>
       ${hlavickaCisla([
         [fmt(count), pluralNabidky(count, list)],
         [fmt(okresuCelkem), sklon(okresuCelkem, 'okres', 'okresy', 'okresů')],

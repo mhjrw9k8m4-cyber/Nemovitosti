@@ -48,8 +48,14 @@ pravda('stránky okresů se našly', stranky.length > 50, `${stranky.length} str
    čte vzorkem s obyčejnou mezerou, nenajde nic — a zkouška pak mlčí,
    přesně jak mlčela při prvním spuštění téhle. */
 function cistyText(html) { return html.replace(/\u00a0/g, ' '); }
+/* SLOVO V NADPISU UŽ NENÍ VŽDY „Pozemky". Nadpis se 9. 11. začal řídit
+   tím, co stránka opravdu vypisuje: okres se samými pozemky má v <h1>
+   „Pozemky v okrese X", okres s domy a byty „Nemovitosti v okrese X"
+   (viz nadpisMnoziny v scripts/generate-region-pages.mjs). Vzorek s
+   napsaným „Pozemky" tím pádem u části okresů nenašel NIC — a kontrola
+   pod ním tiše přeskočila stránku místo toho, aby ji změřila. */
 function okresZeStranky(html) {
-  const m = /<h1>Pozemky v okrese ([^<.]+)\.<\/h1>/.exec(cistyText(html));
+  const m = /<h1>(?:Pozemky|Nemovitosti) v okrese ([^<.]+)\.<\/h1>/.exec(cistyText(html));
   return m ? m[1] : null;
 }
 

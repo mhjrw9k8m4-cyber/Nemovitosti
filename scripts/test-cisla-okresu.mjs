@@ -119,9 +119,20 @@ for (const f of fs.readdirSync(KOREN).sort()) {
   if (!/^pozemky-okres-.*\.html$/.test(f)) continue;
   stranek++;
   const h = fs.readFileSync(path.join(KOREN, f), 'utf8').replace(/ /g, ' ');
-  const okres = (h.match(/<h1>Pozemky v okrese ([^.<]+)\./) || [])[1];
+  /* SLOVO V NADPISU UŽ NENÍ VŽDY „Pozemky" — od 9. 11. se řídí tím, co
+     stránka vypisuje (nadpisMnoziny v generate-region-pages.mjs). Čte
+     se proto obojí: jméno okresu i to slovo. A protože okres je známý,
+     dá se slovo hned porovnat s týmž pravidlem, jakým se dole poznává
+     „pozemků/nemovitostí" v hlavičce — nadpis a čísla pod ním tak
+     musí mluvit o téže množině. */
+  const mH1 = h.match(/<h1>(Pozemky|Nemovitosti) v okrese ([^.<]+)\./);
+  const okres = mH1 && mH1[2];
   if (!okres) { rozchody.push(`${f}: jméno okresu se z <h1> nepřečetlo`); continue; }
   const list = aktualni.filter((o) => o.okres === okres);
+  const slovoNadpisu = kmenSlova(list) === 'pozemk' ? 'Pozemky' : 'Nemovitosti';
+  if (mH1[1] !== slovoNadpisu) {
+    rozchody.push(`${f}: nadpis říká „${mH1[1]}", podle dat má „${slovoNadpisu}"`);
+  }
 
   /* ČÍSLA JSOU V HLAVIČCE, NE VE VĚTĚ. Do 26. 10. je stránka psala
      dvakrát: jednou v odstavci „Aktuálně evidujeme N pozemků …" a hned
