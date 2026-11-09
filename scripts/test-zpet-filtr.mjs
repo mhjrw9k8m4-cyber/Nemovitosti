@@ -51,6 +51,24 @@ await ctx.route('**/*', (r) => {
   const h = new URL(r.request().url()).hostname;
   return (h === '127.0.0.1' || h === 'localhost') ? r.continue() : r.abort();
 });
+/* INSTRUMENTACE PRO CI. Tahle zkouška padá na běžci a u mě ne — ani
+   pod zátěží čtyř smyček naplno (zkoušeno 9. 11.). Dokud nevím, co se
+   tam děje, nemá smysl hádat opravu: stránka si proto zapisuje, jaké
+   události přišly a jak se při nich měnila adresa, a zkouška to při
+   pádu vypíše. Zápis je pasivní (jen posluchače), takže nic neměří
+   jinak, než by to dopadlo bez něj. */
+await ctx.addInitScript(() => {
+  window.__pkUdalosti = [];
+  const zapis = (co) => {
+    try {
+      window.__pkUdalosti.push(co + ' @' + (location.hash || '(bez hashe)')
+        + ' t=' + Math.round(performance.now()));
+    } catch (e) {}
+  };
+  window.addEventListener('popstate', () => zapis('popstate'));
+  window.addEventListener('hashchange', () => zapis('hashchange'));
+  window.addEventListener('pageshow', (e) => zapis('pageshow persisted=' + !!(e && e.persisted)));
+});
 const p = await ctx.newPage();
 
 /* Na web se přijde ODJINUD, jako z vyhledávače — jinak by „zpět"
@@ -106,8 +124,23 @@ await p.waitForTimeout(300);
 pravda('krok zpět nechá člověka na výpisu', /index\.html/.test(p.url()), p.url());
 const pocetPoZpet = await pocetZ();
 const druhPoZpet = await vybrany();
+/* Co stránka při couvnutí zažila — vypíše se jen při pádu, aby
+   zelený běh nebyl zavalený ladicím výpisem. */
+const stopa = await p.evaluate(() => ({
+  udalosti: (window.__pkUdalosti || []).slice(-8),
+  hash: location.hash,
+  trida: document.body.className,
+  pocty: ['mvt-count', 'map-count', 'opp-count'].map((id) => {
+    const e = document.getElementById(id);
+    return id + '=' + (e ? JSON.stringify((e.textContent || '').trim()) : '—');
+  }).join(' '),
+  karet: document.querySelectorAll('.opp-item').length,
+})).catch(() => null);
 pravda('krok zpět filtr zruší (počet je zpátky)', pocetPoZpet === pocetStart,
-  `na začátku ${pocetStart}, s filtrem ${pocetSFiltrem}, po zpět ${pocetPoZpet}`);
+  `na začátku ${pocetStart}, s filtrem ${pocetSFiltrem}, po zpět ${pocetPoZpet}`
+  + (stopa ? `\n      stopa: ${stopa.udalosti.join(' | ')}`
+    + `\n      hash „${stopa.hash}", karet ${stopa.karet}, ${stopa.pocty}`
+    + `\n      třída těla „${stopa.trida}"` : ''));
 pravda('a označený druh je zase ten výchozí',
   druhPoZpet.indexOf(jmenoChipu.replace(/\d.*$/, '').trim()) !== 0 || druhPoZpet === druhStart,
   `na začátku „${druhStart}", po zpět „${druhPoZpet}"`);
