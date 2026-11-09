@@ -179,6 +179,7 @@ export function premapujKlice(stav, nabidky) {
 
   const novy = Object.assign({}, stav.nabidky);
   const pouzite = new Set();
+  const prejmenovani = new Map();
   let premapovano = 0;
   for (const [k, d] of zive) {
     if (novy[k]) continue;
@@ -192,9 +193,10 @@ export function premapujKlice(stav, nabidky) {
     novy[k] = novy[stary];
     delete novy[stary];
     pouzite.add(stary);
+    prejmenovani.set(stary, k);
     premapovano++;
   }
-  return { nabidky: novy, premapovano };
+  return { nabidky: novy, premapovano, prejmenovani };
 }
 
 export function krok(stav, nabidky, den) {
@@ -250,7 +252,12 @@ export function krok(stav, nabidky, den) {
        nepáruje vůbec — hádat, která je která, je horší než nepárovat. */
     podleInzeratu.set(h, podleInzeratu.has(h) ? null : k);
   }
-  const prestehovane = new Set();
+  /* MAPA, NE MNOŽINA: potřebuje se i to, NA CO se přejmenovalo, aby
+     se podle ní daly srovnat i už uzavřená období (viz
+     prejmenujVUzavrenych). Dokud to byla množina, přejmenoval se
+     jenom živý stav a historie nabídky zůstala viset pod starým
+     klíčem — graf ceny i filtr „Zlevněné" ji pak nenašly. */
+  const prestehovane = new Map();
 
   for (const [k, d] of zive) {
     const z = zaznam(d);
@@ -260,7 +267,7 @@ export function krok(stav, nabidky, den) {
       const stary = (h && !/^v\d*$/.test(h)) ? podleInzeratu.get(h) : null;
       if (stary && !zive.has(stary) && !prestehovane.has(stary)) {
         byl = stav.nabidky[stary];
-        prestehovane.add(stary);
+        prestehovane.set(stary, k);
       }
     }
     if (!byl) {
@@ -288,7 +295,45 @@ export function krok(stav, nabidky, den) {
     uzavrene.push({ k, m: byl.m, o: byl.o, dr: byl.dr, t: byl.t,
       v: byl.v, c: byl.c, od: byl.od, do: byl.videno, proc: 'zmizela' });
   }
-  return { stav: novy, uzavrene, prestehovano: prestehovane.size };
+  return { stav: novy, uzavrene, prestehovano: prestehovane.size, prejmenovani: prestehovane };
+}
+
+/**
+ * PŘEJMENOVÁNÍ MUSÍ DOJÍT I DO UZAVŘENÝCH OBDOBÍ.
+ * ====================================================================
+ * Když nabídka dostane nový klíč (změní se jí poloha nebo okres),
+ * přejmenuje se v živém stavu — ale její už uzavřená období leží
+ * v data/archiv/*.jsonl pod klíčem STARÝM. Historie ceny se tím
+ * rozpadne na dvě půlky, které k sobě nikdo nepřiřadí: graf na stránce
+ * pozemku se přestane kreslit a filtr „Zlevněné" nabídku nenajde.
+ *
+ * Změřeno 9. 11. 2026: po opravě okresu u Bezrealitek sedělo na živou
+ * nabídku 6 uzavřených klíčů z 1 049, zatímco den předtím 581. Filtr
+ * „Zlevněné" spadl ze 129 nabídek na jednu.
+ *
+ * Soubory se přepisují na místě. Je to jediné místo v archivu, které
+ * to dělá — jinak se jen připojuje (viz pripoj). Přejmenování ale
+ * nemění ani jeden ÚDAJ o trhu: záznam zůstane celý, jen se mu opraví
+ * jméno nabídky, ke které patří.
+ * @returns {number} kolik řádků se přepsalo
+ */
+export function prejmenujVUzavrenych(prejmenovani, adresar = ADR) {
+  if (!prejmenovani || !prejmenovani.size || !fs.existsSync(adresar)) return 0;
+  let zasazeno = 0;
+  for (const f of fs.readdirSync(adresar).filter((x) => x.endsWith('.jsonl')).sort()) {
+    const cesta = path.join(adresar, f);
+    let zmena = false;
+    const radky = fs.readFileSync(cesta, 'utf8').split('\n').map((r) => {
+      if (!r.trim()) return r;
+      let z; try { z = JSON.parse(r); } catch (e) { return r; }
+      const novy = prejmenovani.get(z.k);
+      if (!novy || novy === z.k) return r;
+      z.k = novy; zmena = true; zasazeno++;
+      return JSON.stringify(z);
+    });
+    if (zmena) fs.writeFileSync(cesta, radky.join('\n'));
+  }
+  return zasazeno;
 }
 
 export function pripoj(uzavrene) {
@@ -385,8 +430,12 @@ function krokDneska() {
       stav.nabidky = m.nabidky;
       fs.mkdirSync(ADR, { recursive: true });
       fs.writeFileSync(STAV, JSON.stringify(stav, null, 1));
+      /* A TOTÉŽ DO UZAVŘENÝCH OBDOBÍ, jinak zůstane historie nabídky
+         pod starým klíčem a graf ceny ji nenajde. */
+      const radku = prejmenujVUzavrenych(m.prejmenovani);
       console.log(`Archiv: dnešek už je započítaný, ale ${m.premapovano} nabídkám`
-        + ' se změnila poloha a dostaly nový klíč — ten se srovnal, nic se nezavřelo.');
+        + ' se změnila poloha a dostaly nový klíč — ten se srovnal, nic se nezavřelo'
+        + (radku ? `, a ${radku} uzavřených období se přejmenovalo s nimi` : '') + '.');
     } else {
       console.log('Archiv: dnešek už je započítaný, nic se nedělá.');
     }
@@ -402,6 +451,10 @@ function krokDneska() {
     return;
   }
   const v = krok(stav, n, den);
+  /* Přejmenovat uzavřená období MUSÍ jít dřív, než se připojí dnešní:
+     ta už se zapisují pod novým klíčem, takže by je druhé přejmenování
+     nenašlo — a hlavně se tím nedotkne toho, co právě vzniklo. */
+  const prejmenovanychRadku = prejmenujVUzavrenych(v.prejmenovani);
   const pocet = pripoj(v.uzavrene);
   fs.mkdirSync(ADR, { recursive: true });
   fs.writeFileSync(STAV, JSON.stringify(v.stav, null, 1));
@@ -409,7 +462,9 @@ function krokDneska() {
     + `uzavřeno ${pocet} období (${v.uzavrene.filter((x) => x.proc === 'zmizela').length} zmizelo, `
     + `${v.uzavrene.filter((x) => x.proc === 'cena').length} změnilo cenu)`
     + (v.prestehovano ? `, a ${v.prestehovano} nabídek dostalo nový klíč, aniž by zmizely`
-      + ' (změnila se jim poloha — viz krok())' : '') + '.');
+      + ' (změnila se jim poloha — viz krok())'
+      + (prejmenovanychRadku ? `; ${prejmenovanychRadku} uzavřených období se přejmenovalo s nimi` : '')
+      : '') + '.');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

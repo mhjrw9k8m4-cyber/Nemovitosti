@@ -26,6 +26,7 @@ import { historiePodleKlice, jenZmeny } from './cenova-historie.mjs';
 import { nactiArchiv } from './archiv-statistiky.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { stavStranky } from './vzorek-pozemku.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const Z = createRequire(import.meta.url)(path.join(ROOT, 'js', 'zlevneni.js'));
@@ -106,6 +107,12 @@ for (const f of readdirSync(ROOT).filter((x) => x.startsWith('pozemek-') && x.en
   const m = /window\.PK_POZEMEK=(\{.*?\});<\/script>/.exec(readFileSync(path.join(ROOT, f), 'utf8'));
   if (!m) continue;
   let o; try { o = JSON.parse(m[1]); } catch (e) { continue; }
+  /* JEN ŽIVÉ STRÁNKY. Na vyřazené („Tato nabídka už není aktuální")
+     se blok historie nekreslí — a je to tak správně. Dokud se vzorek
+     bral v pořadí adresáře, spadly do něj právě ty a zkouška hlásila
+     „blok historie se vykreslil: ne" jako vadu webu. Táž příčina jako
+     u třinácti dalších zkoušek, proto týž pomocník. */
+  if (stavStranky(f) !== 'ziva') continue;
   if (o.h && o.h.length > 1) { if (sHistorii.length < 3) sHistorii.push({ f, o }); }
   else if (bezHistorie.length < 1) bezHistorie.push({ f, o });
 }

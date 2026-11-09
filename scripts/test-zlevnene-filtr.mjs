@@ -116,16 +116,29 @@ pravda(`očekáváme ${cekano.zlevnene.length} zlevněných nabídek`, cekano.zl
 
    Absolutní počet se o jmenovatele neopírá a odpovídá přesně na tu
    otázku, kvůli které zkouška vznikla: bez toho souboru by filtr
-   nenašel čtyřicet nabídek, které zlevnily dřív než včera. Mez je 30 —
-   pod naměřeným pásmem 38–41 s rezervou, ale dost vysoko na to, aby
-   kousla, kdyby archiv spadl na polovinu. Podíl se dál vypisuje do
-   hlášky, takže je posun vidět i ve chvíli, kdy kontrola projde. */
+   nenašel čtyřicet nabídek, které zlevnily dřív než včera. Podíl se
+   dál vypisuje do hlášky, takže je posun vidět i ve chvíli, kdy
+   kontrola projde.
+
+   MEZ SE 9. 11. SNÍŽILA ZE 30 NA 15, A JE TO PŘIZNANÁ ZTRÁTA.
+   Osmého listopadu dostaly nabídky z Bezrealitek okres dopočítaný ze
+   souřadnic a tím i nový klíč archivu; uzavřená období zůstala pod
+   klíčem starým, takže se historie rozpadla. Sedělo 6 klíčů z 1 049
+   místo dřívějších 581. Přejmenování se dohnalo zpětně
+   (scripts/oprava-klicu-archivu.mjs) a napříště ho drží
+   prejmenujVUzavrenych v scripts/archiv.mjs, jenže dohnat se dalo jen
+   to, co dnes na trhu pořád je: 90 klíčů. Zbytek patří nabídkám, které
+   mezitím odešly, a jejich historii nikdo nevrátí.
+   Naměřeno po opravě: archiv přidává 25 změn z 56 (45 %). Pásmo 38–41
+   tedy už neplatí a mez 30 by kousala do zdravého stavu. Patnáctka je
+   pod dnešním měřením s rezervou a pořád dost vysoko na to, aby
+   kousla, kdyby archiv přestal přispívat. */
 {
   const celkem = cekano.zArchivu + cekano.zBehu;
   const podil = celkem ? cekano.zArchivu / celkem : 0;
   pravda(`bez archivu by chybělo ${cekano.zArchivu} změn z ${celkem} `
     + `(${Math.round(podil * 100)} %), poslední běh robota ${cekano.zBehu}`,
-    cekano.zArchivu >= 30,
+    cekano.zArchivu >= 15,
     'archiv přidává míň než třicet změn, takže se ten soubor nevyplatí stahovat');
 }
 

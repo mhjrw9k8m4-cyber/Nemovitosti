@@ -13,7 +13,7 @@ import fsx from 'node:fs';
 import pathx from 'node:path';
 import { createRequire as createRequireX } from 'node:module';
 import { fileURLToPath as furlX } from 'node:url';
-import { krok, premapujKlice, dnyPrezneceni, verdiktStavu, posledniZaDen, VERZE } from './archiv.mjs';
+import { krok, premapujKlice, prejmenujVUzavrenych, dnyPrezneceni, verdiktStavu, posledniZaDen, VERZE } from './archiv.mjs';
 
 const KOREN_X = pathx.resolve(pathx.dirname(furlX(import.meta.url)), '..');
 const reqX = createRequireX(import.meta.url);
@@ -137,6 +137,7 @@ je('nabídka bez obce nebo okresu se nesleduje (nejde ji poznat)',
 /* ---- 6) skutečný archiv v repozitáři ---- */
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -296,7 +297,13 @@ if (fs.existsSync(ADR)) {
      píše do souborů a zkouška mu je podstrkovat nebude. */
   const kodA = fsx.readFileSync(pathx.join(KOREN_X, 'scripts', 'archiv.mjs'), 'utf8');
   const iK = kodA.indexOf('function krokDneska');
-  const telo = iK > 0 ? kodA.slice(iK, iK + 1500) : '';
+  /* CELÉ TĚLO, NE PRVNÍCH 1 500 ZNAKŮ. Dřív se bral pevný výřez a ten
+     zestárl hned, jak do funkce přibyl odstavec komentáře: hláška,
+     kterou tahle kontrola hledá, vypadla z okna a zkouška hlásila vadu
+     v robotovi, přestože se nezměnil. Okno proto končí tam, kde končí
+     funkce — na uzavírací složené závorce v prvním sloupci. */
+  const konecK = iK > 0 ? kodA.indexOf('\n}', iK) : -1;
+  const telo = iK > 0 ? kodA.slice(iK, konecK > 0 ? konecK + 2 : undefined) : '';
   je('krokDneska se podle značky opravdu zdrží',
     /dnyPrezneceni\(n\)\.has\(den\)/.test(telo), true);
   /* POZOR: hledat to slovo kdekoli v těle nestačí — stejné slovo stojí
@@ -404,6 +411,47 @@ if (fs.existsSync(ADR)) {
   } };
   const m3 = premapujKlice(stav3, [D]);
   je('ale dvě k nerozeznání se nespárují vůbec', m3.premapovano, 0);
+}
+
+/* --- 4d) PŘEJMENOVÁNÍ MUSÍ DOJÍT I DO UZAVŘENÝCH OBDOBÍ -------------
+   Přejmenovat klíč jen v živém stavu nestačí: už uzavřená období leží
+   v data/archiv/*.jsonl pod klíčem starým, takže se historie nabídky
+   rozpadne na dvě půlky a nikdo je k sobě nepřiřadí. Na webu se to
+   projeví tak, že graf vývoje ceny zmizí a filtr „Zlevněné" nabídku
+   nenajde. Naměřeno 9. 11. 2026 po opravě okresu u Bezrealitek:
+   z 1 049 uzavřených klíčů sedělo na živou nabídku 6, den předtím 581;
+   filtr „Zlevněné" spadl ze 129 nabídek na jednu.
+   Zkouší se na opravdových souborech v dočasném adresáři, ne na
+   domluvě o tvaru: funkce soubory PŘEPISUJE, a to je jediné místo
+   v archivu, které to dělá. */
+{
+  const adr = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-archiv-'));
+  fs.writeFileSync(path.join(adr, '2026-02.jsonl'),
+    JSON.stringify({ k: 'STARY#abc', m: 'Hora', o: 'Beroun', dr: 'orná půda', t: 'sale',
+      v: 100, c: 500, od: '2026-01-01', do: '2026-02-01', proc: 'cena' }) + '\n'
+    + JSON.stringify({ k: 'JINY#xyz', m: 'Les', o: 'Kolín', dr: 'les', t: 'sale',
+      v: 200, c: 900, od: '2026-01-01', do: '2026-02-01', proc: 'zmizela' }) + '\n');
+  const kolik = prejmenujVUzavrenych(new Map([['STARY#abc', 'NOVY#abc']]), adr);
+  const po = fs.readFileSync(path.join(adr, '2026-02.jsonl'), 'utf8')
+    .split('\n').filter((x) => x.trim()).map((x) => JSON.parse(x));
+  je('přejmenuje se právě jeden řádek', kolik, 1);
+  je('a dostane nový klíč', po[0].k, 'NOVY#abc');
+  je('cizí řádek zůstane nedotčený', po[1].k, 'JINY#xyz');
+  /* ŽÁDNÝ ÚDAJ O TRHU SE NESMÍ ZMĚNIT — jen jméno nabídky. */
+  je('a nic jiného se v přejmenovaném řádku nezměnilo',
+    [po[0].c, po[0].v, po[0].od, po[0].do, po[0].proc], [500, 100, '2026-01-01', '2026-02-01', 'cena']);
+  je('prázdná mapa soubory nesahá', prejmenujVUzavrenych(new Map(), adr), 0);
+  /* A OBĚ CESTY, KTERÉ KLÍČE PŘEJMENOVÁVAJÍ, MUSÍ MAPU VYDAT —
+     jinak by se uzavřená období neměla podle čeho srovnat. */
+  const A2 = P({ url: 'https://e.cz/2-nabidka-prodej-pozemku-kolin' });
+  const B2 = Object.assign({}, A2, { lat: 50.41, lng: 15.91 });
+  const stavA = krok(PRAZDNY, [A2], '2026-02-01').stav;
+  const kStary = Object.keys(stavA.nabidky)[0];
+  je('premapujKlice vydá mapu starý → nový',
+    premapujKlice(stavA, [B2]).prejmenovani.get(kStary), KLICX.klicArchivu(B2));
+  je('a krok() taky',
+    krok(stavA, [B2], '2026-02-02').prejmenovani.get(kStary), KLICX.klicArchivu(B2));
+  fs.rmSync(adr, { recursive: true, force: true });
 }
 
 console.log('\nArchiv nabídek: ' + (ok + chyb) + ' kontrol');
