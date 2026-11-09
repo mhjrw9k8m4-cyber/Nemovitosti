@@ -9309,7 +9309,26 @@
        vrstvaPraveCouvla u obsluhy popstate nahoře. */
     try { if (window.PK_VRSTVA_COUVLA && window.PK_VRSTVA_COUVLA()) return; } catch (e) {}
     try {
-      if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
+      /* PRÁZDNÁ ADRESA JE TAKY STAV — TEN VÝCHOZÍ.
+         ----------------------------------------------------------
+         Tahle podmínka se dřív ptala jen „je v adrese stav mapy?",
+         takže po couvnutí na adresu BEZ hashe se neobnovilo nic
+         a filtr zůstal zapnutý. Projevilo se to jako náhodný pád
+         zkoušky „Zpět po zapnutí filtru" v CI (běhy 1110 a 1113,
+         1114 prošel) a reprodukoval jsem to 9. 11. doma: stačí, aby
+         první záznam v historii neměl hash — pak je po kroku zpět
+         adresa prázdná. Naměřeno: před 3 432, s filtrem 3 339,
+         po zpět 3 339 a adresa „", kdežto s hashem „#m=…" se filtr
+         zruší správně.
+         Pro člověka je to tohle: přijde z vyhledávače, hned klepne
+         na filtr a dá zpět — a filtr mu zůstane, i když adresa už
+         o něm nic neříká. Prázdná adresa proto znamená „nic
+         nastaveného", tedy resetFilters() a dosazení ničeho.
+         Cizí kotva (#sekce) se dál přeskakuje: ta nepatří webu
+         ani mapě a sahat kvůli ní na filtry by bylo horší. */
+      var hStav = location.hash || '';
+      var prazdnaAdresa = (hStav === '' || hStav === '#');
+      if (!prazdnaAdresa && (!window.PKOdkaz || !PKOdkaz.jeStavMapy(hStav))) return;
       /* NEJDŘÍV ZRUŠIT, PAK DOSADIT — jinak krok zpět nic neudělá.
          ----------------------------------------------------------
          obnovZAdresy() dosazuje jen to, co v adrese STOJÍ: je to řada
@@ -9332,7 +9351,7 @@
       adresaDrzi = true;
       try { if (typeof resetFilters === 'function') resetFilters(); }
       finally { adresaDrzi = false; }
-      obnovZAdresy(location.hash);
+      obnovZAdresy(hStav);
     } catch (e) {}
   });
   function openFromUrl() {

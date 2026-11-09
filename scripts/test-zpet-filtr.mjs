@@ -148,6 +148,45 @@ const hashPoZpet = await p.evaluate(() => location.hash);
 pravda('a v adrese po filtru nic nezbylo', !/[?&#]t=/.test(hashPoZpet), 'hash: ' + hashPoZpet);
 
 
+/* ---- 3. TOTÉŽ, ALE S PRÁZDNOU ADRESOU -----------------------------
+   Tohle je ta podoba, která v CI náhodně padala (běhy 1110 a 1113,
+   1114 prošel) a doma nikdy: záleží na tom, jestli si mapa stihla
+   zapsat výřez do adresy DŘÍV, než člověk klepl na filtr. Když ne,
+   je po kroku zpět adresa PRÁZDNÁ — a obsluha, která se ptala jen
+   „je v adrese stav mapy?", neobnovila nic.
+   Pro člověka: přijde z vyhledávače, hned klepne na filtr, dá zpět —
+   a filtr mu zůstane, i když adresa už o něm nic neříká.
+   Vyrábí se to jedním řádkem: adresa se před klepnutím na filtr
+   uvede do stavu, v jakém je hned po příchodu (bez hashe). Nic se
+   tím nepředstírá — přesně tak stránka vypadá, než se mapa usadí. */
+{
+  await p.goto(`${BASE}/kontakt.html`, { waitUntil: 'domcontentloaded' });
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.locator('.opp-item').first().waitFor({ state: 'visible', timeout: 25000 }).catch(() => {});
+  await p.waitForTimeout(900);
+  const pocetA = await pocetZ();
+  await p.evaluate(() => history.replaceState(history.state, '', location.pathname + location.search));
+  await p.locator('#ms-filtr').click();
+  await p.waitForTimeout(400);
+  const chip2 = p.locator('#map-filters [data-type]').nth(1);
+  await chip2.click();
+  await p.waitForTimeout(1300);
+  const pocetB = await pocetZ();
+  pravda(`bez stavu mapy v adrese filtr taky zabere (${pocetA} → ${pocetB})`,
+    pocetB !== pocetA, `před ${pocetA}, po ${pocetB} — nebylo by co rušit`);
+  const hashB = await p.evaluate(() => location.hash);
+  await p.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+  await p.waitForFunction((ocek) => {
+    const e = document.querySelector('#map-count, #opp-count, #mvt-count');
+    return !!e && String(e.textContent || '').replace(/\s/g, '') === ocek;
+  }, pocetA, { timeout: 20000 }).catch(() => {});
+  const pocetC = await pocetZ();
+  const hashC = await p.evaluate(() => location.hash);
+  pravda('a krok zpět ho zruší i tam, kde adresa zůstane prázdná',
+    pocetC === pocetA, `po filtru hash „${hashB}" (${pocetB}), `
+    + `po zpět hash „${hashC}" (${pocetC}), čekal se ${pocetA}`);
+}
+
 /* ---- CO TAHLE ZKOUŠKA NEHLÍDÁ, A PROČ -------------------------------
    Druhá polovina pravidla zní „posun mapy NESMÍ zakládat položku
    historie" — a tu tady změřenou nemám.

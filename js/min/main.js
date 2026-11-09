@@ -5545,12 +5545,15 @@
 
     try { if (window.PK_VRSTVA_COUVLA && window.PK_VRSTVA_COUVLA()) return; } catch (e) {}
     try {
-      if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
+
+      var hStav = location.hash || '';
+      var prazdnaAdresa = (hStav === '' || hStav === '#');
+      if (!prazdnaAdresa && (!window.PKOdkaz || !PKOdkaz.jeStavMapy(hStav))) return;
 
       adresaDrzi = true;
       try { if (typeof resetFilters === 'function') resetFilters(); }
       finally { adresaDrzi = false; }
-      obnovZAdresy(location.hash);
+      obnovZAdresy(hStav);
     } catch (e) {}
   });
   function openFromUrl() {
