@@ -70,6 +70,17 @@ function popisPolozky(o) {
   if (o.area > 0) c.push(`${fmt(o.area)}&#160;m²`);
   if (o.price > 0 && o.area > 0) c.push(`${fmt(Math.round(o.price / o.area))}&#160;Kč/m²`);
   if (o.druh) c.push(esc(o.druh));
+  /* PARCELNÍ ČÍSLO ODLIŠÍ DVĚ NABÍDKY NA JEDNOM MÍSTĚ. Bez něj vyšly
+     9. 11. dvě různé nabídky ÚZSVM v České Lípě znak za znak stejně:
+     obě „Na prodej, 52 m²", obě 115 400 Kč, obě zastavěná plocha,
+     obě okres Česká Lípa — lišily se jen parcelou (1530 a 1532) a
+     adresou, kterou čtečka neukazuje. Pro odběratele to nebyly dvě
+     příležitosti, ale jedna poslaná dvakrát. Je to táž třída vady,
+     jakou níž řeší termín u dražeb, a řeší se stejně: do popisu
+     patří to, čím se ty dvě věci opravdu liší. Číslo mají všechny
+     nabídky (změřeno: 3 441 ze 3 441), takže to není výjimka pro
+     jeden zdroj. */
+  if (o.parcel) c.push(`parc. č. ${esc(o.parcel)}`);
   if (o.okres) c.push(`okres ${esc(o.okres)}`);
   /* U podílu to MUSÍ stát hned: cena je za zlomek, ale výměra za celou
      parcelu, takže cena za metr vychází nízko sama od sebe a nabídka
