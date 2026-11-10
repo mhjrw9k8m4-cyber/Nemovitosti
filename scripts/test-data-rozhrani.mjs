@@ -173,11 +173,49 @@ const nabidky = D.opportunities || [];
   }
 }
 
-/* ---- 4) velikost: kdo si to bere, má vědět, co stahuje ---- */
+/* ---- 4) velikost: kdo si to bere, má vědět, co stahuje ----
+   TADY STÁVALA PEVNÁ MEZ 2 MB s poznámkou „nad dva megabajty už je čas
+   na dělení po krajích". Dvě věci se od tehdy změřily a mez tím
+   ztratila smysl, který měla.
+
+   PRVNÍ: dělení už je HOTOVÉ a kvůli téhle mezi se neudělalo.
+   Řezy po okresech (data/okres/*.json, průměr 17 kB) existují a od
+   10. 11. po nich chodí i poslední stránka, která si brala celek —
+   porovnani.html přes rejstřík data/klice-okresu.json. Změřeno
+   čtením js/: úvod bere data/mapa.json, stránka pozemku svůj
+   předpočítaný řez, celek si vezme jen (a) kdo si stahuje data jako
+   data, (b) pridat.html po klepnutí na „Mám inzerát jinde“, z
+   mezipaměti, a (c) kterákoli stránka, když jí její řez nedojde.
+   Mez na celku tedy nehlídá telefon návštěvníka — to hlídá
+   test-porovnani.mjs, který měří, o které soubory si stránka požádala.
+
+   DRUHÉ: to číslo by zčervenalo z úspěchu, ne z vady. Robot našel
+   víc nabídek (po opravě stropu geokodéru u Bezrealitek vyjde ~8 700
+   místo 3 499) a soubor tím vyroste na ~3,26 MB. Víc nabídek je
+   PŘESNĚ to, o co na tomhle webu jde; mez, která se o to opře, by jen
+   učila číst hlídače jako šum.
+
+   CO SE TEDY MĚŘÍ MÍSTO TOHO. Bajty na JEDNU nabídku. To nezestárne
+   s obsahem a pozná vadu, které se tu opravdu bát: někdo přidá do
+   každého záznamu tučné pole (dnes je největší „url“ s 84 B) a soubor
+   skokem ztěžkne všem, kdo ho berou. Naměřeno 392 B na nabídku;
+   mez 460 B je +17 % rezerva na delší adresy z nového zdroje.
+   A k tomu volný absolutní strop 8 MB: ten neříká „optimalizuj“, ten
+   říká „při čtyřnásobku dnešního počtu se na to někdo má přijít
+   podívat“. */
 {
   const b = statSync(path.join(KOREN, 'data', 'opportunities.json')).size;
-  pravda('soubor je pořád v rozumné velikosti (do 2 MB)', b <= 2 * 1024 * 1024,
-    `${(b / 1024 / 1024).toFixed(2)} MB — nad dva megabajty už je čas na dělení po krajích`);
+  const pocet = ((JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'))
+    || {}).opportunities || []).length;
+  pravda('je co měřit: v souboru jsou nabídky', pocet > 100, `nabídek ${pocet}`);
+  if (pocet > 100) {
+    const naNabidku = b / pocet;
+    pravda('na jednu nabídku nepřipadá víc než 460 B', naNabidku <= 460,
+      `${naNabidku.toFixed(0)} B na nabídku (${pocet} nabídek, ${(b / 1024 / 1024).toFixed(2)} MB)`
+      + ' — přibylo do každého záznamu tučné pole?');
+  }
+  pravda('a celý soubor zůstává do 8 MB (hromadné stažení)', b <= 8 * 1024 * 1024,
+    `${(b / 1024 / 1024).toFixed(2)} MB — při čtyřnásobku dnešního počtu je čas se na to podívat`);
 }
 
 /* ---- 4b) VYJMENOVANÉ HODNOTY SE BEROU OD ROBOTA -------------
