@@ -24,6 +24,7 @@ import { porovnejZdroje, PRAH_SLEDOVANI, PRAH_PROPADU,
   nejvyssiOkdZDat, nejnizsiOkdZDat, oknoOkd, OKD_OKNO, OKD_OKNO_STROP,
   medianyCenZdroju, porovnejCeny, PRAH_CEN, PRAH_CEN_KUSU, DNU_CEN,
   porovnejTotoznost, PRAH_TOTOZNOSTI, PRAH_TOTOZNOSTI_KUSU,
+  PRAH_NAROSTU, PRAH_NAROSTU_KUSU, zapisMimoProvoz, MIMO_SE_NEPOCITA,
   prirazPrvniVideni } from './fetch-opportunities.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
@@ -735,6 +736,55 @@ pravda('první běh bez minulých čísel projde tiše',
     porovnejTotoznost({ 'Farmy': { celkem: 9, novych: 9 } }, dost('Farmy', 9), JMENA).length === 0
     && porovnejTotoznost({ 'Farmy': { celkem: 49, novych: 49 } }, dost('Farmy', 49), JMENA).length === 0,
     'u Farem je to naostro 9 nabídek, u Dražeb 20');
+
+  /* ===== A DRUHÝ SPOUŠTĚČ: „ČTEME VÍC NEŽ DŘÍV" =====================
+     NALEZENO 10. 11. jako důsledek vlastní opravy. Strop geokodéru
+     u Bezrealitek zahazoval 5 513 z 8 700 nabídek; po opravě přijdou
+     všechny, žádná se nespáruje (dřív v datech nebyly) a web by druhý
+     den tvrdil, že za jeden den přibylo 5 500 pozemků.
+     Podíl nespárovaných to nepozná: 5 513 / 8 700 = 0,63, tedy POD
+     mezí 0,7. Rozhoduje proto NÁRŮST celku, a obě meze musí být
+     potřeba — jinak by jedna z nich byla ozdoba. */
+  pravda('meze nárůstu drží na tom, co bylo naměřeno',
+    PRAH_NAROSTU >= 1.2 && PRAH_NAROSTU <= 3 && PRAH_NAROSTU_KUSU >= 100,
+    `poměr ${PRAH_NAROSTU}, kusů ${PRAH_NAROSTU_KUSU}`
+    + ' — největší skutečný krok zdroje v historii byl +10 kusů (Dražby 44 → 54)');
+  /* Je co měřit: ten případ MUSÍ projít pod mezí podílu, jinak by ho
+     chytla stará větev a nová by se vůbec nerozhodovala. */
+  pravda('je co měřit: případ Bezrealitek je pod mezí podílu (0,63 < 0,7)',
+    5513 / 8700 < PRAH_TOTOZNOSTI, `podíl ${(5513 / 8700).toFixed(2)}`);
+  const nB = porovnejTotoznost({ 'Bezrealitky': { celkem: 8700, novych: 5513 } },
+    dost('Bezrealitky', 3187), JMENA);
+  pravda('zdroj, u kterého se skokem začalo číst víc, se ozve jako „vicCteno"',
+    nB.length === 1 && nB[0].druh === 'vicCteno' && nB[0].novych === 5513
+    && nB[0].vcera === 3187,
+    JSON.stringify(nB));
+  /* Obě meze zvlášť. Kdyby stačila jedna, druhá je ozdoba. */
+  pravda('samotný poměr nestačí: malý zdroj z 60 na 100 se nehlásí',
+    porovnejTotoznost({ 'Dražby': { celkem: 100, novych: 45 } }, dost('Dražby', 60), JMENA).length === 0,
+    'malý zdroj může vyskočit o polovinu právem — mez na kusy to má zastavit');
+  pravda('a samotný počet nestačí: velký zdroj o 400 kusů výš se nehlásí',
+    porovnejTotoznost({ 'Bezrealitky': { celkem: 3600, novych: 420 } },
+      dost('Bezrealitky', 3187), JMENA).length === 0,
+    'obyčejný denní přírůstek velkého zdroje není změna našeho čtení');
+  /* A TO PODSTATNÉ: tenhle nález NESMÍ označit zdroj za mimo pořádek.
+     „jinaIdentita" se do série počítá (MIMO_SE_NEPOCITA ji nemá), takže
+     by z naší vlastní opravy vznikl e-mail o selhání zdroje, který je
+     v pořádku. */
+  pravda('je co měřit: stav „jinaIdentita" se do série mimo pořádek POČÍTÁ',
+    !MIMO_SE_NEPOCITA.has('jinaIdentita') && MIMO_SE_NEPOCITA.has('ok'),
+    'kdyby se nepočítal, tahle kontrola by nic nehlídala');
+  pravda('zdroj, který čteme šířeji, zůstane „ok" a sérii hlídky nerozjede', (() => {
+    const po = zapisMimoProvoz({ mimoProvoz: {} },
+      [{ nazev: 'Bezrealitky', stav: 'ok' }], '2026-11-10');
+    return Object.keys(po).length === 0;
+  })(), 'z naší vlastní opravy by jinak vznikl e-mail o selhání');
+  /* Zdroj robota: stav se smí přepsat jen u přemalovaného zdroje. */
+  pravda('a robot stav mění jen u nálezu „jinaIdentita"', (() => {
+    const zdroj = readFileSync(path.join(KOREN_H, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
+    return /if \(z && n\.druh === 'jinaIdentita'\) z\.stav = 'jinaIdentita';/.test(zdroj)
+      && !/if \(z\) z\.stav = 'jinaIdentita';/.test(zdroj);
+  })(), 'bez té podmínky označí „vicCteno" zdroj za mimo pořádek');
   /* A TEĎ PŘÍPAD, VE KTERÉM ROZHODUJE VÝHRADNĚ MEZ NA POČET KUSŮ.
      Ty dva výš ji nehlídaly: u devíti nabídek selže i podmínka na
      včerejší počet, takže sabotáž „mez na kusy zrušena" prošla

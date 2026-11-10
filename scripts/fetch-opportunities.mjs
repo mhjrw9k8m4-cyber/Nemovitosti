@@ -2486,6 +2486,41 @@ export function porovnejZdroje(minule, ted) {
 export const PRAH_TOTOZNOSTI = 0.7;
 export const PRAH_TOTOZNOSTI_KUSU = 50;
 
+/* A DRUHÝ SPOUŠTĚČ: „ČTEME VÍC NEŽ DŘÍV".
+   ------------------------------------------------------------------
+   NALEZENO 10. 11. ČTENÍM KÓDU, ne pádem — a nalezeno jako důsledek
+   vlastní opravy. Strop geokodéru u Bezrealitek zahazoval 5 513
+   z 8 700 prodejních nabídek jako „bez okresu"; po opravě přijdou
+   všechny. Žádná z nich se nespáruje s minulým během (dřív v datech
+   nebyly), takže by každá dostala `first_seen` = dnešek a web by
+   druhý den tvrdil, že za jeden den přibylo 5 500 pozemků. To není
+   pravda: ty nabídky tam byly, jen jsme je neumě zahazovali.
+
+   PROČ NA TO NESTAČÍ PODÍL NESPÁROVANÝCH. Ten tu už hlídá
+   PRAH_TOTOZNOSTI (0,7). U Bezrealitek ale vyjde 5 513 / 8 700 = 0,63
+   — tedy POD mezí, a pojistka by mlčela. Podíl pozná zdroj, který se
+   přemaloval; nepozná zdroj, u kterého se změnilo NAŠE čtení.
+
+   ROZHODUJE PROTO NÁRŮST CELKU. Zdroj, který za jeden běh (šest
+   hodin) naroste o polovinu A ZÁROVEŇ o stovky kusů, tolik pozemků
+   neprodal ani nevyvěsil — čteme ho jinak. Obě meze jsou potřeba:
+   samotný poměr by chytil malý zdroj, co vyskočil z 50 na 75
+   (to se stát může), a samotný počet by chytil velký zdroj
+   s obyčejným denním přírůstkem.
+   ZMĚŘENO V HISTORII (data/zdroje-historie.json, 30 dnů): největší
+   skutečný krok kteréhokoli zdroje mezi běhy byl u Dražeb 44 → 54,
+   tedy +10 kusů. Proti tomu je +300 daleko, a Bezrealitky se chystají
+   na +5 500 (2,7×).
+
+   CO SE S NÁLEZEM DĚLÁ. Jen se nespárovaným nabídkám označí věk za
+   neznámý (`prezn`), takže nejdou mezi novinky, do RSS ani do denní
+   řady a archiv se o ten den zdrží. STAV ZDROJE SE NEMĚNÍ, a to je
+   podstatné: `jinaIdentita` se počítá do série „mimo pořádek"
+   (MIMO_SE_NEPOCITA ji nemá), takže by z naší vlastní opravy vznikl
+   e-mail o selhání zdroje, který je v pořádku. Zdroj v pořádku je. */
+export const PRAH_NAROSTU = 1.5;
+export const PRAH_NAROSTU_KUSU = 300;
+
 /**
  * Zdroje, u kterých se dnes nespárovalo skoro nic.
  * `podleZdroje` je z prirazPrvniVideni, `drive` jsou včerejší nabídky.
@@ -2505,9 +2540,19 @@ export function porovnejTotoznost(podleZdroje, drive, znama) {
     if (celkem < PRAH_TOTOZNOSTI_KUSU) continue;
     if ((vcera.get(nazev) || 0) < PRAH_TOTOZNOSTI_KUSU) continue;
     const podil = novych / celkem;
+    const vcerejsek = vcera.get(nazev) || 0;
     if (podil >= PRAH_TOTOZNOSTI) {
       nalezy.push({ nazev, druh: 'jinaIdentita', celkem, novych,
-        podil: Math.round(podil * 100) / 100, vcera: vcera.get(nazev) || 0 });
+        podil: Math.round(podil * 100) / 100, vcera: vcerejsek });
+      continue;                 // přemalovaný zdroj je silnější nález
+    }
+    /* Viz PRAH_NAROSTU výš: tohle není vada zdroje, ale změna našeho
+       čtení — a nesmí se vydávat za novinky. */
+    if (novych > 0 && celkem - vcerejsek >= PRAH_NAROSTU_KUSU
+        && celkem / vcerejsek >= PRAH_NAROSTU) {
+      nalezy.push({ nazev, druh: 'vicCteno', celkem, novych,
+        podil: Math.round(podil * 100) / 100, vcera: vcerejsek,
+        narust: Math.round((celkem / vcerejsek) * 100) / 100 });
     }
   }
   return nalezy;
@@ -5052,7 +5097,10 @@ async function fetchNabidkyStatu() {
      tedy do dat, ze kterých čte diagnostika. */
   for (const n of porovnejTotoznost(vysledek.podleZdroje, driveVse, znamaJmena)) {
     const z = zdroje.find((x) => x.nazev === n.nazev);
-    if (z) z.stav = 'jinaIdentita';
+    /* STAV SE MĚNÍ JEN U PŘEMALOVANÉHO ZDROJE. U „vicCteno" je zdroj
+       v pořádku (čteme ho jinak my), a `jinaIdentita` se počítá do
+       série „mimo pořádek" — viz PRAH_NAROSTU. */
+    if (z && n.druh === 'jinaIdentita') z.stav = 'jinaIdentita';
     let oznaceno = 0;
     for (const o of fresh) {
       if (zdrojNabidky(o, znamaJmena) !== n.nazev || o.first_seen !== dnesISO) continue;
@@ -5062,6 +5110,15 @@ async function fetchNabidkyStatu() {
          natrvalo. Pro novinky a RSS je to pořád jen pravdivostní
          hodnota: věk neznámý zůstává neznámý. */
       o.prezn = dnesISO; oznaceno++;
+    }
+    if (n.druh === 'vicCteno') {
+      console.error(`POZOR: zdroj ${n.nazev} dnes přinesl ${n.celkem} nabídek proti`
+        + ` ${n.vcera} z minulého běhu (${n.narust}×) a ${n.novych} z nich se nespárovalo.`
+        + ' Tolik pozemků za šest hodin nikdo nevyvěsí — čteme ten zdroj jinak než dřív'
+        + ` (šířeji, nebo přestal padat nějaký náš filtr). Nabídky se berou, ale`
+        + ` ${oznaceno} z nich má věk označený za neznámý a mezi novinky nejdou.`
+        + ' Stav zdroje se nemění: zdroj je v pořádku.');
+      continue;
     }
     console.error(`POZOR: u zdroje ${n.nazev} se dnes nespárovalo ${n.novych}`
       + ` z ${n.celkem} nabídek (${Math.round(n.podil * 100)} %), včera jich bylo ${n.vcera}.`
