@@ -2145,10 +2145,37 @@ export function porovnejSHistorii(historie, ted, dnes) {
     /* Pozor na „aspoň jeden zdravý den" jako podmínku: s jedním zdravým
        dnem a devíti označenými by medián spočítat nešlo (pět je minimum)
        a tahle větev by taky nespustila — zdroj by vyšuměl do ticha. Platí
-       to tedy vždycky, když zdravých dnů není dost a označených je. */
+       to tedy vždycky, když zdravých dnů není dost a označených je.
+
+       A MUSÍ JÍT PŘESTAT, KDYŽ SE ZDROJ ZVEDÁ.
+       Označený den (`{p, v:1}`) se zapisuje právě tehdy, když zdroj NENÍ
+       „ok" — tedy i tehdy, když ho za oslabený označila sama tahle
+       funkce. Dokud se tu hlásil pokles BEZPODMÍNEČNĚ, jedno označení
+       plodilo další donekonečna. Naměřeno na ostrých datech: zdroj
+       Dražby hlásil „mimo pořádek" 47 běhů v řadě od 4. 11. 2026,
+       zatímco počet nabídek ve stejném okně STOUPAL ze 44 na 54.
+       Poplach, který nemá jak skončit, se přestane číst — a vedle něj
+       zanikne i ten pravý.
+
+       PROČ SE NEPOROVNÁVÁ S MEDIÁNEM OZNAČENÝCH DNŮ. Zkusil jsem to
+       jako první a shodilo to kontrolu, která tu stojí právem: zdroj,
+       co spadl na polovinu a na polovině zůstal, má se hlásit dál —
+       jenže jeho nová (nízká) hladina se mediánem označených dnů za
+       pár dnů stane „normálem" a poplach by ztichl přesně u toho
+       případu, kvůli kterému vznikl.
+       Rozhoduje proto SMĚR, ne hladina: okno označených dnů se rozpůlí
+       a porovnají se mediány obou půlek. Zdroj, který se zvedá
+       (novější půlka výš než starší), se pustí; zdroj, který stojí
+       nebo klesá, se hlásí dál. */
     if (vadne.length >= 5) {
-      nalezy.push({ nazev: z.nazev, druh: 'pokles', median: median(vadne), ted: z.pocet,
-        dnu: vadne.length, trva: true });
+      const pul = Math.floor(vadne.length / 2);
+      const starsi = median(vadne.slice(0, pul));
+      const novejsi = median(vadne.slice(vadne.length - pul));
+      const zveda = (starsi !== null && novejsi !== null && novejsi > starsi);
+      if (!zveda) {
+        nalezy.push({ nazev: z.nazev, druh: 'pokles', median: median(vadne), ted: z.pocet,
+          dnu: vadne.length, trva: true });
+      }
     }
   }
   return nalezy;

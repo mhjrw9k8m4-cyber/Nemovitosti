@@ -143,6 +143,40 @@ pravda('první běh bez minulých čísel projde tiše',
     return n.length === 1 && n[0].druh === 'pokles';
   })(), 'krátké okno klesá s daty a vykrvácení nepozná');
 
+
+  /* POPLACH, KTERÝ NEMÁ JAK SKONČIT, SE PŘESTANE ČÍST.
+     ------------------------------------------------------------------
+     Označený den (`{p, v:1}`) se do historie zapisuje právě tehdy, když
+     zdroj NENÍ „ok" — tedy i tehdy, když ho za oslabený označila sama
+     tahle funkce. Dokud tedy větev „žádný zdravý den v okně" hlásila
+     pokles bezpodmínečně, jedno označení plodilo další donekonečna.
+     Naměřeno na ostrých datech: zdroj Dražby hlásil „mimo pořádek"
+     47 běhů v řadě od 4. 11. 2026, zatímco počet nabídek ve stejném
+     okně STOUPAL ze 44 na 54.
+     Hlídá se obojí: že se z označených dnů umí vyhrabat ven, a že
+     skutečný propad pozná i mezi samými označenými dny. */
+  const samyOznaceny = (rada) => {
+    const dny = {};
+    rada.forEach((p, i) => { dny[den(i + 1)] = { Portál: { p, v: 1 } }; });
+    return { verze: 4, dny };
+  };
+  const stoupajici = samyOznaceny([46, 47, 48, 49, 50, 51, 52, 53]);
+  pravda('zdroj, který se z označených dnů vyhrabal zpátky, se přestane hlásit',
+    porovnejSHistorii(stoupajici, ted(53), dnes).length === 0,
+    'poplach, který nejde ukončit, přehluší ten pravý');
+  /* Zdroj, který stojí na nízké hladině, se hlásí dál — na to, jestli
+     se poplach ukončí, nesmí stačit „dnešek je na úrovni označených
+     dnů" (to by ztichlo přesně u propadu, který trvá). */
+  const stojici = samyOznaceny([50, 50, 50, 50, 50, 50, 50, 50]);
+  pravda('ale zdroj, který na nízké hladině STOJÍ, se hlásí dál', (() => {
+    const n = porovnejSHistorii(stojici, ted(50), dnes);
+    return n.length === 1 && n[0].druh === 'pokles' && n[0].trva === true;
+  })(), 'po opravě by se ztratila celá větev „trvající pokles"');
+  pravda('a klesající zdroj mezi samými označenými dny taky', (() => {
+    const n = porovnejSHistorii(samyOznaceny([80, 76, 72, 68, 64, 60, 56, 52]), ted(50), dnes);
+    return n.length === 1 && n[0].trva === true;
+  })());
+
   /* Plané poplachy. Krátká historie, malý zdroj a zdroj, který dnes
      nedojel, se nehlásí — jinak by hlídač křičel po každém výpadku. */
   pravda('ze čtyř dnů se medián nepočítá',
