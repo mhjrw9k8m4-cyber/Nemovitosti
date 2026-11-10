@@ -308,6 +308,11 @@
      SMĚR 135° je týž jako v kresbě — světlo přichází zleva shora,
      odkud na webu svítí i hrany desek a stíny padají doprava dolů. */
   --preliv-znacka:linear-gradient(135deg, var(--znacka-svetla) 0%, var(--plocha-znacka) 55%, var(--znacka-hluboka) 100%);
+  /* Hloubka tmavého pásu přes celou šířku: týž rod barev jako značka,
+     jen obráceným směrem (hloubka dole). Vlastní token proto, že
+     --preliv-znacka je psaný na předmět velikosti tlačítka a na ploše
+     1 440 px by jeho 135° diagonála byla vidět jako šikmá šmouha. */
+  --preliv-pas-tmavy:linear-gradient(to top, var(--znacka-hluboka) 0%, var(--plocha-tmava) 62%, var(--plocha-tmava-2) 100%);
 
   
   /* ZNAČKA NA TMAVÉ DESCE. --znacka-svetla je psaná pro bílý podklad a na
@@ -2384,7 +2389,18 @@ h1 em{ color:var(--znacka-svetla);
    .s-mrizka a pás si ji bere v HTML. Jedna textura, jedno místo.
    Čísla jsou v nadpisovém písmu a ve velikosti nadpisu oddílu: jsou to
    argumenty, ne popisky. */
-.pas-proc{background:var(--plocha-tmava); color:var(--text-ondeep);
+/* PŘELIV, NE PLACKA. Napsal jsem pás plnou barvou a hlídač „jedna
+   deska" ho odmítl: každá zelená plocha webu nese světlo značky, a pás
+   je první tmavá plocha přes celou šířku, takže pravidlo platí i na ni.
+   Hlídač měl pravdu dvakrát — zkratka `background:` navíc smetla
+   i mřížku z .s-mrizka, kterou si pás bere v HTML. Proto
+   `background-color` + `background-image`: textura zůstane a plocha má
+   hloubku. Zarážky jdou z tmavé k tmavší odspodu vzhůru, tedy opačně
+   než u tlačítek: tlačítko je předmět, který leží na stránce, a světlo
+   mu padá shora; pás je plocha, do které stránka vchází, a ta má mít
+   hloubku dole. */
+.pas-proc{background-color:var(--plocha-tmava); color:var(--text-ondeep);
+  background-image:var(--preliv-pas-tmavy);
   padding:calc(var(--oddil-y) * 0.75) 0;}
 .pas-proc .pp-oci{color:var(--text-ondeep-mute); margin:0 0 12px;}
 .pas-proc .pp-nadpis{font-family:var(--font-nadpis); font-weight:700; font-size:32px;

@@ -91,6 +91,7 @@ export const PRELIVY = {
   '.sn-popis': 'týž závoj pod popiskou na snímku pozemku',
   '.okr-item .okr-foto': 'mříž v zástupném snímku — opakovaná 1px linka, tedy vzor, ne přeliv barev',
   '.s-mrizka::before': 'mříž na pozadí sekce, stejný vzor z 1px linek',
+  '.pas-proc': 'hloubka tmavého pásu „Proč Parcelka" přes celou šířku stránky. Je to rozhodnutí o vzhledu, ne ozdoba: pás je jediná tmavá plocha světlého webu a plnou barvou vypadal jako chyba tisku. Vlastní token --preliv-pas-tmavy, ne --preliv-znacka: ten je psaný na předmět velikosti tlačítka a jeho 135° diagonála by na ploše široké 1 440 px byla vidět jako šikmá šmouha. Zarážky jdou odspodu vzhůru od nejtmavší, protože pás je plocha, do které stránka vchází, ne předmět, na který padá světlo shora.',
   '.add-hero::after, .section.band::after': 'mříž na pásu a nad úvodní plochou',
   'footer::after': 'mříž v patičce — opakovaná 1px linka, tedy vzor, ne přeliv barev',
   '.okr-band::before': 'mříž na pásu stránky okresu',
