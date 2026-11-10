@@ -1644,3 +1644,16 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 
 
 .btn-primary,.nav-add,.lp-btn,.pf-add,.auth-submit,.auth-tab.active,.hl-btn,.mcf-hotovo,.filter-chip.active,.mvt-btn.active,.mcv-btn.on,.mc-prep.on,.map-nastroj[aria-pressed="true"],.map-nastroj[aria-expanded="true"],.loc-btn.primary,.msr-hotovo,.opp-feat,.boost-price,.kt-mail .kt-ico,:root.pk-prihlasen .hdr-ucet,.skip-link,.vm-vetsi,.vm-ok,.reset-btn,.copy-btn,.rv-uvod-ok,.vyv-ok,.st-btn-1,.zp-btn,.mc-toggles .mc-prep.on,.mcv-btn.mcv-nula.on,.mc-info[aria-expanded="true"] span,.map-podklad button.on,.mv-v.on,.ms-vysledky .msv-ulozene.on,.vm-km input:checked + span,.as-num,.uc-tab-pocet,.msch,.pp-titulka,.msf-badge{background-image:var(--preliv-znacka)}
+@media (max-width:560px){.opp-item{display:grid;grid-template-columns:112px 1fr;align-items:stretch}
+.opp-media{min-height:0;align-self:start}
+.opp-body{padding:12px;min-width:0}
+.opp-druh{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opp-meta{font-size:13px}
+.opp-cenarad{margin-top:4px}
+.opp-price{font-size:24px;margin-top:0}
+.opp-media .opp-fav,.opp-media .opp-skryt{min-height:44px;min-width:44px;padding:0;justify-content:center;align-items:center}
+.opp-media .opp-fav .os-t,.opp-media .opp-skryt .os-t{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.opp-badge{padding:4px;font-size:0;gap:0}
+.opp-chips{display:flex;flex-wrap:nowrap;overflow:hidden;margin-top:4px}
+.opp-chips>*:not(:first-child){display:none}
+}
