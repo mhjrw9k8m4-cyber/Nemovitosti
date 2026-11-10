@@ -4793,16 +4793,34 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
    48 je na stupnici, polovina 24 taky, a chytací ploše to prospěje
    (mez na dotyk je 44). */
 @media (max-width:560px){
-  /* A OD 9. 11. U PRAVÉHO OKRAJE, NE UPROSTŘED.
-     Střed dole je na výpisu to nejhorší místo: karty jsou přes celou
-     šířku, takže jejich spodní řádek („zdroj", „Uložit") vede právě
-     tudy a knoflík na něm sedí. Naměřeno na 390 px krokem 40 px:
-     v poloze 3 480 px zakrýval odkaz na zdroj z 22 % a v CI (běh 1115)
-     padl hlídač na témže překryvu u 340 px širokého odkazu — tam už
-     i přes jeho střed. Klepnutí na odkaz pak odroluje nahoru.
-     Vpravo je karta prázdnější: spodní řádek začíná vlevo a doprava
-     nedosáhne. Odsazení 12 px, aby knoflík nelepil na hranu. */
-  .to-top{bottom:12px; right:12px; left:auto; width:48px; height:48px; margin-left:0;}
+  /* A OD 10. 11. DO MEZERY MEZI SLOUPCI OVLADAČŮ, ANI VPRAVO, ANI UPROSTŘED.
+     Karta je přes celou šířku a má ovladače u obou okrajů („Skrýt"
+     vlevo, „Uložit" vpravo) a široký odkaz přes tělo. Žádné místo
+     u spodní hrany displeje tedy není prázdné — jde jen o to, čemu
+     knoflík bere dotek a čemu zakrývá nápis.
+
+     ZMĚŘENO 10. 11. na 390 px, 101 poloh rolování (2 200–4 200 px
+     krokem 20) pro šest odsazení zprava. Sloupec „střed" je ovladač,
+     jemuž knoflík zakryl bod doteku, sloupec „nápis" je nápis
+     TLAČÍTKA pod knoflíkem:
+
+       odsazení   knoflík       překryvů   střed   nápis tlačítka
+       12 px      x 330–378     21         0       15× „Uložit"
+       60 px      x 282–330     28        12       21× „Uložit"
+       90 px      x 252–300     29         0        0
+       112 px     x 230–278      5         0        0
+       140 px     x 202–250      6         0        0
+       171 (střed) x 171–219     5         3        0
+
+     Střed dole bere dotek odkazu na zdroj (3 polohy ze 101) — proto
+     se odtud knoflík v listopadu stěhoval. Pravý roh nebere dotek
+     nikomu, zato v 15 polohách sedí na slově „Uložit": přesně to,
+     co majitel reklamoval (úkol 181). Odsazení 112 px je jediné,
+     kde jsou obě čísla nulová a kde je navíc nejméně dotyků s čímkoli
+     (5 místo 21 a 29): knoflík stojí v pruhu mezi levým a pravým
+     sloupcem ovladačů, 4 px vlevo od pilulky „Uložit".
+     112 = 4 × 28, tedy číslo ze stupnice odstupů. */
+  .to-top{bottom:12px; right:112px; left:auto; width:48px; height:48px; margin-left:0;}
 }
 
 /* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */

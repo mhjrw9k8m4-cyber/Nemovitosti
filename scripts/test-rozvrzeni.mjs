@@ -326,41 +326,80 @@ async function otevri(soubor, sirka, vyska) {
   await ctx.close();
 }
 
-// --- 3) „Nahoru" nesedí na obsahu ------------------------------------
+// --- 3) „Nahoru" nesedí na nápisu tlačítka v kartě -------------------
+/* CO SE TU MĚŘÍ A PROČ PRÁVĚ TOHLE.
+   Dřív tu stálo „a nezakrývá text v kartách" a počítalo se každé
+   písmeno pod knoflíkem. To pravidlo se splnit nedá: karta je přes
+   celou šířku displeje a knoflík visí nad výpisem, takže při nějaké
+   poloze rolování leží na textu vždycky — to je u plovoucího knoflíku
+   normální, člověk odroluje a čte dál. Kontrola tím nehlídala vadu,
+   ale to, jaký kus dat se zrovna vykreslil, a padala podle náhody
+   (naposled v běhu 1116).
+   Vada je jinde a je dvojí. Dotek knoflík krade tehdy, když zakryje
+   BOD DOTEKU ovladače — to hlídá test-nahoru.mjs po celém sloupci
+   poloh. A nápis knoflík bere tehdy, když sedí na písmenech
+   TLAČÍTKA: „Uložit" a „Skrýt" jsou jediné dva nápisy v kartě, které
+   pojmenovávají ovladač, a právě na „Uložit" si majitel stěžoval
+   (úkol 181). Odkaz přes tělo karty sem nepatří — ten nese celý text
+   karty a zakrýt se mu dá vždycky.
+   Rolovat se musí přes výšku jedné karty (~460 px), jinak se měří
+   jediná poloha a kontrola je zase loterie. */
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
   await rozbalHledani(p);
   await pripravenoVypis(p); await domUtichlo(p, 300);
   await p.evaluate(() => scrollTo(0, 1400));
   await p.waitForTimeout(900);
-  const v = await p.evaluate(() => {
+  const naskocil = await p.evaluate(() => {
     const b = document.getElementById('to-top');
-    if (!b || !b.classList.contains('show')) return null;
-    const r = b.getBoundingClientRect();
-    // Který text karty leží pod tlačítkem?
-    const pod = [];
-    /* MĚŘÍ SE NAPSANÝ TEXT, NE CELÝ ŘÁDEK. Prvky jako „okres Blansko"
-       jsou blokové, takže jejich obdélník jde přes celou šířku karty,
-       i když písmena končí v první třetině. Při úzkých kartách to
-       nevadilo (text stál v levém sloupci a tlačítko vpravo mimo něj),
-       po rozšíření karet na celou šířku displeje začala kontrola hlásit
-       překryv prázdna. Rozsah (Range) vrátí obdélníky samotných
-       písmen, takže se porovnává to, co je opravdu vidět. */
-    const protina = (t) => t.right > r.left && t.left < r.right && t.bottom > r.top && t.top < r.bottom;
-    for (const e of document.querySelectorAll('.opp-item *')) {
-      if (e.children.length || !e.textContent.trim()) continue;
-      const rng = document.createRange();
-      rng.selectNodeContents(e);
-      const radky = [...rng.getClientRects()].filter((t) => t.width > 0 && t.height > 0);
-      rng.detach && rng.detach();
-      if (radky.some(protina)) pod.push(e.textContent.trim().slice(0, 24));
-    }
-    return { sirka: Math.round(r.width), pod };
+    return !!(b && b.classList.contains('show'));
   });
-  pravda('tlačítko „Nahoru" je po odrolování vidět', !!v, 'nenaskočilo');
-  if (v) {
-    pravda('a nezakrývá text v kartách', v.pod.length === 0,
-      `sedí na: ${v.pod.join(' | ')} — tlačítko je ${v.sirka} px široké`);
+  pravda('tlačítko „Nahoru" je po odrolování vidět', naskocil, 'nenaskočilo');
+  if (naskocil) {
+    const pod = [];
+    let meritelnych = 0;
+    for (let y = 1400; y <= 1860; y += 40) {
+      await p.evaluate((yy) => scrollTo(0, yy), y);
+      await p.waitForTimeout(80);
+      const v = await p.evaluate(() => {
+        const b = document.getElementById('to-top');
+        if (!b || !b.classList.contains('show')) return null;
+        const r = b.getBoundingClientRect();
+        /* MĚŘÍ SE NAPSANÝ TEXT, NE CELÝ ŘÁDEK. Prvky jsou blokové,
+           takže jejich obdélník jde přes celou šířku karty, i když
+           písmena končí v první třetině. Rozsah (Range) vrátí
+           obdélníky samotných písmen, tedy to, co je opravdu vidět. */
+        const protina = (t) => t.right > r.left && t.left < r.right
+          && t.bottom > r.top && t.top < r.bottom;
+        const out = { pod: [], tlacitek: 0 };
+        for (const t of document.querySelectorAll('.opp-item button')) {
+          const q = t.getBoundingClientRect();
+          if (!q.width || !q.height || q.bottom < 0 || q.top > innerHeight) continue;
+          out.tlacitek++;
+          for (const e of [t, ...t.querySelectorAll('*')]) {
+            if (e.children.length || !e.textContent.trim()) continue;
+            const rng = document.createRange();
+            rng.selectNodeContents(e);
+            const radky = [...rng.getClientRects()].filter((x) => x.width > 0 && x.height > 0);
+            rng.detach && rng.detach();
+            if (radky.some(protina)) out.pod.push(e.textContent.trim().slice(0, 24));
+          }
+        }
+        return out;
+      });
+      if (!v) continue;
+      meritelnych += v.tlacitek;
+      for (const t of v.pod) if (pod.indexOf(t) === -1) pod.push(t);
+    }
+    /* ANTI-PRÁZDNO: kdyby se ve výpisu nevykreslilo jediné tlačítko,
+       kontrola níž by prošla, protože by nebylo co zakrýt.
+       Prokázáno sabotáží: s `transform:scale(0)` na `.opp-item button`
+       spadl počet na 0, kontrola překryvu zůstala zelená (nebylo co
+       zakrýt) a ozvala se právě tahle. */
+    pravda('je co měřit: v kartách jsou tlačítka', meritelnych >= 10,
+      `tlačítek ve výhledu napříč polohami jen ${meritelnych}`);
+    pravda('a nezakrývá nápis tlačítka v kartě', pod.length === 0,
+      `sedí na: ${pod.join(' | ')}`);
   }
   await ctx.close();
 }

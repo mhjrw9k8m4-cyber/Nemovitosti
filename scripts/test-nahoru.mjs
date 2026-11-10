@@ -456,7 +456,27 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(2600);
   await domUtichlo(p, 400);
-  let mereno = 0, nalezy = [];
+  /* PRAVIDLO JE VODOROVNÉ, NE „KDE ZROVNA LEŽÍ".
+     Napoprvé se tu hlídalo, jestli knoflík v NĚKTERÉ naměřené poloze
+     rolování zakryl střed nějakého ovladače. To je loterie na datech:
+     10. 11. se se středovou polohou knoflíku (tedy s tou vadnou, kvůli
+     které se stěhoval) trefil překryv jen ve dvou polohách ze 178
+     (krok 20 px, 1 200–5 200 px) — při hrubším kroku v žádné, takže
+     sabotáž „vrať knoflík doprostřed" zkoušku neshodila a hlídač
+     nehlídal nic. Zítra po obměně dat by to dopadlo jinak a pozítří
+     zase jinak.
+     Výpis se přitom roluje plynule, takže KAŽDÝ ovladač v kartě se
+     jednou octne ve výšce knoflíku. Jestli mu knoflík zakryje bod
+     doteku, nerozhoduje poloha rolování, ale jediná věc: jestli
+     vodorovný střed ovladače padne do sloupce, ve kterém knoflík
+     stojí. To se dá změřit bez loterie a platí to pro všechny polohy
+     najednou.
+     Karta na telefonu má ovladače ve dvou sloupcích u obou okrajů
+     („Skrýt" vlevo, „Uložit" vpravo) a široký odkaz přes tělo. Knoflík
+     proto stojí v pruhu mezi nimi — viz naměřená tabulka u .to-top
+     v css/styles.css. Rolování tu zůstává jen proto, aby se ovladače
+     stihly vykreslit a aby bylo co měřit. */
+  let mereno = 0, nalezy = [], videno = 0;
   for (let y = 2600; y <= 3560; y += 120) {
     await p.evaluate((yy) => window.scrollTo(0, yy), y);
     await p.waitForTimeout(260);
@@ -464,50 +484,49 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
       const t = document.getElementById('to-top');
       if (!t || t.className.indexOf('show') === -1) return null;
       const g = t.getBoundingClientRect();
-      const out = [];
+      const out = { nalezy: [], videno: 0 };
       const otrely = window.__otrely = (window.__otrely || []);
       const KARTY = '.opp-item, .okr-item, .deal-card, .ul-card, .odl-card';
       const sel = KARTY.split(', ').map((k) => k + ' a, ' + k + ' button, ' + k + ' [role="button"], ' + k + ' label').join(', ');
       for (const e of document.querySelectorAll(sel)) {
         const q = e.getBoundingClientRect();
         if (!q.width || !q.height || q.bottom < 0 || q.top > innerHeight) continue;
-        const x = Math.min(g.right, q.right) - Math.max(g.left, q.left);
-        const yy = Math.min(g.bottom, q.bottom) - Math.max(g.top, q.top);
-        if (x <= 0 || yy <= 0) continue;
-        /* MĚŘÍ SE MÍSTO, KAM ČLOVĚK KLEPNE, NE KAŽDÝ DOTYK HRAN.
-           Pevný knoflík nad nekonečným výpisem karet přes celou šířku
-           se někde o nějaký ovladač otře vždycky — a která karta pod
-           ním zrovna je, rozhoduje noční obměna dat. Zákaz „ať se
-           nedotkne ničeho" je tedy nesplnitelný a zelený býval jen
-           náhodou (běhy 1110–1115 to ukázaly třikrát).
-           Co ale rozbité JE: když knoflík zakryje STŘED ovladače,
-           tedy bod, na který prst míří — klepnutí pak odroluje nahoru
-           místo své akce. A když zakryje většinu plochy, zbyde proužek,
-           na který se nedá trefit. Obojí je nález; samotné olíznutí
-           hrany ne. */
-        const sx = q.left + q.width / 2, sy = q.top + q.height / 2;
-        const stred = sx >= g.left && sx <= g.right && sy >= g.top && sy <= g.bottom;
-        const podil = 100 * x * yy / (q.width * q.height);
-        const popis = ((e.className && String(e.className)) || e.tagName)
-          + ' (' + Math.round(x) + '×' + Math.round(yy) + ' px, '
-          + Math.round(podil) + ' % prvku' + (stred ? ', A STŘED' : '') + ')';
-        if (stred || podil >= 50) out.push(popis); else otrely.push(popis);
+        out.videno++;
+        const sx = q.left + q.width / 2;
+        const jmeno = ((e.className && String(e.className)) || e.tagName)
+          + ' (střed na ' + Math.round(sx) + ' px, knoflík '
+          + Math.round(g.left) + '–' + Math.round(g.right) + ')';
+        /* Střed ovladače ve sloupci knoflíku = při nějakém posunu
+           klepnutí přistane na knoflíku a odroluje nahoru. Dotek
+           hranou (ovladač sloupcem jen prochází) vadný není, jen se
+           počítá do výpisu níž. */
+        if (sx >= g.left && sx <= g.right) out.nalezy.push(jmeno);
+        else if (q.right > g.left && q.left < g.right) otrely.push(jmeno);
       }
       return out;
     });
     if (v === null) continue;
     mereno++;
-    for (const x of v) if (nalezy.indexOf(x) < 0) nalezy.push(x);
+    videno += v.videno;
+    for (const x of v.nalezy) if (nalezy.indexOf(x) < 0) nalezy.push(x);
   }
   pravda(`je z čeho měřit — knoflík byl vidět v ${mereno} polohách rolování`, mereno >= 6,
     'na úvodní stránce se knoflík skoro neukázal, takže kontrola pod tím nic nedokazuje');
-  /* Kolik hran se knoflík dotkl, aniž by ovladač znepřístupnil —
-     vypisuje se, aby bylo vidět, že se měřilo, a aby šlo poznat, kdyby
-     těch doteků najednou začaly být desítky. */
+  /* Kolik ovladačů se napříč polohami vůbec naměřilo. Vypisuje se
+     vždycky, aby šlo poznat, kdy číslo začne klesat k mezi.
+     Mez 20 je prokázaná sabotáží: zdravý běh naměřil 10. 11.
+     64 ovladačů, se sabotáží `transform:scale(0)` na ovladačích
+     v kartách jich zbylo 19 a kontrola se ozvala. */
+  zpravy.push(`  · ovladačů v kartách napříč polohami: ${videno}`);
+  pravda('a ve výhledu byly ovladače karet', videno >= 20,
+    `ovladačů napříč polohami jen ${videno} — není co zakrývat`);
+  /* Kolik ovladačů sloupcem knoflíku jen prochází, aniž by v něm měly
+     střed — vypisuje se, aby bylo vidět, že se měřilo, a aby šlo
+     poznat, kdyby jich najednou začaly být desítky. */
   const otrely = await p.evaluate(() => (window.__otrely || []).length).catch(() => 0);
-  zpravy.push(`  · knoflík se olízl o hranu ovladače ${otrely}×, aniž by zakryl jeho střed`);
-  pravda('knoflík nahoru nezakrývá střed žádného ovladače v kartě', nalezy.length === 0,
-    'zakrývá: ' + nalezy.slice(0, 4).join('; ') + ' — klepnutí na ně odroluje nahoru místo své akce');
+  zpravy.push(`  · sloupcem knoflíku prochází ${otrely}× ovladač, který v něm nemá střed`);
+  pravda('žádný ovladač v kartě nemá střed ve sloupci knoflíku nahoru', nalezy.length === 0,
+    'má ho: ' + nalezy.slice(0, 4).join('; ') + ' — při některém posunu klepnutí odroluje nahoru místo své akce');
   await ctxV.close();
 }
 
