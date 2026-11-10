@@ -2118,6 +2118,40 @@ function denPocet(x) {
 }
 function denZdravy(x) { return typeof x === 'number'; }
 
+/* ZVEDÁ SE ZDROJ? JEDNO PRAVIDLO PRO OBĚ SÍTA.
+   Označený den (`{p, v:1}`) se zapisuje právě tehdy, když zdroj NENÍ
+   „ok" — tedy i tehdy, když ho za oslabený označilo tohle porovnání
+   samo. Dokud se pokles hlásil bezpodmínečně, jedno označení plodilo
+   další donekonečna: ani jedno z obou sít nemělo jak poplach ukončit.
+
+   NAMĚŘENO NA OSTRÝCH DATECH (10. 11. 2026, zdroj Dražby).
+   Hlídka ohlásila 48. běh v řadě „mimo pořádek" od 4. 11., zatímco
+   počty ve stejném okně STOUPALY: 44, 45, 45, 45, 48, 52, 52, 53, 54,
+   54, 53. Zdravé dny přitom zůstaly zamrzlé na říjnové hladině
+   (15 dnů, 88 až 62, medián 80), protože označenému zdroji se zdravý
+   den už nikdy nepřipíše. Základ se tedy sám neobnoví a poplach nemá
+   jak skončit — a poplach, který nemá jak skončit, se přestane číst.
+
+   PROČ SE NEPOROVNÁVÁ S HLADINOU, ALE SE SMĚREM. Porovnání s mediánem
+   označených dnů jsem zkusil jako první a shodilo to kontrolu, která
+   tu stojí právem: zdroj, co spadl na polovinu a na polovině zůstal,
+   se má hlásit dál — jenže jeho nová nízká hladina se za pár dnů
+   stane „normálem" a poplach by ztichl přesně u toho případu, kvůli
+   kterému vznikl. Okno označených dnů se proto rozpůlí a porovnají se
+   mediány obou půlek: zdroj, který se zvedá, se pustí; zdroj, který
+   stojí nebo klesá, se hlásí dál.
+
+   MÉNĚ NEŽ PĚT OZNAČENÝCH DNŮ ZNAMENÁ „NEVÍM" (tedy hlásit).
+   Na začátku opravdového poklesu je označených dnů pár a směr z nich
+   spočítat nejde — a to je zrovna doba, kdy se poplach ozvat MÁ. */
+function zvedaSe(vadne) {
+  if (!Array.isArray(vadne) || vadne.length < 5) return false;
+  const pul = Math.floor(vadne.length / 2);
+  const starsi = median(vadne.slice(0, pul));
+  const novejsi = median(vadne.slice(vadne.length - pul));
+  return starsi !== null && novejsi !== null && novejsi > starsi;
+}
+
 export function porovnejSHistorii(historie, ted, dnes) {
   const dny = (historie && historie.dny) || {};
   const klice = Object.keys(dny).filter((d) => d < dnes).sort().slice(-DNU_HISTORIE);
@@ -2135,10 +2169,17 @@ export function porovnejSHistorii(historie, ted, dnes) {
     if (!z || z.stav !== 'ok') continue;
     const zapisy = klice.map((d) => dny[d][z.nazev]).filter((x) => denPocet(x) !== null);
     const zdrave = zapisy.filter(denZdravy).map(denPocet);
+    const vadne = zapisy.filter((x) => !denZdravy(x)).map(denPocet);
     if (zdrave.length >= 5) {
       const med = median(zdrave);
       if (!(med >= PRAH_SLEDOVANI)) continue;
-      if (z.pocet < med * PRAH_POKLESU) {
+      /* A TOHLE SÍTO MUSÍ JÍT PŘESTAT TAKY (viz zvedaSe). Zdravé dny
+         jsou zamrzlé na hladině PŘED poklesem a nové se označenému
+         zdroji nepřipíší, takže `med` zůstane starý, dokud ho z okna
+         nevytlačí čas. Zdroj, který se v označeném okně měřitelně
+         zvedá, se proto pustí — a ten, co stojí nebo klesá dál, se
+         hlásí. */
+      if (z.pocet < med * PRAH_POKLESU && !zvedaSe(vadne)) {
         nalezy.push({ nazev: z.nazev, druh: 'pokles', median: med, ted: z.pocet, dnu: zdrave.length });
       }
       continue;
@@ -2152,7 +2193,6 @@ export function porovnejSHistorii(historie, ted, dnes) {
        12. 10., pět dnů po sobě — proto se to tady opravuje.)
        Teď se označené dny zapisují taky, jen zvlášť — a když v celém okně
        není ani jeden zdravý den, hlásí se to dál jako TRVAJÍCÍ pokles. */
-    const vadne = zapisy.filter((x) => !denZdravy(x)).map(denPocet);
     /* Pozor na „aspoň jeden zdravý den" jako podmínku: s jedním zdravým
        dnem a devíti označenými by medián spočítat nešlo (pět je minimum)
        a tahle větev by taky nespustila — zdroj by vyšuměl do ticha. Platí
@@ -2178,15 +2218,9 @@ export function porovnejSHistorii(historie, ted, dnes) {
        a porovnají se mediány obou půlek. Zdroj, který se zvedá
        (novější půlka výš než starší), se pustí; zdroj, který stojí
        nebo klesá, se hlásí dál. */
-    if (vadne.length >= 5) {
-      const pul = Math.floor(vadne.length / 2);
-      const starsi = median(vadne.slice(0, pul));
-      const novejsi = median(vadne.slice(vadne.length - pul));
-      const zveda = (starsi !== null && novejsi !== null && novejsi > starsi);
-      if (!zveda) {
-        nalezy.push({ nazev: z.nazev, druh: 'pokles', median: median(vadne), ted: z.pocet,
-          dnu: vadne.length, trva: true });
-      }
+    if (vadne.length >= 5 && !zvedaSe(vadne)) {
+      nalezy.push({ nazev: z.nazev, druh: 'pokles', median: median(vadne), ted: z.pocet,
+        dnu: vadne.length, trva: true });
     }
   }
   return nalezy;

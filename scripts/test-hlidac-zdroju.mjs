@@ -177,6 +177,56 @@ pravda('první běh bez minulých čísel projde tiše',
     return n.length === 1 && n[0].trva === true;
   })());
 
+  /* A TOTÉŽ V PRVNÍM SÍTĚ — tam ten poplach vznikal doopravdy.
+     ------------------------------------------------------------------
+     NAMĚŘENO 10. 11. 2026 NA OSTRÝCH DATECH. Hlídka ohlásila u zdroje
+     Dražby 48. běh v řadě „mimo pořádek" a výš opravená větev „žádný
+     zdravý den v okně" za to NEMOHLA: v okně zdravé dny pořád byly,
+     patnáct říjnových (88 až 62, medián 80). Rozhodovalo tedy tohle
+     síto — a pravidlo směru nemělo. Označenému zdroji se zdravý den
+     nepřipíše, takže základ 80 zůstane, dokud ho z okna nevytlačí
+     čas: šestnáct dalších dnů e-mailů o zdroji, který se dva týdny
+     ZVEDÁ (44 → 54).
+     Vzorek je proto SMÍŠENÝ: deset zdravých dnů na staré hladině
+     a za nimi deset označených. */
+  const smes = (oznacene, zdravaHladina = 80) => {
+    const dny = {};
+    for (let i = 0; i < 10; i++) dny[den(i + 1)] = { Portál: zdravaHladina };
+    oznacene.forEach((p, i) => { dny[den(i + 11)] = { Portál: { p, v: 1 } }; });
+    return { verze: 4, dny };
+  };
+  const dnesSmes = den(21);
+  pravda('je co měřit: ve smíšeném okně jsou zdravé i označené dny', (() => {
+    const d = smes([50, 50, 50, 50, 50, 50, 50, 50, 50, 50]).dny;
+    const vsechny = Object.values(d);
+    const zdravych = vsechny.filter((x) => typeof x.Portál === 'number').length;
+    const oznacenych = vsechny.filter((x) => x.Portál && x.Portál.v === 1).length;
+    return zdravych === 10 && oznacenych === 10;
+  })(), 'kdyby vzorek nesl jen jeden druh dnů, první síto by se vůbec nerozhodovalo');
+  pravda('zdroj, který se po poklesu zvedá, se NEhlásí ani proti zamrzlým zdravým dnům',
+    porovnejSHistorii(smes([44, 45, 45, 45, 48, 52, 52, 53, 54, 54]), ted(53), dnesSmes).length === 0,
+    'přesně tenhle poplach se u zdroje Dražby ozval 48× v řadě');
+  pravda('ale zdroj, který na nižší hladině STOJÍ, se hlásí dál', (() => {
+    const n = porovnejSHistorii(smes([50, 50, 50, 50, 50, 50, 50, 50, 50, 50]), ted(50), dnesSmes);
+    return n.length === 1 && n[0].druh === 'pokles' && n[0].median === 80;
+  })(), 'zdroj, co spadl a na nové hladině zůstal, se hlásit MÁ');
+  pravda('a zdroj, který klesá dál, taky', (() => {
+    const n = porovnejSHistorii(smes([60, 58, 56, 54, 52, 50, 48, 46, 44, 42]), ted(40), dnesSmes);
+    return n.length === 1 && n[0].druh === 'pokles';
+  })());
+  /* Pravidlo směru má být v OBOU sítech jedno a totéž. Dřív stálo
+     rozepsané v těle druhého síta; kdyby se rozdvojilo zpátky na dvě
+     kopie, rozejdou se časem a tahle vada se vrátí jednou polovinou. */
+  pravda('obě síta se ptají touž funkcí (zvedaSe), ne dvěma kopiemi', (() => {
+    const zdroj = readFileSync(path.join(KOREN_H, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
+    const od = zdroj.indexOf('export function porovnejSHistorii');
+    if (od < 0) return false;
+    const zbytek = zdroj.slice(od + 10);
+    const doKonce = zbytek.indexOf('\nexport ');
+    const fn = doKonce > 0 ? zbytek.slice(0, doKonce) : zbytek;
+    return (fn.match(/zvedaSe\(/g) || []).length === 2 && !/const zveda =/.test(fn);
+  })(), 'pravidlo směru se rozpadlo na kopie, nebo zmizelo z jednoho síta');
+
   /* Plané poplachy. Krátká historie, malý zdroj a zdroj, který dnes
      nedojel, se nehlásí — jinak by hlídač křičel po každém výpadku. */
   pravda('ze čtyř dnů se medián nepočítá',
