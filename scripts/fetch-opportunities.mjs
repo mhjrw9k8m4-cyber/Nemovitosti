@@ -3824,10 +3824,30 @@ async function fetchBezrealitky() {
      inzerát pozná z odkazu (jiná cesta, jiná země), nebo z adresy,
      doplní se filtr PŘED dotazem a strop zůstane českým obcím. */
   const neznameUkazky = [];
+  /* ROZHODUJÍCÍ MĚŘENÍ, A NESTOJÍ JEDINÝ DOTAZ VEN.
+     Mezipaměť geokodéru (data/geocode-cache.json) dala označený vzorek
+     3 244 jmen s okresem „*": 1 406 geokodér zná, 1 838 ne — a těch
+     1 838 jsou německé a slovenské adresy. Jenže poznat je podle SAMOTNÉHO
+     JMÉNA nejde spolehlivě: změřeno, že spolková země, pětimístné PSČ
+     a německá ulice dohromady chytnou jen 78,5 % z nich a slovenská
+     („detvianska", „korňa", „janíky") nemají žádný z těch znaků.
+     Co by rozhodlo, je poslední úsek údaje o poloze ze sitemapy: u české
+     nabídky tam stojí kraj („… , Středočeský kraj"), u německé spolková
+     země. Jestli to platí doopravdy, se z kódu uhádnout nedá a v datech
+     po zahozených inzerátech nic nezůstane — tak ať to robot spočítá sám. */
+  const usekVse = new Map();
+  const usekNeznal = new Map();
+  const pricti = (m, k) => m.set(k, (m.get(k) || 0) + 1);
+  const posledniUsek = (geo) => {
+    const c = String(geo || '').split(',').map((x) => x.trim()).filter(Boolean);
+    return c.length ? c[c.length - 1].toLowerCase().slice(0, 40) : '(bez údaje)';
+  };
   const kObjednani = [];
   for (let i = 0; i < inzeraty.length; i++) {
     const a = inzeraty[i];
     const place = predbezne[i].place;
+    const usek = posledniUsek(a.geo);
+    pricti(usekVse, usek);
     if (!place) { bezOkresu++; bezJmena++; continue; }
     const klic = place.toLowerCase();
     if (!zeSlovniku.has(klic)) {
@@ -3864,7 +3884,10 @@ async function fetchBezrealitky() {
       if (cekajiciJmena.has(klic)) nadStrop++;
       else {
         geoNeznal++;
-        if (neznameUkazky.length < 5) neznameUkazky.push(`${place} → ${a.url || '(bez odkazu)'}`);
+        pricti(usekNeznal, usek);
+        if (neznameUkazky.length < 5) {
+          neznameUkazky.push(`${place} → ${a.geo || '(bez údaje o poloze)'} → ${a.url || '(bez odkazu)'}`);
+        }
       }
       continue;
     }
@@ -4010,6 +4033,24 @@ async function fetchBezrealitky() {
   if (neznameUkazky.length) {
     console.log(`  Bezrealitky — ukázky míst, která geokodér nezná (${geoNeznal} nabídek):`);
     for (const u of neznameUkazky) console.log(`    · ${u}`);
+  }
+  /* Poslední úsek údaje o poloze: čistota obou stran rozhodne, jestli
+     stačí jediné pravidlo „končí českým krajem", nebo bude potřeba
+     seznam. Vypisuje se dvanáct nejčastějších z obou stran a u každého
+     podíl neznámých — to je to, co se má číst. */
+  if (usekVse.size) {
+    const radky = [...usekVse.entries()]
+      .map(([k, n]) => ({ k, n, zle: usekNeznal.get(k) || 0 }))
+      .sort((x, y) => y.n - x.n);
+    console.log(`  Bezrealitky — poslední úsek údaje o poloze (${usekVse.size} různých):`);
+    for (const r of radky.slice(0, 12)) {
+      console.log(`    · ${r.k} — ${r.n} nabídek, z toho geokodér nezná ${r.zle}`
+        + ` (${Math.round((r.zle / r.n) * 100)} %)`);
+    }
+    const cisteZle = radky.filter((r) => r.zle === r.n).reduce((a, r) => a + r.n, 0);
+    const cisteDobre = radky.filter((r) => r.zle === 0).reduce((a, r) => a + r.n, 0);
+    console.log(`    Úseků, kde geokodér nezná ANI JEDNU: ${cisteZle} nabídek.`
+      + ` Úseků, kde zná všechny: ${cisteDobre} nabídek.`);
   }
   return out;
 }
