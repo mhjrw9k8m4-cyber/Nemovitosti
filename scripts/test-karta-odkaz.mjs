@@ -161,17 +161,29 @@ async function vypis() {
   await p.close();
 }
 
+/* POROVNÁVÁ SE STRÁNKA, NE CELÁ ADRESA.
+   „Zůstat, kde byl" znamená, že prohlížeč je pořád na index.html. Za
+   mřížkou si ale web vede vlastní účetnictví: filtry odjakživa a od
+   10. 11. i výřez mapy, který se dopíše pár set milisekund po startu
+   (js/main.js, map.on('moveend zoomend', zapisAdresu)). Celá adresa se
+   tedy mezi dvěma čteními změní, aniž by se kamkoli odešlo — a zkouška
+   to hlásila jako odchod: „z …/index.html na
+   …/index.html#m=49.82911,15.50688,7" (CI, běh 1121). Doma to prošlo,
+   protože se výřez stihl zapsat ještě před prvním čtením; na pomalejším
+   běžci až mezi nimi. Porovnává se proto cesta a dotaz, mřížka ne. */
+const bezMrizky = (u) => String(u).split('#')[0];
+
 /* ---- 4. CTRL+KLEPNUTÍ OTEVŘE NOVOU KARTU ------------------------------ */
 {
   const p = await vypis();
-  const predtim = p.url();
+  const predtim = bezMrizky(p.url());
   const [nova] = await Promise.all([
     ctx.waitForEvent('page', { timeout: 8000 }).catch(() => null),
     p.locator('#opp-list .opp-item').first().locator('a.opp-odkaz').click({ modifiers: ['Control'] }),
   ]);
   await p.waitForTimeout(600);
   pravda('Ctrl+klepnutí otevře pozemek na nové kartě', !!nova, 'žádná nová stránka se neotevřela');
-  pravda('a původní výpis zůstane, kde byl', p.url() === predtim, p.url());
+  pravda('a původní výpis zůstane, kde byl', bezMrizky(p.url()) === predtim, p.url());
   if (nova) {
     await nova.waitForTimeout(400);
     pravda('nová karta míří na stránku pozemku', /pozemek\.html\?p=/.test(nova.url()), nova.url());
@@ -183,11 +195,11 @@ async function vypis() {
 /* ---- 5. TLAČÍTKA UVNITŘ KARTY DÁL FUNGUJÍ ----------------------------- */
 {
   const p = await vypis();
-  const predtim = p.url();
+  const predtim = bezMrizky(p.url());
   await p.locator('#opp-list .opp-item').first().locator('.opp-fav').focus();
   await p.keyboard.press('Enter');
   await p.waitForTimeout(500);
-  pravda('Enter na „Uložit" neodejde z výpisu', p.url() === predtim, p.url());
+  pravda('Enter na „Uložit" neodejde z výpisu', bezMrizky(p.url()) === predtim, p.url());
   const popisek = await p.locator('#opp-list .opp-item').first().locator('.opp-fav').getAttribute('aria-label');
   pravda('Enter na „Uložit" pozemek opravdu uloží', /Odebrat/.test(popisek || ''), 'popisek tlačítka: ' + popisek);
   /* A MYŠÍ TAKY — MĚŘENO, NE KLEPNUTO. Plocha odkazu jde přes celou
