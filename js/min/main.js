@@ -5454,6 +5454,10 @@
     }, 350);
   }
 
+  azBudeMapa(function () {
+    try { map.on('moveend zoomend', zapisAdresu); } catch (e) {}
+  });
+
   var ADRESA_PRI_OTEVRENI = (function () { try { return location.hash || ''; } catch (e) { return ''; } })();
 
   function obnovZAdresy(adresa) {

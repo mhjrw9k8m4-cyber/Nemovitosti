@@ -9174,6 +9174,33 @@
     }, 350);
   }
 
+  /* A TEĎ UŽ TO MÁ KDO SPUSTIT.
+     ------------------------------------------------------------------
+     zapisAdresu() se do 10. 11. volalo z JEDINÉHO místa — z renderList().
+     Adresa se tedy měnila jen při překreslení výpisu, tedy při změně
+     filtru. Posun ani přiblížení mapy do ní nenapsaly nic, ačkoli
+     komentáře nad i pod tímhle řádkem s tím počítaly („při tažení mapy
+     chodí moveend v jednom kuse", „odkaz.js zapisuje výřez při každé
+     jeho změně").
+
+     Naměřeno 10. 11. na 390 px: po načtení „#m=49.82677,15.50882,9",
+     po posunu mapy o 80 px TÝŽ hash, po přiblížení zase týž — a teprve
+     po klepnutí na filtr „#m=49.68540,15.72968,10&tn=pozemek". Komu se
+     tedy líbil výřez, který si sám nastavil, zkopíroval odkaz na výřez
+     úplně jiný, a šipka zpět mu vrátila taky ten cizí.
+
+     Druhá, tišší škoda byla ve zkouškách: hash se plnil jen z prvního
+     vykreslení výpisu, a to na pomalém běžci CI proběhlo DŘÍV, než se
+     mapa postavila — do adresy tam pak nestihl napsat nikdo a
+     test-zpet.mjs hlásil prázdný hash (běhy 1108, 1110, 1116).
+
+     Zapisuje se se zpožděním 350 ms (viz zapisAdresu výš) a pohyb mapy
+     mění jen `m=`, takže se adresa přepisuje (replaceState) a historie
+     se posunem mapy neplní. */
+  azBudeMapa(function () {
+    try { map.on('moveend zoomend', zapisAdresu); } catch (e) {}
+  });
+
   /* ADRESA, SE KTEROU ČLOVĚK PŘIŠEL — ne ta, kterou si web mezitím
      zapsal sám.
      ------------------------------------------------------------------

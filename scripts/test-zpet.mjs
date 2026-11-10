@@ -181,7 +181,33 @@ try {
   await p.waitForTimeout(900);
   const poHash = await p.evaluate(() => location.hash);
   pravda('v adrese je stav mapy (jinak kontrola níž neměří nic)', /m=/.test(pred), `hash: „${pred}"`);
-  pravda('a zavřením vrstvy se stav mapy neztratí', poHash === pred,
+  /* POROVNÁVÁ SE VÝŘEZ, NE ŘETĚZEC.
+     Od 10. 11. si mapa zapisuje polohu do adresy sama po každém posunu
+     (viz js/main.js, map.on('moveend zoomend', zapisAdresu)). Po návratu
+     se tedy stav z adresy nejdřív dosadí do mapy a mapa pak zapíše
+     polohu, na které SKUTEČNĚ stojí — a ta se o kousek liší, protože
+     Leaflet počítá střed z celých pixelů. Naměřeno: 49.82558,15.51270
+     proti 49.82735,15.50995, tedy 0,0018° šířky a 0,0027° délky. Při
+     přiblížení 9 je jeden pixel asi 305 m, takže je to míň než pixel —
+     na obrazovce totéž místo.
+     Mez 0,01° (asi 1 km, tedy zhruba tři pixely) je proto na shodu
+     měkká, ale na vadu tvrdá: kvůli čemu to celé je — návrat na výchozí
+     pohled na celou republiku — je o stupně vedle a má jiné přiblížení,
+     a prázdný nebo chybějící výřez neprojde vůbec.
+     Prokázáno sabotáží: do obsluhy popstate (tam, kde se vrstva zavírá)
+     se přidalo `map.setView([49.8, 15.5], 7)` a kontrola se ozvala —
+     „před „#m=49.82558,15.51270,9", po „#m=49.80000,15.50000,7"". */
+  const vyrezZHashe = (h) => {
+    const m = /(^|[#&])m=([^&]*)/.exec(String(h || ''));
+    if (!m) return null;
+    const k = m[2].split(',');
+    const o = { lat: Number(k[0]), lng: Number(k[1]), z: Number(k[2]) };
+    return (isFinite(o.lat) && isFinite(o.lng)) ? o : null;
+  };
+  const vPred = vyrezZHashe(pred), vPo = vyrezZHashe(poHash);
+  const tyzVyrez = !!vPred && !!vPo && vPred.z === vPo.z
+    && Math.abs(vPred.lat - vPo.lat) < 0.01 && Math.abs(vPred.lng - vPo.lng) < 0.01;
+  pravda('a zavřením vrstvy se stav mapy neztratí', tyzVyrez,
     `před „${pred}", po „${poHash}"`);
 
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));

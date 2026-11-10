@@ -103,6 +103,38 @@ pravda('a stojí v ní druh nabídky', /t=exekuce/.test(hash), hash);
 pravda('a cena', /(^|&|#)cd=\d/.test(hash), hash);
 pravda('a výřez mapy', /(^|&|#)m=-?\d/.test(hash), hash);
 pravda('a řazení', /(^|&|#)razeni=price_asc/.test(hash), hash);
+
+/* A VÝŘEZ SE MUSÍ ZAPSAT I TEHDY, KDYŽ ČLOVĚK JEN POSUNE MAPOU.
+   ---------------------------------------------------------------------
+   Do 10. 11. se adresa přepisovala jen při překreslení výpisu, tedy při
+   změně filtru. Posun a přiblížení mapy do ní nenapsaly nic: naměřeno
+   na 390 px, že po posunu o 80 px i po přiblížení zůstal v adrese týž
+   hash jako po načtení. Kdo si tedy výřez nastavil a odkaz zkopíroval,
+   poslal cizí výřez — a šipka zpět mu vrátila taky ten cizí.
+   Kontroly výš by to nechytily: ty mění filtr, a ten výpis překreslí,
+   takže se při té příležitosti zapíše i mapa. */
+const hashPredPosunem = await p.evaluate(() => location.hash);
+const mapaJe = await p.evaluate(() => !!window.PK_MAPA);
+pravda('mapa je na stránce dosažitelná (jinak se posun nedá změřit)', mapaJe,
+  'window.PK_MAPA chybí');
+if (mapaJe) {
+  await p.evaluate(() => { try { window.PK_MAPA.panBy([160, 160]); } catch (e) {} });
+  /* Čeká se na STAV, ne na hodinky: zápis má 350ms zpoždění (viz
+     zapisAdresu v js/main.js) a Leaflet posun ještě dojíždí. */
+  await pripravenoKdyz(p, (h) => location.hash !== h, hashPredPosunem, 10000);
+  const hashPoPosunu = await p.evaluate(() => location.hash);
+  const vyrez = (h) => (/(^|[#&])m=([^&]*)/.exec(h) || [])[2] || '';
+  pravda('posun mapy se zapíše do adresy (sdílí se to, co člověk vidí)',
+    vyrez(hashPoPosunu) !== '' && vyrez(hashPoPosunu) !== vyrez(hashPredPosunem),
+    `před posunem „${vyrez(hashPredPosunem)}", po posunu „${vyrez(hashPoPosunu)}"`);
+  /* Filtry se posunem mapy měnit nesmějí — adresa by jinak při každém
+     šoupnutí mapou zahodila to, co si člověk nastavil. */
+  const bezMapy = (h) => String(h).replace(/^#/, '').split('&')
+    .filter((k) => k.indexOf('m=') !== 0).join('&');
+  pravda('a filtry v adrese zůstanou, jak byly',
+    bezMapy(hashPoPosunu) === bezMapy(hashPredPosunem),
+    `před „${bezMapy(hashPredPosunem)}", po „${bezMapy(hashPoPosunu)}"`);
+}
 /* PŘEDPOKLAD, bez kterého by zkouška níž neznamenala nic: filtry musí
    výpis OPRAVDU zúžit. Kdyby ukazovaly totéž co bez nich, „vidí totéž"
    by platilo i s rozbitým odkazem. */
