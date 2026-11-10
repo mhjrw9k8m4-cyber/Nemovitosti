@@ -137,14 +137,29 @@ await ctx.route('**/*', (r) => {
   return r.abort();
 });
 const p = await ctx.newPage();
+/* CO SI STRÁNKA STÁHNE, SE MĚŘÍ, NE ODHADUJE.
+   Stránka má od 10. 11. brát rejstřík a okresní řezy, ne celá data —
+   ale v záloze jí celek pořád zůstává, takže by při chybě tiše sáhla
+   po něm a tabulka by vyšla stejně. Zelená zkouška by pak o té opravě
+   neříkala nic. Sbírají se proto adresy datových souborů, o které si
+   stránka opravdu požádala. */
+const stazeno = [];
+p.on('request', (r) => {
+  const u = r.url();
+  const m = /\/(data\/[^?]+)/.exec(u);
+  if (m) stazeno.push(m[1]);
+});
+const odznovu = () => { stazeno.length = 0; };
 const chyby = [];
 p.on('pageerror', (e) => chyby.push(String(e).slice(0, 140)));
 
 /* 1) bez uložených pozemků stránka neukazuje prázdnou tabulku */
 await p.goto(`${BASE}/porovnani.html`, { waitUntil: 'domcontentloaded' });
 await p.evaluate(() => localStorage.removeItem('pk_fav_v1'));
+odznovu();
 await p.reload({ waitUntil: 'domcontentloaded' });
 await domUtichlo(p, 350);   // bylo waitForTimeout(1500)
+const stazenoPrazdne = stazeno.slice();
 const prazdna = await p.evaluate(() => ({
   prazdnaTabulka: !!document.querySelector('.por-tab tbody tr:not(.por-ukazka *)')
     && !document.querySelector('.por-ukazka'),
@@ -211,8 +226,10 @@ pravda('bez uložených se neukáže prázdná tabulka, ale vysvětlení',
 
 /* 2) se třemi uloženými se objeví právě ty tři */
 await p.evaluate((k) => localStorage.setItem('pk_fav_v1', JSON.stringify(k)), vzorky.map(klic));
+odznovu();
 await p.reload({ waitUntil: 'domcontentloaded' });
 await domUtichlo(p, 350);   // bylo waitForTimeout(2500)
+const stazenoUlozene = stazeno.slice();
 const t = await p.evaluate(() => {
   const tab = document.querySelector('.por-tab');
   if (!tab) return null;
@@ -266,6 +283,42 @@ pravda('s uloženými pozemky ukázka zmizí',
   'blok s ukázkou zůstal i vedle vlastních uložených pozemků');
 
 /* 3) klíč, který v datech není, nesmí stránku shodit */
+
+/* 2b) A TEĎ ČÍM SE TA TABULKA NAPLNILA.
+   NAMĚŘENO 10. 11.: stránka si brala celá data (1,37 MB, a s
+   `no-store`, takže při každém otevření znovu) kvůli hrstce uložených
+   pozemků. Po opravě bere rejstřík data/klice-okresu.json a z něj jen
+   okresní řezy. Celek zůstává v záloze — proto se to musí měřit, ne
+   přečíst v kódu. */
+{
+  const velikost = (rel) => {
+    try { return fs.statSync(path.join(ROOT, rel)).size; } catch (e) { return 0; }
+  };
+  const celek = velikost('data/opportunities.json');
+  const datove = (seznam) => seznam.filter((x) => /^data\//.test(x));
+  const sUlozenymi = datove(stazenoUlozene);
+  const bezUlozenych = datove(stazenoPrazdne);
+  pravda('je co měřit: stránka si o datové soubory vůbec požádala',
+    sUlozenymi.length > 0 && bezUlozenych.length > 0,
+    `s uloženými ${sUlozenymi.length}, bez uložených ${bezUlozenych.length} požadavků`);
+  pravda('s uloženými pozemky si vezme rejstřík klíčů',
+    sUlozenymi.indexOf('data/klice-okresu.json') !== -1, sUlozenymi.join(', '));
+  pravda('a z něj jen okresní řezy, ne celá data',
+    sUlozenymi.some((x) => /^data\/okres\//.test(x))
+    && sUlozenymi.indexOf('data/opportunities.json') === -1,
+    `stáhlo se: ${sUlozenymi.join(', ')}`);
+  pravda('ani bez uložených pozemků se celek nestahuje (ukázka je jeden řez)',
+    bezUlozenych.indexOf('data/opportunities.json') === -1,
+    `stáhlo se: ${bezUlozenych.join(', ')}`);
+  /* A kolik to ušetřilo. Mez je volná schválně: smyslem je, aby se
+     nedalo nepozorovaně vrátit ke stahování celku, ne doladit bajty. */
+  const vazi = (seznam) => seznam.reduce((a, x) => a + velikost(x), 0);
+  pravda(`a je to měřitelně méně než celek (${(celek / 1024).toFixed(0)} kB)`,
+    celek > 0 && vazi(sUlozenymi) < celek / 2 && vazi(bezUlozenych) < celek / 2,
+    `s uloženými ${(vazi(sUlozenymi) / 1024).toFixed(0)} kB,`
+    + ` bez uložených ${(vazi(bezUlozenych) / 1024).toFixed(0)} kB`);
+}
+
 await p.evaluate(() => localStorage.setItem('pk_fav_v1', JSON.stringify(['tenhle|klic|neexistuje||'])));
 await p.reload({ waitUntil: 'domcontentloaded' });
 await domUtichlo(p, 350);   // bylo waitForTimeout(2000)

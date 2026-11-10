@@ -170,10 +170,53 @@
 
   if (!klice.length) prazdno('Zatím nemáte uložený žádný pozemek');
 
-  fetch('data/opportunities.json', { cache: 'no-store' })
-    .then(function (r) { return r.json(); })
-    .then(function (j) {
-      var D = (j && j.opportunities) || [];
+  function vem(url, cache) {
+    return fetch(url, { cache: cache || 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+  function celek() {
+    return vem('data/opportunities.json', 'no-store').then(function (j) {
+      return (j && j.opportunities) || [];
+    });
+  }
+  function zRezu(soubory) {
+    return Promise.all(soubory.map(function (s) { return vem('data/okres/' + s + '.json'); }))
+      .then(function (casti) {
+        var D = [];
+        casti.forEach(function (c) {
+          if (c && Array.isArray(c.opportunities)) D = D.concat(c.opportunities);
+        });
+        return D;
+      });
+  }
+  function data(klice) {
+    return vem('data/klice-okresu.json').then(function (r) {
+      var okresy = r && Array.isArray(r.okresy) ? r.okresy : null;
+      if (!okresy || !okresy.length) return celek();
+
+      if (!klice.length) {
+        if (!r.ukazka) return celek();
+        return zRezu([r.ukazka]).then(function (D) { return D.length ? D : celek(); });
+      }
+      var mapa = r.klice || {};
+      var chci = {};
+      var vsechnyZnamy = true;
+      klice.forEach(function (k) {
+        var pk = String(k == null ? '' : k).split('#')[0];
+        var i = mapa[pk];
+        if (typeof i === 'number' && okresy[i]) chci[okresy[i]] = 1;
+        else vsechnyZnamy = false;
+      });
+      var seznam = Object.keys(chci);
+
+      if (!seznam.length || !vsechnyZnamy) return celek();
+      return zRezu(seznam).then(function (D) { return D.length ? D : celek(); });
+    });
+  }
+
+  data(klice)
+    .then(function (D) {
       if (!klice.length) { sUkazkou(D); return; }
 
       var podleKlice = {};

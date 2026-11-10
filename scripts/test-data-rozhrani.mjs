@@ -256,6 +256,13 @@ const nabidky = D.opportunities || [];
        nebylo. Popisovat ho na data.html by znamenalo vydávat výtah
        za další zdroj; kdo chce data, má celý soubor. */
     'data/rozpocet.json': 'výtah z opportunities.json pro výpočet podle rozpočtu',
+    /* Rejstřík „klíč pozemku → okres". Taky jen výtah z
+       opportunities.json: nenese o nabídce nic, co by v celku nebylo,
+       a existuje jen proto, aby se dal JEDEN pozemek najít bez
+       stahování celých dat (stránka porovnání). Popisovat ho na
+       data.html by znamenalo vydávat vnitřní rejstřík za další zdroj;
+       kdo chce data, vezme si celek nebo řez okresu. */
+    'data/klice-okresu.json': 'rejstřík klíč pozemku → okres, aby se nemusel stahovat celek',
   };
   /* PROHLEDÁVAJÍ SE VŠECHNY SKRIPTY, ne vyjmenovaná hrstka. Nejdřív
      tu stál seznam deseti souborů a tři výjimky v tabulce výš se podle

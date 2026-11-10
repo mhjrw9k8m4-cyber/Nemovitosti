@@ -271,10 +271,73 @@
      o nenačtených datech. Ukázka se k němu přisype, až data dojdou. */
   if (!klice.length) prazdno('Zatím nemáte uložený žádný pozemek');
 
-  fetch('data/opportunities.json', { cache: 'no-store' })
-    .then(function (r) { return r.json(); })
-    .then(function (j) {
-      var D = (j && j.opportunities) || [];
+  /* ---------- ODKUD SE BEROU DATA ----------
+     NAMĚŘENO 10. 11. Tahle stránka si stahovala CELÁ data při každém
+     otevření a ještě s `cache: no-store` — 1,37 MB při 3 499 nabídkách
+     — aby v nich našla tu hrstku pozemků, které si člověk uložil.
+     Uložený záznam totiž nese jen klíč, ne okres, takže nebylo kam jít
+     jinam. Po opravě stropu geokodéru u Bezrealitek by to bylo
+     ~3,26 MB na jedno otevření jedné stránky.
+     Od teď se vezme rejstřík data/klice-okresu.json (137 kB, 32 kB přes
+     drát) a z něj jen ty dva tři okresní řezy (průměr 17 kB), ve
+     kterých uložené pozemky opravdu leží. Řezy nesou všechna pole,
+     která tabulka vypisuje.
+     CELEK ZŮSTÁVÁ JAKO ZÁLOHA: kdyby rejstřík na serveru nebyl nebo
+     v něm klíč chyběl, stránka sáhne po celých datech a chová se jako
+     dřív. Radši o 1,37 MB víc než „uložené pozemky už v nabídce
+     nejsou" u pozemku, který v ní je. */
+  function vem(url, cache) {
+    return fetch(url, { cache: cache || 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+  function celek() {
+    return vem('data/opportunities.json', 'no-store').then(function (j) {
+      return (j && j.opportunities) || [];
+    });
+  }
+  function zRezu(soubory) {
+    return Promise.all(soubory.map(function (s) { return vem('data/okres/' + s + '.json'); }))
+      .then(function (casti) {
+        var D = [];
+        casti.forEach(function (c) {
+          if (c && Array.isArray(c.opportunities)) D = D.concat(c.opportunities);
+        });
+        return D;
+      });
+  }
+  function data(klice) {
+    return vem('data/klice-okresu.json').then(function (r) {
+      var okresy = r && Array.isArray(r.okresy) ? r.okresy : null;
+      if (!okresy || !okresy.length) return celek();
+      /* Bez uložených pozemků se vypisuje jen ukázka — na tu stačí
+         jeden řez, který při sestavení vyšel jako nejbohatší. */
+      if (!klice.length) {
+        if (!r.ukazka) return celek();
+        return zRezu([r.ukazka]).then(function (D) { return D.length ? D : celek(); });
+      }
+      var mapa = r.klice || {};
+      var chci = {};
+      var vsechnyZnamy = true;
+      klice.forEach(function (k) {
+        var pk = String(k == null ? '' : k).split('#')[0];
+        var i = mapa[pk];
+        if (typeof i === 'number' && okresy[i]) chci[okresy[i]] = 1;
+        else vsechnyZnamy = false;
+      });
+      var seznam = Object.keys(chci);
+      /* Klíč, který rejstřík nezná, může být pozemek, co z nabídky
+         odešel — ale taky pozemek uložený pod starším tvarem klíče.
+         Rozhodnout se to tady nedá, a mýlit se směrem „už tam není" by
+         člověku ubralo jeho práci. Celek je proti 17 kB drahý, ale je
+         to jediná odpověď, která nelže. */
+      if (!seznam.length || !vsechnyZnamy) return celek();
+      return zRezu(seznam).then(function (D) { return D.length ? D : celek(); });
+    });
+  }
+
+  data(klice)
+    .then(function (D) {
       if (!klice.length) { sUkazkou(D); return; }
       /* INDEX POD OBA TVARY KLÍČE. Uložené pozemky se od teď zapisují
          jako pkey + výměra (PKKlic.klicPozemku), ale co si člověk uložil

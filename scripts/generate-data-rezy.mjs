@@ -151,6 +151,18 @@ export async function spust() {
     console.error('::error::js/hlidani-logika.js nedalo bezDuplicit — řezy by nesouhlasily se stránkami');
     process.exit(1);
   }
+
+  /* KLÍČ POZEMKU SKLÁDÁ TATÁŽ FUNKCE JAKO V PROHLÍŽEČI.
+     Rejstřík klíčů níž musí odpovídat tomu, POD ČÍM si člověk pozemek
+     uložil — a to ví jedině js/klic.js (PKKlic.pkey). Vlastní kopie
+     pravidla by se s ním časem rozešla a uložené pozemky by se na
+     porovnání „už nenašly v nabídce", což je ta nejhorší možná vada:
+     tiše ubírá člověku jeho vlastní práci. */
+  const PKK = (require_(path.join(ROOT, 'js', 'klic.js')) || {}).PKKlic;
+  if (!PKK || typeof PKK.pkey !== 'function') {
+    console.error('::error::js/klic.js nedalo PKKlic.pkey — rejstřík klíčů by nesouhlasil s uloženými pozemky');
+    process.exit(1);
+  }
   /* PO TERMÍNU SE NEPOČÍTÁ. Dražba, která už proběhla, není nabídka —
      a okresní stránky ji vynechávají odjakživa. Řezy ji počítaly dál,
      takže web o témže okrese tvrdil dvě různá čísla; projevilo se to
@@ -221,17 +233,83 @@ export async function spust() {
      důvodu jako výš: přičítací proměnná je ruční počet a dá se posunout. */
   const velikostiRezu = [];
   const ziveOkres = new Set();
+  /* REJSTŘÍK KLÍČŮ VZNIKÁ V TÉHLE SMYČCE, NE VEDLE NÍ.
+     Kdyby se počítal zvlášť, mohl by ukázat na okres, ve kterém daná
+     nabídka v řezu není — a porovnání by si stáhlo soubor, kde ten
+     pozemek nenajde. Takhle se zapisuje jméno řezu, do kterého
+     nabídka právě šla. */
+  const okresySlugy = [];
+  const klicOkresu = {};
+  const ukazkaAdepti = [];
 
   for (const [okres, polozky] of [...podleOkresu].sort()) {
     const soubor = `data/okres/${slug(okres)}.json`;
     ziveOkres.add(`${slug(okres)}.json`);
+    const poradi = okresySlugy.push(slug(okres)) - 1;
+    const poDruhu = new Map();
+    for (const nabidka of polozky) {
+      const k = PKK.pkey(nabidka);
+      if (k) klicOkresu[k] = poradi;
+      /* NÁPOVĚDA PRO UKÁZKU, NE DRUHÁ KOPIE PRAVIDLA.
+         Porovnání ukazuje člověku bez uložených pozemků tři skutečné
+         nabídky téhož druhu z téhož okresu, aby bylo vidět, co tabulka
+         umí. Pravidlo výběru zůstává v js/porovnani.js (ukazka) —
+         tady se jen spočítá, ve kterém okresu je nejsilnější skupina
+         jednoho druhu, aby si stránka mohla vzít JEDEN řez místo
+         celých dat. Kdyby ta nápověda nesedla, stránka sáhne po celku,
+         takže se tím nedá nic rozbít, jen zdržet. */
+      if (nabidka && nabidka.okres && nabidka.druh && nabidka.price && nabidka.area) {
+        poDruhu.set(nabidka.druh, (poDruhu.get(nabidka.druh) || 0) + 1);
+      }
+    }
+    ukazkaAdepti.push({ slug: slug(okres), skupina: Math.max(0, ...poDruhu.values()) });
     const b = zapis(soubor, Object.assign({}, hlavicka, {
       rez: { uroven: 'okres', nazev: okres, kraj: OKRES_KRAJ[okres] || null, soubor, pocet: polozky.length },
       opportunities: polozky,
     }));
     velikostiRezu.push(b);
+    ukazkaAdepti[ukazkaAdepti.length - 1].bajtu = b;
     rejstrik.rezy.push({ uroven: 'okres', nazev: okres, kraj: OKRES_KRAJ[okres] || null, soubor, pocet: polozky.length, bajtu: b });
   }
+  /* ---- REJSTŘÍK KLÍČŮ: KDE HLEDAT JEDEN KONKRÉTNÍ POZEMEK ----
+     NAMĚŘENO 10. 11. Stránka porovnání (porovnani.html) si stahovala
+     CELÁ data při každém otevření a ještě s `cache: no-store`, aby
+     v nich našla tu hrstku pozemků, které si člověk uložil. Uložený
+     záznam totiž nese jen klíč, ne okres, takže nebylo kam jít jinam.
+     Při 3 499 nabídkách to bylo 1,37 MB; po opravě stropu geokodéru
+     u Bezrealitek vyjde 8 700 nabídek, tedy ~3,26 MB na jedno
+     otevření jedné stránky.
+     Řezy po okresech ale existují (průměr 17 kB) a nesou všechna pole,
+     která porovnání vypisuje. Chybělo jen jedno: ze klíče zjistit
+     okres. To je tenhle soubor — a pak si porovnání dojde pro ty dva
+     tři okresy, ve kterých uložené pozemky opravdu leží.
+     Okresy jsou v poli a klíč ukazuje číslem, ne jménem: jméno okresu
+     se v 8 700 klíčích opakuje a stálo by víc než celý zbytek. */
+  const bKlice = zapis('data/klice-okresu.json', Object.assign({}, hlavicka, {
+    popis: 'Ke každému klíči pozemku (PKKlic.pkey z js/klic.js) číslo okresu '
+      + 'v poli „okresy". Soubor řezu je data/okres/<slug>.json. Slouží k tomu, '
+      + 'aby se dal jeden pozemek najít bez stahování celých dat.',
+    okresy: okresySlugy,
+    /* NEJMENŠÍ ŘEZ, KTERÝ NA UKÁZKU STAČÍ — ne ten nejbohatší.
+       Ukázka jsou tři nabídky, takže skupina pěti je s rezervou dost;
+       největší okres (Praha, 275 kB) by se stahoval zbytečně. Když ani
+       jeden okres skupinu pěti nemá, vezme se ten s nejsilnější
+       skupinou a stránka si případně dojde pro celek. */
+    ukazka: (function () {
+      const dost = ukazkaAdepti.filter((a) => a.skupina >= 5);
+      if (dost.length) return dost.sort((x, y) => x.bajtu - y.bajtu)[0].slug;
+      const nej = ukazkaAdepti.slice().sort((x, y) => y.skupina - x.skupina)[0];
+      return nej && nej.skupina >= 3 ? nej.slug : null;
+    }()),
+    klice: klicOkresu,
+  }));
+  rejstrik.klice = {
+    soubor: 'data/klice-okresu.json',
+    pocet: Object.keys(klicOkresu).length,
+    okresu: okresySlugy.length,
+    bajtu: bKlice,
+  };
+
   /* KRAJSKÉ ŘEZY SE NEDĚLAJÍ, A JE TO ÚMYSL.
      Kraj je součet svých okresů, takže by to byla druhá kopie týchž
      nabídek — dohromady 1 302 kB místo 637 kB. A ten soubor se obnovuje
