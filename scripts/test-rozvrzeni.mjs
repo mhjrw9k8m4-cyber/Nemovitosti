@@ -247,7 +247,12 @@ async function otevri(soubor, sirka, vyska) {
       const mezera = Math.round(odkazy[0].getBoundingClientRect().left - logo.getBoundingClientRect().right);
       // Odkaz, který se sám zalomil na dva řádky (kromě tlačítka s výplní).
       const sirsi = odkazy.filter((a) => {
-        if (a.classList.contains('btn-primary')) return false;
+        /* Vyplněný ovladač není zalomený text. Tlačítko i štítek typu
+           nemovitosti (.nav-typ, druhá řada lišty od 10. 11.) jsou vyšší
+           než řádek schválně — mají výplň a chytací plochu. Měří se tu
+           VADA, kterou to pravidlo vzniklo chytat: nápis rozsekaný na
+           dva řádky uvnitř odkazu („Hledat / na / mapě"). */
+        if (a.classList.contains('btn-primary') || a.classList.contains('nav-typ')) return false;
         const r = a.getBoundingClientRect();
         return r.height > parseFloat(getComputedStyle(a).lineHeight) * 1.6;
       }).map((a) => a.textContent.trim());
@@ -648,9 +653,26 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      A ta vlastní otázka — vejde se nabídka na obrazovku? — se měří
      v test-menu, ne počtem řádků. */
   const MUSI = ['#mapa', 'cena-pozemku.html', 'muj-inzerat.html', 'zpravy.html', 'hlidani.html'];
+  /* STROP SE 10. 11. ZVEDL Z DEVÍTI NA DVANÁCT, a zase na majitelovo
+     slovo: „na hlavní funkce a hlavní menu úplně zanedbáváš, přeřež to,
+     najdi si šablony a předělej to." Přibyla řada typů nemovitostí
+     (Pozemky, Domy, Byty, Dražby, Exekuce, Nové na trhu) — šest položek,
+     z nichž tři tu v jiné podobě už jednou byly.
+     PRAVIDLO, KTERÉ TÍM NEPADÁ: „nemá to být příručka" (27. 10.).
+     Typ nemovitosti není článek ani rozcestník — je to FILTR MAPY;
+     pět z šesti odkazů vede na index.html s klíčem, který sdílí
+     js/odkaz.js, takže se dají poslat odkazem. Že se do nabídky
+     nevrátily rádce a výklady, se proto měří zvlášť a natvrdo níž. */
+  const PRIRUCKA = ['radce.html', 'hypoteka', 'uzemni-plan', 'vecne-bremeno',
+    'kupni-smlouva', 'pristupova-cesta', 'list-vlastnictvi', 'na-co-mam',
+    'stavebni-vs', 'kolik-stoji', 'podminky.html', 'ochrana-udaju.html'];
   pravda(`nabídka nenarostla a akce „Přidat pozemek" je nakonec (${bezUctu.length})`,
-    bezUctu.length <= 9 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
+    bezUctu.length <= 12 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
     `je jich ${bezUctu.length}: ${bezUctu.join(', ')}`);
+  const priruckaVNabidce = bezUctu.filter((h) => PRIRUCKA.some((x) => (h || '').includes(x)));
+  pravda('a není z ní příručka — žádný rádce ani výklad',
+    priruckaVNabidce.length === 0,
+    `do nabídky se vrátily výklady: ${priruckaVNabidce.join(', ')}`);
   pravda('a pořád nese to, co jinde v liště není',
     MUSI.every((c) => bezUctu.some((h) => (h || '').includes(c))),
     `chybí z ${MUSI.join(', ')} — je tam: ${bezUctu.join(', ')}`);
