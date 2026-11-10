@@ -3806,6 +3806,24 @@ async function fetchBezrealitky() {
   let geoDotazu = 0, bezOkresu = 0;
   let bezJmena = 0, geoNeznal = 0, nadStrop = 0, zMezipametiJmen = 0;
   const cekajiciJmena = new Set();
+  /* VZOREK ODKAZŮ, KTERÝM GEOKODÉR NEROZUMÍ — INSTRUMENTACE, NE OPRAVA.
+     NAMĚŘENO 10. 11. po opravě stropu: strop 1 400 dotazů padne celý na
+     jména, která geokodér nezná, a běh se tím protáhl z 2,5 na
+     50 minut. V mezipaměti je 1 838 takových jmen a při pohledu na ně
+     je jasné, co jsou: NĚMECKÉ A SLOVENSKÉ ADRESY — „berlin
+     friedrichshain", „maffeistraße 19 germering", „stuttgart
+     degerloch", „dolní sasko", „hessen", a ze Slovenska „detvianska",
+     „hornádska", „Janíky", „Korňa". Bezrealitky mají v sitemapě i své
+     zahraniční inzeráty; na český web nepatří a zahazují se správně.
+     Marné ale je posílat je do geokodéru: ten se ptá jen na Česko
+     (countrycodes=cz), takže odpověď je vždycky „nevím".
+     ABY SE TO DALO ZARAZIT, MUSÍ BÝT ČÍM JE POZNAT — a to se nedá
+     uhádnout z kódu: inzeráty, o které jde, se zahazují, takže v datech
+     po nich nic nezůstane a jejich odkaz není kde vzít. Příští běh
+     proto vypíše pět ukázek. Až bude vidět, jestli se zahraniční
+     inzerát pozná z odkazu (jiná cesta, jiná země), nebo z adresy,
+     doplní se filtr PŘED dotazem a strop zůstane českým obcím. */
+  const neznameUkazky = [];
   const kObjednani = [];
   for (let i = 0; i < inzeraty.length; i++) {
     const a = inzeraty[i];
@@ -3843,7 +3861,11 @@ async function fetchBezrealitky() {
     const zn = zeSlovniku.get(klic);
     if (!zn || !zn.okres) {
       bezOkresu++;
-      if (cekajiciJmena.has(klic)) nadStrop++; else geoNeznal++;
+      if (cekajiciJmena.has(klic)) nadStrop++;
+      else {
+        geoNeznal++;
+        if (neznameUkazky.length < 5) neznameUkazky.push(`${place} → ${a.url || '(bez odkazu)'}`);
+      }
       continue;
     }
     kObjednani.push({ ...a, place, ...(predbezne[i].ul ? { ul: predbezne[i].ul } : {}),
@@ -3983,6 +4005,12 @@ async function fetchBezrealitky() {
     + ` Nabídek ${out.length}: fotka u ${sFotkou}, popis u ${sPopisem}, bez výměry ${bezVymery}.`
     + ` Typ z adresy u ${typZAdresy}, hádaný z textu u ${typZTextu}`
     + (zbytek ? ` (${zbytek})` : '') + '.');
+  /* Viz neznameUkazky výš: pět ukázek, aby bylo z čeho poznat
+     zahraniční inzerát ještě PŘED dotazem do geokodéru. */
+  if (neznameUkazky.length) {
+    console.log(`  Bezrealitky — ukázky míst, která geokodér nezná (${geoNeznal} nabídek):`);
+    for (const u of neznameUkazky) console.log(`    · ${u}`);
+  }
   return out;
 }
 
