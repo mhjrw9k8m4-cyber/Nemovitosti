@@ -28,6 +28,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { mapaSouboru } from './generate-parcel-pages.mjs';
+import { stavStranky } from './vzorek-pozemku.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
@@ -86,7 +87,16 @@ const dejNabidku = (jmeno) => podleSouboru.get(jmeno) || null;
 
 /* Vzorek stránek napříč abecedou, ne prvních pár z jednoho okresu —
    jinak by se měřil jeden kraj a jedna velikost vzorku. */
-const vsechny = fs.readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f)).sort();
+/* JEN ŽIVÉ STRÁNKY. Archiv vyřazených nabídek za rok přerostl živou
+   nabídku: 10. 11. je ze 3 489 stránek vyřazených skoro tři čtvrtiny
+   a na náhrobku verdikt o ceně není, protože nabídka už neplatí.
+   Rovnoměrný vzorek přes všechny soubory tedy trefil skoro samé
+   náhrobky a verdikt našel jen na 5 stránkách z 60 — a kontroly pod
+   tím neměly co měřit (běhy 1117, 1118). Model přitom pracuje: verdikt
+   dostane 1 825 z 3 489 nabídek, tedy 52 %. Vada byla ve vzorku
+   zkoušky, ne na webu. */
+const vsechny = fs.readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f))
+  .filter((f) => stavStranky(f) === 'ziva').sort();
 /* NEJMÉNĚ tolik stránek, ať se měří i ty BEZ verdiktu (na nich stojí
    kontrola „nikde verdikt neukázal tam, kde ho model nemá“). */
 const KOLIK = 24;

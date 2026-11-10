@@ -108,16 +108,32 @@ VERZE = 'NOVA';                       // nasazení pod rukama běžící karty
    takže se posílá `focus` — jedna ze tří událostí, na které js/offline.js
    poslouchá (vedle visibilitychange a pageshow). Zkouší se tím ŘETĚZ za
    ní: dotaz na novou obsluhu → její výměna → překreslení karty. */
-/* ČEKÁ SE NA NAČTENÍ, NE NA PODMÍNKU V STRÁNCE. waitForFunction vyhodnocuje
-   svůj výraz UVNITŘ karty — jenže právě ta se pod ním překresluje, takže mu
-   zmizí kontext a ohlásí chybu místo úspěchu. Naměřeno: řetěz proběhl
-   správně a zkouška přesto hlásila „karta zůstala na STARA". Čeká se proto
-   na načtení stránky zvenčí a teprve pak se čte značka. */
-const nacteni = p.waitForNavigation({ waitUntil: 'load', timeout: 25000 }).catch(() => null);
+/* ČEKÁ SE NA ZNAČKU V STRÁNCE, ČTENOU ZVENČÍ.
+   ------------------------------------------------------------------
+   Dvě dřívější podoby téhle kontroly byly obě špatně:
+   · waitForFunction vyhodnocuje výraz UVNITŘ karty — jenže právě ta se
+     pod ním překresluje, takže mu zmizí kontext a ohlásí chybu místo
+     úspěchu.
+   · waitForNavigation zase čeká na JAKÝKOLI přechod, a za ten se počítá
+     i `history.replaceState` ve stejném dokumentu. Od chvíle, kdy si
+     mapa zapisuje výřez do adresy (js/main.js, map.on('moveend'…)),
+     takový zápis přijde pár set milisekund po startu — čekání tím
+     skončilo DŘÍV, než vůbec začalo překreslení, a zkouška hlásila
+     „karta zůstala na STARA", ačkoli se za okamžik překreslila.
+     Naměřeno 10. 11.: lokálně i v CI (běh 1118).
+   Čte se proto značka ve smyčce zvenčí: po překreslení se evaluate
+   připojí k novému dokumentu sám, a než se tak stane, čtení skončí
+   chybou, která se spolkne a zkusí znovu. */
 await p.evaluate(() => window.dispatchEvent(new Event('focus'))).catch(() => {});
-await nacteni;
-const poPrekresleni = await p.evaluate(() => (document.getElementById('zk-verze') || {}).textContent)
-  .catch(() => '(nepřečteno)');
+let poPrekresleni = '(nepřečteno)';
+const dokdy = Date.now() + 25000;
+while (Date.now() < dokdy) {
+  const v = await p.evaluate(() => (document.getElementById('zk-verze') || {}).textContent)
+    .catch(() => null);
+  if (v) poPrekresleni = v;
+  if (v === 'NOVA') break;
+  await p.waitForTimeout(250);
+}
 const prekreslilo = poPrekresleni === 'NOVA';
 pravda('po návratu ke kartě se stránka sama překreslí na novou verzi',
   prekreslilo, 'karta zůstala na ' + poPrekresleni);

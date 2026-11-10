@@ -92,42 +92,62 @@ try {
   });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  const p = await ctx.newPage();
+  /* MĚŘÍ SE TŘIKRÁT A BERE SE PROSTŘEDNÍ HODNOTA.
+     ------------------------------------------------------------------
+     Poměr „nejdelší úloha ku všem dlouhým" je na rychlosti stroje
+     citlivý: doma vyšel 0,25, na běžci CI 0,41 proti mezi 0,40 (běh
+     1118). Jediné měření na sdíleném železe tedy nerozhoduje o tom,
+     jestli se start slil do jedné úlohy, ale o tom, jak byl běžec
+     zrovna zaneprázdněný. Tři načtení a prostřední hodnota tenhle šum
+     srazí, a pravidlo zůstává tvrdé: když se start opravdu slije do
+     jedné úlohy, vyjde vysoko ve všech třech. Všechny tři poměry se
+     vypisují, ať je vidět, jak daleko od meze to bylo. */
   const chybyJs = [];
-  p.on('pageerror', (e) => chybyJs.push(String(e)));
-  /* Telefon je pomalejší než stroj, na kterém zkouška běží. Bez zpomalení
-     by se zaseknutí, které člověk na iPhonu vidí, nemuselo projevit. */
-  const cdp = await ctx.newCDPSession(p);
-  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-  await p.addInitScript(() => {
-    window.__ramce = [];
-    window.__umi = false;
-    try {
-      new PerformanceObserver((l) => {
-        for (const e of l.getEntries()) {
-          window.__ramce.push({ d: e.duration, blok: e.blockingDuration || 0 });
-        }
-      }).observe({ type: 'long-animation-frame', buffered: true });
-      window.__umi = true;
-    } catch (e) {}
-  });
-  await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-  await p.waitForSelector('#map-search', { timeout: 30000 });
-  /* Až po vykreslení výpisu — to je poslední velký kus startu. */
-  await p.waitForSelector('.opp-item', { timeout: 30000 }).catch(() => {});
-  await p.waitForTimeout(9000);
+  const POKUSU = 3;
+  const mereni = [];
+  for (let pokus = 0; pokus < POKUSU; pokus++) {
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => chybyJs.push(String(e)));
+    /* Telefon je pomalejší než stroj, na kterém zkouška běží. Bez zpomalení
+       by se zaseknutí, které člověk na iPhonu vidí, nemuselo projevit. */
+    const cdp = await ctx.newCDPSession(p);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    await p.addInitScript(() => {
+      window.__ramce = [];
+      window.__umi = false;
+      try {
+        new PerformanceObserver((l) => {
+          for (const e of l.getEntries()) {
+            window.__ramce.push({ d: e.duration, blok: e.blockingDuration || 0 });
+          }
+        }).observe({ type: 'long-animation-frame', buffered: true });
+        window.__umi = true;
+      } catch (e) {}
+    });
+    await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+    await p.waitForSelector('#map-search', { timeout: 30000 });
+    /* Až po vykreslení výpisu — to je poslední velký kus startu. */
+    await p.waitForSelector('.opp-item', { timeout: 30000 }).catch(() => {});
+    await p.waitForTimeout(9000);
 
-  const v = await p.evaluate(() => {
-    const r = window.__ramce || [];
-    const blok = r.reduce((a, x) => a + x.blok, 0);
-    const nej = r.reduce((a, x) => Math.max(a, x.d), 0);
-    const nejBlok = r.reduce((a, x) => Math.max(a, x.blok), 0);
-    return { umi: window.__umi, ramcu: r.length, blok: Math.round(blok),
-      nej: Math.round(nej), nejBlok: Math.round(nejBlok),
-      dlouhych: r.filter((x) => x.d >= 50).length,
-      souctD: Math.round(r.reduce((a, x) => a + x.d, 0)),
-      karet: document.querySelectorAll('.opp-item').length };
-  });
+    mereni.push(await p.evaluate(() => {
+      const r = window.__ramce || [];
+      const blok = r.reduce((a, x) => a + x.blok, 0);
+      const nej = r.reduce((a, x) => Math.max(a, x.d), 0);
+      const nejBlok = r.reduce((a, x) => Math.max(a, x.blok), 0);
+      return { umi: window.__umi, ramcu: r.length, blok: Math.round(blok),
+        nej: Math.round(nej), nejBlok: Math.round(nejBlok),
+        dlouhych: r.filter((x) => x.d >= 50).length,
+        souctD: Math.round(r.reduce((a, x) => a + x.d, 0)),
+        karet: document.querySelectorAll('.opp-item').length };
+    }));
+    await p.close();
+  }
+  /* Prostřední měření podle poměru — ne průměr: jediný zadrhlý běžec
+     by průměr vytáhl stejně jako dřív jediné měření. */
+  const serazena = mereni.slice().sort((a, b) => (a.nej / (a.souctD || 1)) - (b.nej / (b.souctD || 1)));
+  const v = serazena[Math.floor(serazena.length / 2)];
+  const vsechnyPomery = mereni.map((m) => (m.nej / (m.souctD || 1)).toFixed(2)).join(', ');
 
   if (!pravda('prohlížeč umí hlásit dlouhé rámce', v.umi,
     'bez long-animation-frame zkouška nic nezměří')) { await ctx.close(); hotovo(); }
@@ -146,7 +166,7 @@ try {
   pravda(`a žádná z nich nepobere většinu práce (nejdelší ${v.nej} ms z ${v.souctD} ms, poměr ${pomer.toFixed(2)})`,
     pomer <= MEZ_POMER,
     `poměr ${pomer.toFixed(2)} nad mezí ${MEZ_POMER} — start se slil zpátky do jedné dlouhé úlohy`
-    + ` (pro srovnání z blockingDuration: ${(v.nejBlok / (v.blok || 1)).toFixed(2)})`);
+    + ` (všechna tři měření: ${vsechnyPomery}; z blockingDuration: ${(v.nejBlok / (v.blok || 1)).toFixed(2)})`);
 
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));
   await ctx.close();

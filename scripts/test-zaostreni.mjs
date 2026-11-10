@@ -453,7 +453,16 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
        uložit. Měří se OBOJE — samotné „neodešlo" by prošlo i tehdy,
        kdyby tlačítko nedělalo vůbec nic. */
     await cistaStranka();
-    const adrPred = p.url();
+    /* POROVNÁVÁ SE STRÁNKA, NE CELÁ ADRESA.
+       „Neodejde ze stránky" znamená, že prohlížeč zůstal na index.html.
+       Za mřížkou si ale web vede vlastní účetnictví: od 10. 11. tam
+       mapa zapisuje svůj výřez (js/main.js, map.on('moveend'…)) a
+       filtry tam byly odjakživa. Celá adresa se tedy mezi dvěma čteními
+       změní, aniž by se kamkoli odešlo — a zkouška to hlásila jako
+       odchod („z …/index.html na …/index.html#m=49.82677,…&razeni=nove",
+       běh 1118). Porovnává se proto cesta a dotaz, mřížka ne. */
+    const bezMrizky = (u) => String(u).split('#')[0];
+    const adrPred = bezMrizky(p.url());
     const fav = await p.evaluate(() => {
       const b = document.querySelector('#opp-list .opp-item .opp-fav');
       if (!b) return null;
@@ -467,9 +476,9 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
       for (const klavesa of ['Enter', ' ']) {
         await p.keyboard.press(klavesa === ' ' ? 'Space' : klavesa);
         await p.waitForTimeout(400);
-        const odesli = p.url() !== adrPred;
+        const odesli = bezMrizky(p.url()) !== adrPred;
         pravda(`výpis: ${klavesa === ' ' ? 'mezerník' : 'Enter'} na „Uložit" neodejde ze stránky`,
-          !odesli, `z ${adrPred} na ${p.url()}`);
+          !odesli, `z ${adrPred} na ${bezMrizky(p.url())}`);
         if (odesli) { await p.goto(adrPred); break; }
         const stav = await p.evaluate(() => {
           const b = document.querySelector('#opp-list .opp-item .opp-fav');
