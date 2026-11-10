@@ -19,6 +19,7 @@
 import {
   brSitemapyDetailu, brInzeratyZeSitemapy, brVymeraZPopisku,
   brCenaZDetailu, brPopisZDetailu, brMistaZDrivejsich, brXmlText,
+  geoVMezipameti,
 } from './fetch-opportunities.mjs';
 import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -271,6 +272,44 @@ je('CDATA se odloupne', brXmlText('<![CDATA[Prodej pozemku]]>'), 'Prodej pozemku
 
 console.log('\nBezrealitky povolenou cestou (sitemapa + detail)');
 console.log(zpravy.join('\n'));
+/* ---- STROP GEOKODÉRU SE TÝKÁ DOTAZŮ VEN, NE JMEN ---------------------
+   Tohle stálo web 5 513 inzerátů z 8 700, a nikdo to nemohl vidět:
+   počítadlo dotazů se zvedalo před KAŽDÝM voláním geocodeObec — i když
+   odpověď ležela v mezipaměti a ven se nic neposílalo. Po 1 400 jménech
+   za běh se všechna další zahodila jako „bez okresu", i kdyby je
+   geokodér znal. A protože pořadí inzerátů je mezi běhy skoro stejné,
+   zahazovala se pořád tatáž jména — fronta se nikdy nedojela.
+   Naměřeno v logu robota 10. 11. 01:06: „z toho 3187 se známou obcí
+   (bez okresu 5513 …, geokodér 1400×)", a v mezipaměti přitom leželo
+   1 843 jmen, 1 284 z nich se souřadnicemi.
+   Hlídá se obojí: že se dá zvenčí poznat jméno v mezipaměti (jinak to
+   volající nemá jak vzít v úvahu), a že si to stahovač Bezrealitek
+   opravdu bere — tedy že počítadlo zvedá jen u jména, které v ní
+   NENÍ. */
+{
+  const cache = { 'benešov|*': [49.78, 14.68], 'neznámá obec|*': null };
+  pravda('jméno z mezipaměti se pozná', geoVMezipameti('Benešov', cache) === true);
+  /* I NEÚSPĚŠNÁ ODPOVĚĎ JE ODPOVĚĎ. Když geokodér jméno neznal,
+     uložilo se null — ptát se znovu nemá smysl a do stropu to tedy
+     taky nepatří. */
+  pravda('a pozná se i jméno, u kterého geokodér nic nenašel',
+    geoVMezipameti('Neznámá obec', cache) === true);
+  pravda('jméno, které v mezipaměti není, se nepřizná',
+    geoVMezipameti('Lhota u ničeho', cache) === false);
+  /* Klíč se musí skládat STEJNĚ jako v geocodeObec, jinak by se obě
+     místa rozešla a mezipaměť by se tvářila prázdná. */
+  pravda('klíč se skládá stejně jako v geocodeObec (malá písmena, přípona |*)',
+    geoVMezipameti('BENEŠOV', cache) === true, 'velikost písmen rozhoduje — nemá');
+
+  const zdrojB = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
+  const telo = zdrojB.slice(zdrojB.indexOf('async function fetchBezrealitky'));
+  const radekPocitadla = (telo.match(/^.*geoDotazu\+\+.*$/m) || [''])[0];
+  pravda('stahovač Bezrealitek zvedne počítadlo jen u jména mimo mezipaměť',
+    /!geoVMezipameti\(/.test(radekPocitadla),
+    `řádek s počítadlem: „${radekPocitadla.trim()}" — bez té podmínky se do stropu`
+    + ' počítají i odpovědi z mezipaměti a inzeráty se zahazují zbytečně');
+}
+
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
   for (const z of zpravy.filter((x) => x.indexOf('✕') >= 0).slice(0, 8)) {

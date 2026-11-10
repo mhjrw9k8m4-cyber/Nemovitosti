@@ -639,6 +639,17 @@ async function geocodeObec(place) {
   return coord;
 }
 
+/** Je jméno už v mezipaměti geokodéru? Pak odpověď nestojí žádný dotaz ven. */
+/* PROČ TO MUSÍ JÍT ZJISTIT ZVENČÍ. Strop na dotazy (BR_STROP_GEO) je
+   tu kvůli Nominatimu, který dovolí asi jeden dotaz za sekundu — je to
+   tedy strop na DOTAZY VEN, ne na jména. geocodeObec() ale odpověď
+   z mezipaměti vrací okamžitě a nikam se neptá, takže takové jméno do
+   stropu nepatří. Volající si to musí umět ověřit předem; klíč se
+   skládá stejně jako v geocodeObec, aby se obě místa nerozešla. */
+export function geoVMezipameti(place, cache = GEO_CACHE) {
+  return ((place == null ? '' : String(place)) + '|*').toLowerCase() in cache;
+}
+
 /** Místo z názvu aukce: jméno → geokodér → okres z hranic. Nebo null. */
 export async function mistoZeJmenaAukce(nazev, geo = geocodeObec) {
   for (const kandidat of obecZNazvuAukce(nazev)) {
@@ -3714,7 +3725,7 @@ async function fetchBezrealitky() {
      strop frontu vůbec někdy dožene. */
   const zeSlovniku = new Map();
   let geoDotazu = 0, bezOkresu = 0;
-  let bezJmena = 0, geoNeznal = 0, nadStrop = 0;
+  let bezJmena = 0, geoNeznal = 0, nadStrop = 0, zMezipametiJmen = 0;
   const cekajiciJmena = new Set();
   const kObjednani = [];
   for (let i = 0; i < inzeraty.length; i++) {
@@ -3725,8 +3736,24 @@ async function fetchBezrealitky() {
     if (!zeSlovniku.has(klic)) {
       const zn = mistaObci.get(klic);
       if (zn) zeSlovniku.set(klic, zn);
-      else if (geoDotazu < BR_STROP_GEO) {
-        geoDotazu++;
+      /* STROP SE TÝKÁ DOTAZŮ VEN, NE JMEN.
+         ------------------------------------------------------------
+         Do 10. 11. se počítadlo zvedalo před KAŽDÝM voláním
+         geocodeObec — tedy i tehdy, když odpověď ležela v mezipaměti
+         a ven se nic neposlalo. Jakmile se tak za běh prošlo 1 400
+         jmen, všechna další se zahodila jako „bez okresu", i kdyby je
+         geokodér dávno znal. A protože pořadí inzerátů je mezi běhy
+         skoro stejné, zahazovala se pořád tatáž, takže se fronta nikdy
+         nedojela.
+         Naměřeno na ostrých datech (robot, běh z 10. 11. 01:06):
+         z 8 700 inzerátů na prodej se na web dostalo 3 187 a 5 513
+         skončilo „bez okresu", přičemž geokodér se vyčerpal přesně na
+         stropu (1 400×). V mezipaměti přitom leželo 1 843 jmen, z toho
+         1 284 se souřadnicemi — ta se do stropu počítat neměla.
+         Nově se počítá jen dotaz, který opravdu odejde. Jméno
+         z mezipaměti projde vždycky. */
+      else if (geoVMezipameti(place) || geoDotazu < BR_STROP_GEO) {
+        if (!geoVMezipameti(place)) geoDotazu++; else zMezipametiJmen++;
         const coord = await geocodeObec(place);
         const okres = (Array.isArray(coord) && maHranice())
           ? okresPodleHranice(coord[0], coord[1]) : null;
@@ -3868,7 +3895,8 @@ async function fetchBezrealitky() {
     + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu}`
     + ` = bez jména obce ${bezJmena} + geokodér neznal ${geoNeznal}`
     + ` + nad stropem dotazů ${nadStrop} (${cekajiciJmena.size} různých jmen čeká),`
-    + ` obec z adresy inzerátu ${opravenychUlic}×, geokodér ${geoDotazu}× ze stropu ${BR_STROP_GEO}).`
+    + ` obec z adresy inzerátu ${opravenychUlic}×, geokodér ${geoDotazu}× ze stropu ${BR_STROP_GEO}`
+    + `, z mezipaměti jmen ${zMezipametiJmen} bez dotazu ven).`
     + ` Cena z mezipaměti u ${zMezipameti}, stahováno ${stazeno} detailů`
     + (odlozene.length ? `, odloženo na další běh ${odlozene.length} (strop ${BR_STROP_DETAILU}),`
       + ` z toho ${zeStare} se starší cenou z mezipaměti` : '')
