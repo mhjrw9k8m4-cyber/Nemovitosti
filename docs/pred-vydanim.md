@@ -26,8 +26,8 @@ ne čekání na DNS.
 
 Jedno pravidlo: **nic si neodškrtávej podle toho, že jsi to udělal — odškrtni
 to, až to řekne ta kontrola vpravo.** Stav ve třetím sloupci je změřený
-8. 11. 2026; co odsud (z repozitáře) vidět nejde, je tam napsané jako
-„neuvidím".
+8. 11. 2026 a znovu 10. 11. 2026 (`node scripts/kontrola-spusteni.mjs`);
+co odsud (z repozitáře) vidět nejde, je tam napsané jako „neuvidím".
 
 | # | co udělat | jak si ověříš, že je to hotové | stav 8. 11. |
 |---|---|---|---|
@@ -59,20 +59,43 @@ neví, jestli to drží pohromadě; zkoušky měří části, ne tvůj dojem.
 
 ---
 
+## Co čeká JEN na tvoje slovo (ne na práci)
+
+Tohle nejsou úkoly, jsou to rozhodnutí. Dokud nepadnou, nikdo s nimi
+nehne — a každé z nich je na jednu větu.
+
+| | rozhodnutí | co se stane podle odpovědi |
+|---|---|---|
+| A | **Sreality: pustit jeden placený běh (~$6)?** | ano → v datech přibude zdroj „Sreality (Apify)"; ne → zůstává se u zdrojů zdarma |
+| B | **Kontakt na inzerenta: ukazovat komukoli, nebo až po přihlášení?** | rozvedeno v `docs/pro-majitele.md`, bod 6 |
+| C | **Čtyři červené v stylopisu** | jedno písmeno; popsáno u bodu 7 v tabulce výš |
+| D | **Smazat v Resendu překlepovou doménu `parceleka.cz`** | správně je `parcelaka.cz`; překlep tam jen visí |
+
+---
+
 **Body 0 a 1 jsou to podstatné**; zbytek web neblokuje. Reálně je to
 jeden až dva večery a web je venku.
 
-**Co NENÍ na tomhle seznamu, je hotové** — s jednou výjimkou, kterou ti
-musím říct rovnou: **CI zelená není.** Kód je zavřený a rychlá sada
-(162 zkoušek) prochází, ale v sadě v prohlížeči padá 28 zkoušek ze tří
-směn (změřeno v běhu 1082, 8. 11. 2026). Proto ti z GitHubu chodí
-e-mail „All jobs have failed": z posledních 800 běhů této úlohy (od
-5. 10.) skončilo 309 pádem, 344 se zrušilo novějším pushem a 146 prošlo.
-Web to neblokuje — jsou to zkoušky webu, ne web —, ale dokud to svítí
-červeně, nemá ten e-mail jak přestat chodit a žádná zkouška nemá váhu,
-protože červená je pořád. Co by se dalo ještě leštit (zbývá 28 ovládacích prvků
-v oknech a naklikaných stavech, viz oddíl 108 v `docs/optimalizace.md`),
-návštěvník nepozná a vydání to nebrání.
+**Co NENÍ na tomhle seznamu, je hotové** — a k CI, kvůli které ti chodí
+e-mail „All jobs have failed", patří stav k 10. 11. 2026:
+
+* rychlá sada (162 zkoušek) prochází; z 28 padajících zkoušek v prohlížeči
+  (stav 8. 11., běh 1082) zbyly v běhu 1118 čtyři a všechny čtyři byly
+  opravené téhož dne,
+* **ani jedna ze čtyř nehlásila vadu webu** — tři padly na tom, že si web
+  od 9. 11. zapisuje výřez mapy do adresy (zkoušky čekaly na „jakýkoli
+  přechod", což `replaceState` je), čtvrtá brala rovnoměrný vzorek přes
+  všechny stránky pozemků a trefovala skoro samé náhrobky po vyřazených
+  nabídkách,
+* e-mail z GitHubu přestane chodit sám, jakmile běh skončí zeleně:
+  **jeden push, který skončí červeně, = jeden e-mail.** Vypnout se to dá
+  i natvrdo (GitHub → Settings → Notifications → Actions), ale pak se
+  nedozvíš ani o skutečném pádu.
+
+Druhý zdroj těch e-mailů je úloha **Cvičení sebeopravy**: padala obden
+proto, že automat pouštěl rychlou sadu DVAKRÁT a se 162 zkouškami
+přerostl svůj strop 900 s. Opraveno 10. 11. (měření „co padalo předtím"
+se dělá, až když je sada červená, a jen pro padající zkoušky).
 
 ---
 

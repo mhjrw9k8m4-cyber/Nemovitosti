@@ -3672,13 +3672,28 @@ async function fetchBezrealitky() {
   });
   const opravenychUlic = opravUliceVObci(predbezne);
 
+  /* KDE SE NABÍDKY ZTRÁCEJÍ, SE MUSÍ DÁT PŘEČÍST — JMENOVITĚ.
+     Do 10. 11. tu stálo jediné číslo `bezOkresu`, a v logu pak bylo
+     vidět „bez okresu 5513" ze 8 700 inzerátů, tedy 63 % zdroje mimo
+     web, a NIC o tom proč. Tři důvody se přitom liší tím, co se s nimi
+     dá dělat:
+       · jméno obce se z adresy vůbec nepřečetlo → vada ve čtení adresy,
+       · geokodér jméno neznal (nebo nesedlo do žádného okresu) → jiná
+         cesta k okresu, třeba text adresy,
+       · došel strop dotazů na jeden běh → jen čekání, samo se to
+         doplní, pokud strop stačí.
+     Počítá se proto každý zvlášť, a k tomu kolik RŮZNÝCH jmen ještě
+     čeká ve frontě: to je jediné číslo, ze kterého jde poznat, jestli
+     strop frontu vůbec někdy dožene. */
   const zeSlovniku = new Map();
   let geoDotazu = 0, bezOkresu = 0;
+  let bezJmena = 0, geoNeznal = 0, nadStrop = 0;
+  const cekajiciJmena = new Set();
   const kObjednani = [];
   for (let i = 0; i < inzeraty.length; i++) {
     const a = inzeraty[i];
     const place = predbezne[i].place;
-    if (!place) { bezOkresu++; continue; }
+    if (!place) { bezOkresu++; bezJmena++; continue; }
     const klic = place.toLowerCase();
     if (!zeSlovniku.has(klic)) {
       const zn = mistaObci.get(klic);
@@ -3689,10 +3704,15 @@ async function fetchBezrealitky() {
         const okres = (Array.isArray(coord) && maHranice())
           ? okresPodleHranice(coord[0], coord[1]) : null;
         zeSlovniku.set(klic, okres ? { okres, lat: coord[0], lng: coord[1] } : null);
-      } else zeSlovniku.set(klic, null);
+        if (!okres) zeSlovniku.set(klic, null);
+      } else { zeSlovniku.set(klic, null); cekajiciJmena.add(klic); }
     }
     const zn = zeSlovniku.get(klic);
-    if (!zn || !zn.okres) { bezOkresu++; continue; }
+    if (!zn || !zn.okres) {
+      bezOkresu++;
+      if (cekajiciJmena.has(klic)) nadStrop++; else geoNeznal++;
+      continue;
+    }
     kObjednani.push({ ...a, place, ...(predbezne[i].ul ? { ul: predbezne[i].ul } : {}),
       okres: zn.okres, obecLat: zn.lat, obecLng: zn.lng });
   }
@@ -3818,8 +3838,10 @@ async function fetchBezrealitky() {
     .sort((x, y) => y[1] - x[1]).slice(0, 6)
     .map(([k, v]) => `${k} ${v}×`).join(', ');
   console.log(`  Bezrealitky (sitemapa + detaily): v sitemapě ${inzeraty.length} inzerátů na prodej,`
-    + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu},`
-    + ` obec z adresy inzerátu ${opravenychUlic}×, geokodér ${geoDotazu}×).`
+    + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu}`
+    + ` = bez jména obce ${bezJmena} + geokodér neznal ${geoNeznal}`
+    + ` + nad stropem dotazů ${nadStrop} (${cekajiciJmena.size} různých jmen čeká),`
+    + ` obec z adresy inzerátu ${opravenychUlic}×, geokodér ${geoDotazu}× ze stropu ${BR_STROP_GEO}).`
     + ` Cena z mezipaměti u ${zMezipameti}, stahováno ${stazeno} detailů`
     + (odlozene.length ? `, odloženo na další běh ${odlozene.length} (strop ${BR_STROP_DETAILU}),`
       + ` z toho ${zeStare} se starší cenou z mezipaměti` : '')

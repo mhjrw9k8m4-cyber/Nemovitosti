@@ -164,7 +164,20 @@ function uklid() {
    běh zastavilo pravidlo o čistém stromu, pak ta pojistka padla a
    běželo 39 automatů naráz. Cvičení proto každý běh automatu omezuje
    časem a čas si pamatuje: utnutý běh je nález, ne „pomalý stroj". */
-const LIMIT_AUTOMATU_S = 900;
+/* STROP 1 500 s JE ZMĚŘENÝ, NE ODHADNUTÝ.
+   Poctivá práce automatu je: generátory (~110 s doma) + jedna rychlá
+   sada (~280 s doma, 162 zkoušek). Na běžci CI je to zhruba 1,5×.
+   Do 10. 11. pouštěl automat sadu DVAKRÁT (jednou před opravou, jednou
+   po ní) a na strop 900 s už se nevešel — cvičení 16 (9. 11.) ho utnulo
+   v obou částech, A i F, a mělo z toho devět nálezů. Nebylo to množení
+   (pravidlo 8), byla to práce, na kterou strop zestárl.
+   Měření před opravou se proto přestěhovalo (viz scripts/sebeoprava.mjs)
+   a strop je teď 1 500 s, tedy asi dvojnásobek poctivého běhu. Změřeno
+   po té přestavbě na tomhle stroji: A) 421 s, F) 458 s — tedy ani ne
+   třetina stropu, a přitom obě části předtím na 900 s nedojely vůbec.
+   Pořád platí, k čemu strop je: automat, který se pustí sám v sobě,
+   NEDOBĚHNE NIKDY, takže ho utne jakýkoli konečný strop. */
+const LIMIT_AUTOMATU_S = 1500;
 function pustAutomat(prostredi = {}) {
   const zacatek = Date.now();
   const v = spust('node', [path.join(PRACE, 'scripts', 'sebeoprava.mjs')], PRACE, {

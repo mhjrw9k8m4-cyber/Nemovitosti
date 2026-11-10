@@ -197,18 +197,28 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   /* Strom musí být čistý, jinak by se do opravy přibalilo cizí. */
   if (git('status', '--porcelain')) vzdat('pracovní strom není čistý, do opravy by se přibalilo cizí');
 
-  /* MĚŘENÍ PŘED OPRAVOU. Bez něj umí automat říct jen „po opravě
-     neprošla rychlá sada", což zní jako „oprava je vadná" — a dvakrát
-     to tak znělo, i když padalo něco, co s opravou nemělo nic
-     společného (chybějící závislosti v prostředí). Dvě měření stojí
-     dvě minuty a dávají diagnózu místo dojmu. */
-  hlas('Měřím, co padá PŘED opravou…');
-  const pred = spawnSync('node', [path.join(KOREN, 'scripts', 'zkousky.mjs')],
-    { cwd: KOREN, encoding: 'utf8', env: prostrediDeti });
-  const padlePred = pred.status === 0 ? [] : padleZkousky(pred.stdout);
-  if (pred.status === 0) hlas('  před opravou je sada zelená.');
-  else hlas(`  už před opravou padá ${padlePred.length || '?'}: ${padlePred.join(', ') || '(nepodařilo se vyčíst)'}`);
-
+  /* MĚŘENÍ PŘED OPRAVOU SE DĚLÁ AŽ TEHDY, KDYŽ JE CO VYSVĚTLOVAT.
+     ------------------------------------------------------------------
+     Bez něj umí automat říct jen „po opravě neprošla rychlá sada",
+     což zní jako „oprava je vadná" — a dvakrát to tak znělo, i když
+     padalo něco, co s opravou nemělo nic společného. Proto se měří
+     obojí.
+     Do 10. 11. se ale měřilo VŽDYCKY, a to hned na začátku: dvě celé
+     rychlé sady na každý běh. Sada mezitím vyrostla na 162 zkoušek
+     (~280 s doma, na běžci CI víc), takže automat se dvěma sadami a
+     generátory přerostl strop 900 s, který na něj má cvičení — běh
+     cvičení 16 (9. 11.) utnul automat na stropu v obou částech, A i F,
+     a cvičení z toho mělo devět nálezů. Nebylo to množení (pravidlo 8),
+     byla to poctivá práce, na kterou strop zestárl.
+     Teď se pořadí obrátilo: nejdřív se opraví a dokáže, a teprve když
+     je sada ČERVENÁ, vrátí se strom do stavu před opravou a pustí se
+     JEN TY zkoušky, které padly — tedy přesně ty, o kterých je potřeba
+     vědět, jestli padaly i předtím. V obvyklém případě (po opravě
+     zeleno) se tím ušetří celá jedna sada.
+     CO SE TÍM ZTRATILO, AŤ TO NĚKDO NEHLEDÁ: dřív uměl automat
+     v commitu napsat „před opravou padalo X, po ní je sada zelená".
+     To se teď nedozví, protože po zelené sadě už nic neměří. Je to
+     věta do historie, ne pravidlo — a stojí za ušetřenou sadu. */
   hlas('Pouštím generátory (node scripts/oprav.mjs)…');
   const o = spawnSync('node', [path.join(KOREN, 'scripts', 'oprav.mjs')],
     { cwd: KOREN, encoding: 'utf8', env: prostrediDeti });
@@ -233,9 +243,26 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (z.status !== 0) {
     hlas((z.stdout || '').split('\n').slice(-20).join('\n'));
     const padlePo = padleZkousky(z.stdout);
-    const nove = padlePo.filter((t) => !padlePred.includes(t));
+    /* OPRAVA SE VRACÍ DŘÍV, NEŽ SE MĚŘÍ — jinak by se „před opravou"
+       měřilo nad stromem PO opravě a odpověď by nic neznamenala. */
     git('checkout', '--', '.');
     git('clean', '-fd');
+    /* A TEĎ TEPRVE: padalo totéž i předtím? Pouští se jen ty zkoušky,
+       které padly, ne celá sada — víc jich vědět netřeba a celá sada
+       stojí minuty (viz poznámka výš u generátorů). Zkouška, kterou se
+       nepodařilo spustit, se počítá jako „předtím NEpadala", aby se
+       vada radši přiznala automatu než svedla na okolí. */
+    hlas(`Měřím, jestli těch ${padlePo.length} padalo i PŘED opravou…`);
+    const padlePred = [];
+    for (const t of padlePo) {
+      const r = spawnSync('node', [path.join(KOREN, t)],
+        { cwd: KOREN, encoding: 'utf8', env: prostrediDeti });
+      if (r.status !== 0 && r.status !== null) padlePred.push(t);
+    }
+    hlas(padlePred.length
+      ? `  před opravou padalo ${padlePred.length}: ${padlePred.join(', ')}`
+      : '  před opravou padala sada zeleně — všechno níž je na opravě.');
+    const nove = padlePo.filter((t) => !padlePred.includes(t));
     /* Dvě VELMI různé situace, a každá chce jiné slovo: */
     if (nove.length) {
       vzdat(`oprava sama rozbila ${nove.length}: ${nove.join(', ')}`
@@ -249,14 +276,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   hlas((z.stdout || '').split('\n').filter((r) => /Rychlá sada:/.test(r)).join('\n'));
 
   let zprava = zpravaOprav(zmenene);
-  if (padlePred.length) {
-    /* Stalo se, že sada byla červená PŘED opravou a po ní zelená: pak
-       oprava spravila i to. Je to užitečná informace do historie, a
-       taky pojistka proti dojmu, že se „nic nedělo". */
-    zprava += `\nPřed opravou padalo ${padlePred.length} zkoušek`
-      + ` (${padlePred.slice(0, 5).join(', ')}); po ní je sada zelená.\n`;
-    hlas(`Oprava spravila i to, co padalo před ní: ${padlePred.join(', ')}`);
-  }
 
   if (nasucho) {
     hlas('\n--nasucho: nic se nenahrává. Zpráva by byla:\n' + zprava);
