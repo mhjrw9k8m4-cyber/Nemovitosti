@@ -194,6 +194,8 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .section{padding:var(--oddil-y) 0}
 .section.pt-0{padding-top:0}
 .section.band{background:var(--plocha-karta);padding-top:var(--oddil-y);padding-bottom:var(--oddil-y)}
+
+
 .section-head{max-width:var(--m-sloupec);margin:0 0 28px;text-align:left}
 .section-head .eyebrow{margin-bottom:16px}
 .section-head h2{font-family:var(--font-nadpis);font-weight:700;font-size:32px;line-height:1.2;letter-spacing:-0.03em;color:var(--text)}

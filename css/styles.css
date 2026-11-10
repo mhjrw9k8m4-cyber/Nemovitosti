@@ -2371,6 +2371,48 @@ h1 em{ color:var(--znacka-svetla);
 /* Pruhy: střídavé jemně světlejší pozadí přes celou šířku dávají webu rytmus
    (jako u velkých webů) — sekce pak nejsou ostrůvky textu v prázdnu. */
 .section.band{background:var(--plocha-karta); padding-top:var(--oddil-y); padding-bottom:var(--oddil-y);}
+
+/* ===== PÁS „PROČ PARCELKA" =========================================
+   Jediné místo na úvodní stránce, kde web mluví o sobě — a je schválně
+   TMAVÉ. Celá stránka je světlá, takže tmavý pruh přes celou šířku ji
+   rozdělí na „nástroj" a „co za ním stojí", aniž by přibyla další
+   barva.
+   TEXTURU NEKRESLÍ TENHLE PŘEDPIS. Napsal jsem si ji nejdřív vlastní
+   (dva přelivy a z-index:-2) a shodilo to čtyři hlídače soustavy
+   najednou — mřížkových pravidel bylo šest místo pěti, přeliv nebyl
+   ve výčtu PRELIVY a vrstva -2 nikde. Měly pravdu: mřížku umí třída
+   .s-mrizka a pás si ji bere v HTML. Jedna textura, jedno místo.
+   Čísla jsou v nadpisovém písmu a ve velikosti nadpisu oddílu: jsou to
+   argumenty, ne popisky. */
+.pas-proc{background:var(--plocha-tmava); color:var(--text-ondeep);
+  padding:calc(var(--oddil-y) * 0.75) 0;}
+.pas-proc .pp-oci{color:var(--text-ondeep-mute); margin:0 0 12px;}
+.pas-proc .pp-nadpis{font-family:var(--font-nadpis); font-weight:700; font-size:32px;
+  line-height:1.2; letter-spacing:-0.03em; color:var(--text-ondeep); margin:0;}
+.pas-proc .pp-lead{max-width:var(--m-text); margin:12px 0 0;
+  font-size:16px; line-height:1.6; color:var(--text-ondeep-mute);}
+.pas-proc .pp-mriz{list-style:none; margin:32px 0 0; padding:0;
+  display:grid; gap:28px; grid-template-columns:repeat(3, minmax(0,1fr));}
+.pas-proc .pp-bod{display:block; padding-top:20px;
+  border-top:1px solid rgba(var(--text-ondeep-mute-rgb),0.22);}
+.pas-proc .pp-cislo{display:block; font-family:var(--font-nadpis); font-weight:700;
+  font-size:32px; line-height:1.1; letter-spacing:-0.03em; color:var(--text-ondeep);}
+.pas-proc .pp-titul{display:block; margin-top:4px; font-weight:600; font-size:16px;
+  color:var(--text-ondeep);}
+.pas-proc .pp-text{display:block; margin-top:8px; font-size:16px; line-height:1.6;
+  color:var(--text-ondeep-mute);}
+.pas-proc .pp-pata{margin:32px 0 0; font-size:14px; color:var(--text-ondeep-mute);}
+.pas-proc .pp-odkaz{color:var(--text-ondeep); text-decoration:underline;
+  text-underline-offset:4px;}
+/* Na telefonu pod sebe; menší pás, ať nepřeroste obrazovku. */
+@media (max-width:860px){
+  .pas-proc .pp-mriz{grid-template-columns:1fr; gap:24px;}
+}
+@media (max-width:560px){
+  .pas-proc{padding:calc(var(--oddil-y) * 0.5) 0;}
+  .pas-proc .pp-nadpis{font-size:28px;}
+  .pas-proc .pp-cislo{font-size:28px;}
+}
 /* Úvody sekcí zarovnané doleva na stejnou osu jako celý web — čitelné, urovnané. */
 /* Rytmus. Mezi sekcemi je 152 px, ale nadpis sekce od svého obsahu dělilo
    40 px — poměr necelé 4 : 1, a to oko ještě čte jako „všechno stejně daleko":

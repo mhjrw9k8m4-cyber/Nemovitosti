@@ -175,6 +175,8 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .section{padding:var(--oddil-y) 0}
 .section.band{background:var(--plocha-karta);padding-top:var(--oddil-y);padding-bottom:var(--oddil-y)}
 
+
+
 @keyframes msnPrijed{from{opacity:0;transform:translateY(-3px)}
 to{opacity:1;transform:none}
 }
