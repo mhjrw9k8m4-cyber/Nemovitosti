@@ -29,6 +29,11 @@
    "prokazanych": 18,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-10": {
+   "prokazanych": 17,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1202,7 +1207,7 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-jednotnost.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-10",
    "hlidá": 0,
    "chytila": 0,
    "nechytila": 0,
@@ -1212,7 +1217,7 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "b84840fb6260",
+   "otisk": "b65cdb0a69d6",
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-json-ve-strance.mjs": {
@@ -1448,18 +1453,25 @@
    "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/adresa-pozemku.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
   },
   "test-kopie-funkci.mjs": {
-   "kdy": "2026-11-04",
-   "hlidá": 0,
+   "kdy": "2026-11-10",
+   "hlidá": 1,
    "chytila": 0,
-   "nechytila": 0,
+   "nechytila": 6,
    "rovnocenne": [],
    "slepa": [],
-   "mlcela": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v js/pozemek.js",
+    "obrácené porovnání (<= na <) v js/pozemek.js",
+    "obrácená rovnost (=== na !==) v js/pozemek.js",
+    "zahozená pojistka (if … continue) v js/pozemek.js",
+    "zahozený filter(Boolean) v js/pozemek.js",
+    "a místo nebo (&& na ||) v js/pozemek.js"
+   ],
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "816344d063f5",
-   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+   "otisk": "8185ace0e34f",
+   "poznamka": ""
   },
   "test-kraje-geometrie.mjs": {
    "kdy": "2026-11-04",
@@ -1476,7 +1488,7 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-leaflet.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-10",
    "hlidá": 0,
    "chytila": 0,
    "nechytila": 0,
@@ -1485,9 +1497,11 @@
    "mlcela": [],
    "nedorucene": [],
    "nelzeTady": false,
-   "pomucky": [],
-   "otisk": "dc381c8db63e",
-   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+   "pomucky": [
+    "scripts/vzorek-pozemku.mjs"
+   ],
+   "otisk": "6561804117e4",
+   "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/vzorek-pozemku.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
   },
   "test-legenda-mapy.mjs": {
    "kdy": "2026-11-04",
@@ -1536,7 +1550,7 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-mapa-pozemku.mjs": {
-   "kdy": "2026-11-06",
+   "kdy": "2026-11-10",
    "hlidá": 3,
    "chytila": 0,
    "nechytila": 0,
@@ -1546,7 +1560,7 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "d3a182cec8c0",
+   "otisk": "44d5163e135d",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   },
   "test-filtry-telefon.mjs": {
@@ -1682,13 +1696,13 @@
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "306 z 333 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "307 z 333 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
@@ -2576,6 +2590,50 @@
     ],
     "mlcely": [],
     "hlidacu": 1
+   }
+  },
+  "js/pozemek.js": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-kopie-funkci.mjs"
+    ],
+    "hlidacu": 17
+   },
+   "obrácené porovnání (<= na <)": {
+    "chytily": [],
+    "mlcely": [
+     "test-kopie-funkci.mjs"
+    ],
+    "hlidacu": 17
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-kopie-funkci.mjs"
+    ],
+    "hlidacu": 17
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-kopie-funkci.mjs"
+    ],
+    "hlidacu": 17
+   },
+   "zahozený filter(Boolean)": {
+    "chytily": [],
+    "mlcely": [
+     "test-kopie-funkci.mjs"
+    ],
+    "hlidacu": 17
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-kopie-funkci.mjs"
+    ],
+    "hlidacu": 17
    }
   }
  }
