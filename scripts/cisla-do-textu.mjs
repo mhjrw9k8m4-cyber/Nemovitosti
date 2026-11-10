@@ -37,6 +37,18 @@ import { fileURLToPath } from 'node:url';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ZNAME = ['nabidky', 'okresy', 'zdroje', 'kdy'];
+/* A JEDNA ZNAČKA S PARAMETREM: `zdroj:Bezrealitky` doplní, kolik nabídek
+   dnes nese právě ten zdroj. Vzniklo to proto, že úvodní stránka tvrdila
+   „5 veřejných zdrojů" a vypisovala pět čipů, zatímco robot jich čte osm
+   — tedy stránka si odporovala s vlastním pásem o kus výš (ten má 8
+   z dat) a zároveň podhodnocovala to jediné, čím se web obhajuje.
+   Seznam zdrojů se mění (ÚZSVM přibyl 6. 11.), takže psát počty rukou
+   znamená, že jednou zestárnou — a zestárne to tiše. Proto se doplňují
+   odsud, z týchž dat jako všechna ostatní čísla na webu.
+   JMÉNO, KTERÉ V DATECH NENÍ, JE CHYBA, NE NULA. Kdyby se zdroj
+   přejmenoval, tiše doplněná nula by na webu vypadala jako „ten zdroj
+   dnes nic nepřinesl" — tedy nepravda, která se sama neukáže (§228). */
+const PREDPONA_ZDROJ = 'zdroj:';
 
 /* Česká sazba tisíců: 2 329 s nezlomitelnou mezerou. Totéž, co dělá
    hlavicka.mjs — schválně stejnou cestou, ať se čísla nerozejdou
@@ -55,17 +67,25 @@ function hodnoty() {
       if (x && x.zdroj) zdroje.add(String(x.zdroj));
     }
     const [, m, den] = String(d.updated || '').split('-');
-    return {
+    const poZdroji = new Map();
+    for (const x of o) {
+      if (!x || !x.zdroj) continue;
+      const k = String(x.zdroj);
+      poZdroji.set(k, (poZdroji.get(k) || 0) + 1);
+    }
+    const ven = {
       nabidky: sazba(o.length),
       okresy: sazba(okresy.size),
       zdroje: sazba(zdroje.size),
       kdy: (m && den) ? `${Number(den)}. ${Number(m)}.` : '',
     };
+    for (const [kz, nz] of poZdroji) ven[PREDPONA_ZDROJ + kz] = sazba(nz);
+    return ven;
   } catch (e) { return null; }
 }
 
 const H = hodnoty();
-const ZNACKA = /(<span[^>]*\sdata-pk-cislo="([a-z]+)"[^>]*>)([\s\S]*?)(<\/span>)/g;
+const ZNACKA = /(<span[^>]*\sdata-pk-cislo="([^"]+)"[^>]*>)([\s\S]*?)(<\/span>)/g;
 
 let souboru = 0, doplneno = 0;
 const neznama = new Set();
@@ -77,8 +97,12 @@ for (const jm of readdirSync(KOREN)) {
   if (!puv.includes('data-pk-cislo=')) continue;
   let kolik = 0;
   const novy = puv.replace(ZNACKA, (cely, pred, klic, _vnitrek, za) => {
-    if (!ZNAME.includes(klic)) { neznama.add(klic); return cely; }
+    const jeZdroj = klic.startsWith(PREDPONA_ZDROJ);
+    if (!ZNAME.includes(klic) && !jeZdroj) { neznama.add(klic); return cely; }
     if (!H) return pred + za;                 // bez dat: značka zůstane prázdná
+    /* Zdroj, který v datech není, se nedoplní nulou — to by byla tichá
+       nepravda. Ozve se jako neznámá značka a sestavení skončí chybou. */
+    if (jeZdroj && !(klic in H)) { neznama.add(klic); return cely; }
     kolik++;
     return pred + H[klic] + za;
   });
@@ -88,7 +112,10 @@ for (const jm of readdirSync(KOREN)) {
 
 if (neznama.size) {
   console.log('::error::Čísla do textu: neznámá značka data-pk-cislo: '
-    + [...neznama].join(', ') + '. Známé: ' + ZNAME.join(', '));
+    + [...neznama].join(', ') + '. Známé: ' + ZNAME.join(', ')
+    + ', a „' + PREDPONA_ZDROJ + '<jméno zdroje>" pro zdroj, který je v datech'
+    + (H ? ': ' + Object.keys(H).filter((k) => k.startsWith(PREDPONA_ZDROJ))
+      .map((k) => k.slice(PREDPONA_ZDROJ.length)).join(', ') : ''));
   process.exit(1);
 }
 console.log(`    ${doplneno} čísel doplněno z dat do ${souboru} stránek`

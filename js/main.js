@@ -1019,6 +1019,18 @@
       } else {
         text = pocet + '×'; trida = '';
         popis = 'Při poslední kontrole vrátil ' + pocet + ' záznamů';
+        /* DVĚ ČÍSLA O JEDNÉ VĚCI VEDLE SEBE SE BIJÍ. Panel „Odkud to
+           máme" nese u každého zdroje vlastní počet — kolik nabídek
+           z něj je TEĎ na webu (doplňuje ho sestavení z dat). Odznak
+           říká něco jiného: kolik jich zdroj naposledy VRÁTIL, tedy
+           číslo před zpracováním. U Bezrealitek to bylo 2 882 proti
+           2 908 a na obrazovce z toho byla dvě čísla o kousek od sebe,
+           z nichž ani jedno neříkalo, čím se liší.
+           Když řádek svoje číslo má a zdroj je v pořádku, odznak proto
+           mlčí: stav „v pořádku" nepotřebuje slovo. Počet zůstává
+           v titulku, takže se neztratil. Jakmile je se zdrojem cokoli
+           jinak, odznak se ozve jako dosud — a právě o to jde. */
+        if (chip.querySelector('.zdr-n')) return;
       }
       znacka.className = 'src-stav' + trida;
       znacka.textContent = text;

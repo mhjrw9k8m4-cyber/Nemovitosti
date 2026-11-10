@@ -118,7 +118,9 @@ async function otevri(data) {
     hlavicka: (document.getElementById('data-updated') || {}).textContent || '',
     znacky: [...document.querySelectorAll('.source-chip')].map((c) => {
       const z = c.querySelector('.src-stav');
+      const n = c.querySelector('.zdr-n');
       return { zdroj: c.getAttribute('data-zdroj') || '', text: c.textContent.trim(),
+        cislo: n ? n.textContent.replace(/[\s\u00a0]/g, '') : null,
         stav: z ? z.textContent : null,
         zle: z ? z.classList.contains('src-zle') : false,
         slabe: z ? z.classList.contains('src-slabe') : false,
@@ -139,9 +141,34 @@ async function otevri(data) {
      celý seznam — a tím by prošlo i to, že se číslo ukáže u cizího
      odznaku. Právě na tom se tady už jednou pohořelo (páruje se podle
      data-zdroj, ne podle textu). */
-  const funkcni = sesStavem.find((z) => z.zdroj === 'Dražby');
-  pravda('funkční zdroj ukazuje počet záznamů, a svůj',
-    !!(funkcni && funkcni.stav === '61×'), JSON.stringify(funkcni));
+  /* POČET SE PŘESTĚHOVAL Z ODZNAKU NA ŘÁDEK (10. 11.), A S NÍM
+     I TAHLE KONTROLA — jen měří víc než dřív.
+     Panel „Odkud to máme" nese u každého zdroje počet, který doplní
+     sestavení z dat; odznak proti tomu říkal, kolik zdroj naposledy
+     VRÁTIL, tedy číslo před zpracováním. U Bezrealitek to bylo 2 882
+     proti 2 908 a na obrazovce z toho byla dvě čísla kousek od sebe,
+     z nichž ani jedno neříkalo, čím se liší. Odznak proto u zdroje
+     v pořádku mlčí — a to se tu taky měří, aby se nevrátil tiše zpět.
+     Smysl kontroly se nezměnil: číslo u zdroje musí být JEHO. Právě
+     na tom se tu už jednou pohořelo, když se odznaky párovaly hádáním
+     z názvu a tři zdroje z pěti ukazovaly cizí počet. Nově se
+     neporovnává jeden zdroj, ale VŠECH OSM proti datům. */
+  const vData = JSON.parse(readFileSync(path.join(KOREN_TESTU, 'data', 'mapa.json'), 'utf8'));
+  const ocekej = new Map();
+  for (const x of (vData.opportunities || [])) {
+    if (x && x.zdroj) ocekej.set(String(x.zdroj), (ocekej.get(String(x.zdroj)) || 0) + 1);
+  }
+  const sCislem = v.znacky.filter((z) => z.cislo !== null);
+  pravda('je co měřit: řádky zdrojů nesou počet', sCislem.length >= 8,
+    `řádků s počtem jen ${sCislem.length} z ${v.znacky.length}`);
+  const rozchod = sCislem.filter((z) => String(ocekej.get(z.zdroj) || 0) !== z.cislo)
+    .map((z) => `${z.zdroj}: na webu ${z.cislo}, v datech ${ocekej.get(z.zdroj) || 0}`);
+  pravda('a každý ten počet je počet SVÉHO zdroje', rozchod.length === 0,
+    rozchod.join(' | '));
+  const funkcni = v.znacky.find((z) => z.zdroj === 'Dražby');
+  pravda('u zdroje v pořádku odznak mlčí — číslo je na řádku',
+    !!(funkcni && funkcni.stav === null && funkcni.cislo),
+    JSON.stringify(funkcni));
   // Tohle je jádro testu.
   const spadly = sesStavem.find((z) => z.zdroj === 'Bezrealitky');
   pravda('spadlý zdroj je označený jako nedostupný',

@@ -322,21 +322,30 @@ button:disabled:hover,input:disabled:hover,select:disabled:hover,[aria-disabled=
 .eyebrow::before{content:"";width:16px;height:1px;background:var(--znacka-svetla)}
 h1{font-family:var(--font-nadpis);font-weight:700;font-size:var(--h1-stranka);line-height:1.1;letter-spacing:-0.01em;margin-bottom:20px}
 h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:currentColor}
-.src-stats{display:grid}
-.src-stat{display:flex;flex-direction:column}
-.src-stat b{font-variant-numeric:tabular-nums}
-.src-stat span{line-height:1.4}
-@media (max-width:640px){.src-stats{grid-template-columns:repeat(2,1fr);gap:16px 16px}
-}
 .sources .wrap{text-align:left}
-.sources-lead{font-size:16px;line-height:1.6;letter-spacing:0;max-width:var(--m-text);margin-bottom:8px}
-.source-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
 .source-chip{display:inline-flex;align-items:center;gap:8px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-drobnost);padding:8px 16px;font-size:14px;font-weight:500;color:var(--text)}
+.zdr-nadpis{font-family:var(--font-nadpis);font-weight:700;font-size:32px;line-height:1.2;letter-spacing:-0.03em;color:var(--text);margin:0}
+.zdr-lead{max-width:var(--m-text);margin:12px 0 0;font-size:16px;line-height:1.6;color:var(--muted)}
+.zdr-tab{list-style:none;margin:32px 0 0;padding:0;max-width:var(--m-sloupec)}
+.sources .zdr-r{display:flex;align-items:baseline;gap:12px;width:100%;background:none;box-shadow:none;border:0;border-radius:0;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px;font-weight:500}
+.sources .zdr-r:first-child{border-top:1px solid var(--line)}
 .s-dot{width:8px;height:8px;border-radius:50%}
+.sources .zdr-r .s-dot{flex:none;align-self:center}
+.zdr-jm{display:flex;flex-direction:column;gap:2px;flex:none;color:var(--text)}
+.zdr-co{font-size:13px;font-weight:400;color:var(--muted)}
+.zdr-cara{flex:1;min-width:16px;border-bottom:1px dotted var(--line-strong);transform:translateY(-4px)}
+.zdr-n{flex:none;font-weight:700;font-size:20px;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
+.zdr-soucet{margin:20px 0 0;font-size:16px;color:var(--muted)}
+.zdr-soucet b{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+.zdr-pozn{margin:28px 0 0;max-width:var(--m-text);font-size:14px;line-height:1.6;color:var(--muted)}
+@media (max-width:560px){.zdr-nadpis{font-size:28px}
+.zdr-co{display:none}
+.zdr-jm{flex:1;min-width:0}
+.zdr-cara{display:none}
+.zdr-n{font-size:18px}
+}
 .opp-figures .m .m-celek{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
 .opp-figures .m .m-celek::before{content:"\00a0· "}
-.sources-over{display:flex;align-items:baseline;gap:8px;margin:12px 0 0;max-width:var(--m-text);font-size:14px;line-height:1.6;color:var(--muted)}
-.sources-over .s-dot{flex:none;transform:translateY(-1px);background:var(--znacka)}
 .section{padding:var(--oddil-y) 0}
 .section.pt-0{padding-top:0}
 .section.band{background:var(--plocha-karta);padding-top:var(--oddil-y);padding-bottom:var(--oddil-y)}
@@ -1690,16 +1699,9 @@ body{background:var(--bg)}
 .cen-metodika summary .ik{width:var(--ik-xs);height:var(--ik-xs);flex:none;stroke-width:var(--ik-xs-tah);margin-right:8px;vertical-align:-3px}
 .sources{background:var(--plocha-jemna);color:var(--text);padding:var(--oddil-y) 0}
 .sources::before,.sources::after{display:none}
-.src-stats{grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:40px}
-.src-stat{border-left:0;padding:0;gap:8px}
-.src-stat b{font-family:var(--font-display);font-weight:700;font-size:clamp(40px,5.4vw,64px);line-height:0.9;letter-spacing:-0.04em;color:var(--text)}
-.src-stat span{font-size:13px;color:var(--muted);max-width:var(--m-nadpis)}
-.sources-lead{color:var(--muted)}
-.sources .sources-over{color:var(--muted)}
 .sources .data-updated{color:var(--muted)}
-.sources .source-chip{background:var(--plocha-karta);border-color:var(--line);color:var(--text)}
-@media (max-width:880px){.src-stats{grid-template-columns:repeat(2,1fr);gap:24px 16px}
-}
+.sources .source-chip{color:var(--text)}
+@media (max-width:880px){}
 .glossary{gap:0 40px}
 .gl-item{background:none;background-image:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:16px 0 20px}
 .gl-item:hover{border-color:var(--accent-warm);transform:none;box-shadow:none}

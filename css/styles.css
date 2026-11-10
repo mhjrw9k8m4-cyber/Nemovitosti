@@ -2323,19 +2323,56 @@ h1 em{ color:var(--znacka-svetla);
 
 /* Zdroje */
 /* Statistiky = důvěra + hodnota v číslech */
-.src-stats{display:grid;}
-.src-stat{display:flex; flex-direction:column;}
-.src-stat b{ font-variant-numeric:tabular-nums;}
-.src-stat span{ line-height:1.4;}
-@media (max-width:640px){ .src-stats{grid-template-columns:repeat(2,1fr); gap:16px 16px;} }
 .sources .wrap{text-align:left;}
 /* Celá věta verzálkami a prostrkaná se nečte, čte se luští. Verzálky jsou
    pro štítek o dvou slovech, ne pro souvětí. */
-.sources-lead{font-size:16px; line-height:1.6;
-  letter-spacing:0; max-width:var(--m-text); margin-bottom:8px;}
-.source-row{display:flex; flex-wrap:wrap; gap:12px; margin-top:16px;}
 .source-chip{display:inline-flex; align-items:center; gap:8px; background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-drobnost); padding:8px 16px; font-size:14px; font-weight:500; color:var(--text);}
+/* ===== PANEL „ODKUD TO MÁME" — osm řádků s počty ===================
+   Čip byl pilulka s názvem zdroje a nic víc; osm pilulek vedle sebe se
+   čte jako štítky, ne jako důkaz. Jako ŘÁDEK s číslem vpravo se dá
+   sečíst okem a porovnat — a vodicí tečky mezi jménem a číslem jsou
+   to, co z tabulky dělá čtivou tabulku: oko po nich dojede z dlouhého
+   názvu na číslo, aniž by se ztratilo o řádek výš.
+   Tečky kreslí `border-bottom: dotted` na pružném prvku mezi jménem
+   a číslem — ne přeliv a ne obrázek, takže v registru PRELIVY nic
+   nepřibývá a hlídači mřížky se to netýká.
+   Čísla jsou tabulková (font-variant-numeric), aby jednotky stály pod
+   sebou; bez toho se u 2 882 a 9 rozjede pravý okraj. */
+.zdr-nadpis{font-family:var(--font-nadpis); font-weight:700; font-size:32px;
+  line-height:1.2; letter-spacing:-0.03em; color:var(--text); margin:0;}
+.zdr-lead{max-width:var(--m-text); margin:12px 0 0; font-size:16px;
+  line-height:1.6; color:var(--muted);}
+.zdr-tab{list-style:none; margin:32px 0 0; padding:0; max-width:var(--m-sloupec);}
+.sources .zdr-r{display:flex; align-items:baseline; gap:12px; width:100%;
+  background:none; box-shadow:none; border:0; border-radius:0; padding:12px 0;
+  border-bottom:1px solid var(--line); font-size:16px; font-weight:500;}
+.sources .zdr-r:first-child{border-top:1px solid var(--line);}
+/* Tvarová značka zdroje — kolečko, kosočtverec, trojúhelník. Není to
+   ozdoba: barva sama nestačí, tvary jsou tu kvůli barvosleposti a jsou
+   to tytéž tvary, jakými se kreslí body na mapě. Pravidlo se 10. 11.
+   na chvíli smazalo jako mrtvé (zmizely čipy, na kterých viselo),
+   a tečky se tím staly neviditelnými — vrátilo se i se značkami. */
 .s-dot{width:8px; height:8px; border-radius:50%;}
+.sources .zdr-r .s-dot{flex:none; align-self:center;}
+.zdr-jm{display:flex; flex-direction:column; gap:2px; flex:none; color:var(--text);}
+.zdr-co{font-size:13px; font-weight:400; color:var(--muted);}
+.zdr-cara{flex:1; min-width:16px; border-bottom:1px dotted var(--line-strong);
+  transform:translateY(-4px);}
+.zdr-n{flex:none; font-weight:700; font-size:20px; color:var(--text);
+  font-variant-numeric:tabular-nums; letter-spacing:-0.02em;}
+.zdr-soucet{margin:20px 0 0; font-size:16px; color:var(--muted);}
+.zdr-soucet b{color:var(--text); font-weight:700; font-variant-numeric:tabular-nums;}
+.zdr-pozn{margin:28px 0 0; max-width:var(--m-text); font-size:14px;
+  line-height:1.6; color:var(--muted);}
+/* Na telefonu se popisek zdroje schová: dva řádky krát osm je sloupec
+   textu, ve kterém se čísla ztratí. Jméno a číslo stačí. */
+@media (max-width:560px){
+  .zdr-nadpis{font-size:28px;}
+  .zdr-co{display:none;}
+  .zdr-jm{flex:1; min-width:0;}
+  .zdr-cara{display:none;}
+  .zdr-n{font-size:18px;}
+}
 /* „celá parcela" u výměry podílu. Menší a tlumené — je to upřesnění
    k číslu, ne další údaj; kurzívou, ať se nepřečte jako součást čísla. */
 /* ŠTÍTEK U VÝMĚRY STOJÍ V ŘÁDCE, NE POD ČÍSLEM. Byl to `display:block`
@@ -2349,13 +2386,10 @@ h1 em{ color:var(--znacka-svetla);
 /* Katastr stojí pod řadou zdrojů, ne v ní — je to ověření, ne zdroj nabídek.
    Tečka zůstává, aby bylo poznat, že patří k téže rodině; text je ale věta,
    ne odznak, protože se tu něco vysvětluje. */
-.sources-over{display:flex; align-items:baseline; gap:8px; margin:12px 0 0; max-width:var(--m-text);
-  font-size:14px; line-height:1.6; color:var(--muted);}
 /* Tečka u věty o katastru nese ZNAČKOVOU barvu webu, ne barvu
    kategorie: katastr není druh nabídky. Barva stávala v `style="…"`
    v index.html. (Token --znacka je dnes zelený; jméno zůstalo
    z dřívější palety.) */
-.sources-over .s-dot{flex:none; transform:translateY(-1px); background:var(--znacka);}
 
 /* Sections */
 /* JEDEN RYTMUS PRO VŠECHNY ODDÍLY, a o stupeň větší.
@@ -7707,21 +7741,17 @@ body{background:var(--bg);}
    a text je obyčejný tmavý inkoust. */
 .sources{background:var(--plocha-jemna); color:var(--text); padding:var(--oddil-y) 0;}
 .sources::before, .sources::after{display:none;}
-.src-stats{grid-template-columns:repeat(4,1fr); gap:28px; margin-bottom:40px;}
-.src-stat{border-left:0; padding:0; gap:8px;}
-.src-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(40px,5.4vw,64px); line-height:0.9; letter-spacing:-0.04em; color:var(--text);}
-.src-stat span{font-size:13px; color:var(--muted); max-width:var(--m-nadpis);}
-.sources-lead{color:var(--muted);}
-.sources .sources-over{color:var(--muted);}
 .sources .data-updated{color:var(--muted);}
 /* Odznak zdroje je na světlé ploše bílá dlaždice s linkou — tatáž
    stavba jako ovladače nad výpisem, ne průsvit přes tmu. */
-.sources .source-chip{background:var(--plocha-karta); border-color:var(--line);
-  color:var(--text);}
+/* Pilulkový čip zmizel 10. 11. a s ním i jeho deska: řádek v panelu
+   „Odkud to máme" je řádek tabulky, ne karta. Bílá plocha pod ním
+   kreslila useknutý obdélník uprostřed šedého pásu. Pravidlo zůstává
+   jen pro barvu textu, kterou řádek dědit má. */
+.sources .source-chip{color:var(--text);}
 @media (max-width:880px){
   /* rytmus drží --oddil-y, ne vlastní číslo (bylo 40/40, tedy
      polovina proti ostatním oddílům na téže šířce) */
-  .src-stats{grid-template-columns:repeat(2,1fr); gap:24px 16px;}
 }
 
 /* SLOVNÍČEK: definice oddělené linkou, ne rámečky.

@@ -49,11 +49,20 @@ const nabidky = data.opportunities || [];
   /* „6 veřejných zdrojů" je v úvodu napsané natvrdo, kdežto seznam pod ním
      se vypisuje po jednom. Čísla se rozejdou tiše: přibude zdroj, číslo
      zůstane — a web tvrdí něco, co si sám pod tím vyvrací. */
-  const cipu = (idx.match(/class="source-chip"/g) || []).length;
-  /* MEZERA MEZI ZNAČKAMI JE DOVOLENÁ. Mezi </b> a <span> stojí od 17. 10.
-     mezera, aby se číslo a slovo nelepily („5veřejných zdrojů“); vzor bez
-     \s* kvůli ní přestal číslo najít a zkouška hlásila „napsáno ?“. */
-  const napsano = /<b>(\d+)<\/b>\s*<span>veřejných zdrojů/.exec(idx);
+  const cipu = (idx.match(/class="source-chip[^"]*" data-zdroj=/g) || []).length;
+  /* ČÍSLO UŽ NENÍ NAPSANÉ RUKOU, A PŘESTO SE MŮŽE ROZEJÍT.
+     Do 10. 11. stálo v úvodu „<b>5</b> <span>veřejných zdrojů" natvrdo
+     a seznam pod ním měl taky pět čipů — jenže zdrojů bylo osm, takže
+     obojí lhalo shodně a kontrola to nepoznala: porovnávala dvě čísla,
+     z nichž ani jedno nepocházelo z dat.
+     Teď počet doplňuje sestavení značkou data-pk-cislo="zdroje" z týchž
+     dat jako mapu, takže se rozejít může UŽ JEN seznam pod ním: někdo
+     přidá zdroj do robota a zapomene na řádek v panelu. Přesně to tahle
+     kontrola hlídá dál, jen druhou stranu rovnice bere odjinud.
+     Číslo se čte i s nedělitelnou mezerou tisíců („1 024"), kterou tam
+     sazba dává; proto se před porovnáním odstraní. */
+  const napsano = /data-pk-cislo="zdroje"[^>]*>([\d  ]+)</.exec(idx);
+  if (napsano) napsano[1] = napsano[1].replace(/[\s ]/g, '');
   pravda('počet zdrojů v úvodu sedí se seznamem pod ním',
     !!napsano && Number(napsano[1]) === cipu,
     `napsáno ${napsano ? napsano[1] : '?'}, vypsaných zdrojů ${cipu}`);
@@ -63,8 +72,8 @@ const nabidky = data.opportunities || [];
      jedna nabídka, je to ÚŘEDNÍ OVĚŘENÍ toho, co jsme našli jinde.
      Zdroj je to, odkud data tečou; nástroj na ověření patří vedle, ne
      do počtu. */
-  const rada = idx.slice(idx.indexOf('<div class="source-row">'));
-  const seznamZdroju = rada.slice(0, rada.indexOf('</div>\n      </div>') + 6);
+  const rada = idx.slice(idx.indexOf('<ul class="zdr-tab">'));
+  const seznamZdroju = rada.slice(0, rada.indexOf('</ul>') + 5);
   pravda('mezi zdroji nestojí nástroj na ověřování',
     !/katast/i.test(seznamZdroju),
     'katastr je vypsaný jako zdroj nabídek — z katastru ale žádná nabídka nepřichází');
@@ -75,7 +84,7 @@ const nabidky = data.opportunities || [];
      Přesně to se stalo, když se párovalo hádáním z názvu: „Centrální
      evidence veřejných dražeb" zůstala bez čísla a „Nucené dražby"
      ukazovaly její počet. Nic nespadlo, jen web lhal číslem. */
-  const klice = [...idx.matchAll(/class="source-chip" data-zdroj="([^"]+)"/g)].map((m) => m[1]);
+  const klice = [...idx.matchAll(/class="source-chip[^"]*" data-zdroj="([^"]+)"/g)].map((m) => m[1]);
   const vData = (data.sources || []).map((z) => z.nazev);
   pravda('každý vypsaný zdroj má klíč ke svému stavu', klice.length === cipu,
     `čipů ${cipu}, z toho s klíčem ${klice.length}`);

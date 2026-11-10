@@ -597,6 +597,8 @@
       } else {
         text = pocet + '×'; trida = '';
         popis = 'Při poslední kontrole vrátil ' + pocet + ' záznamů';
+
+        if (chip.querySelector('.zdr-n')) return;
       }
       znacka.className = 'src-stav' + trida;
       znacka.textContent = text;
