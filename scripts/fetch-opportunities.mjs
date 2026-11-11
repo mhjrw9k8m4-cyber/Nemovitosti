@@ -722,7 +722,47 @@ async function geocodeName(place, okres) {
  * Dotazů je málo a jsou v mezipaměti (data/geocode-cache.json), takže
  * běžný běh se geokodéru ptá jen na jména, která ještě neviděl.
  */
+/* CIZÍ ADRESY SE DO GEOKODÉRU NEPOSÍLAJÍ.
+   ------------------------------------------------------------------
+   Bezrealitky inzerují i nemovitosti v Německu a v Rakousku. Robot
+   jejich adresu poslal do Nominatimu s `countrycodes=cz`, takže
+   odpověď nepřišla — ale dotaz z rozpočtu (BR_STROP_GEO) ubral a běh
+   zdržel o 1,1 s. Změřeno 11. 11. 2026 na data/geocode-cache.json:
+   ze 3 862 jmen s odpovědí nebylo ani jedno mimo české hranice,
+   zatímco 3 152 jmen odpověď nemá — a vzorek ukázal, že jde skoro
+   výhradně o německé a rakouské ulice („weißenhorner straße 9a",
+   „lorystrasse 134/1/7 wien", „chemnitz gablenz sachsen 09126").
+   Tento filtr z nich zachytí 2 266, tedy 72 %: přes 40 minut běhu
+   a stejný počet dotazů z rozpočtu, který pak chybí na skutečné
+   české obce.
+   NEJDE JEN O ÚSPORU, JDE O SPRÁVNOST. U 53 cizích adres odpověď
+   přišla: Nominatim našel stejně pojmenovanou ulici v Česku, takže
+   německý dům skončil na českém špendlíku — „goethestraße 11" na
+   50.107,14.404 (Praha), „münchen" na 50.723,14.077 (u České
+   Kamenice). Filtr proto stojí PŘED mezipamětí: těch 53 chybných
+   záznamů tím přestává platit, aniž by se mezipaměť mazala.
+   BEZPEČNOST JE ZMĚŘENÁ, NE ODHADNUTÁ. Na 3 992 živých nabídkách
+   (data/opportunities.json) filtr nezasáhl ani jednu, a stejně tak
+   na žádném úředním českém jménu z data/okresy.json a kraje.json.
+   DIAKRITIKA SE MUSÍ SUNDAT PŘEDEM — a není to kosmetika, je to
+   třída vad §454: v JS je „š" NESLOVNÍ znak, takže `\b` uvnitř
+   českého slova vytvoří hranici. Vzorek `\bkoln\b` (pro Köln) proto
+   padl na „**š**kolní" a odmítl českou ulici. Po NFD a odstranění
+   akcentů z „školní" vyjde „skolni", kde žádná hranice není. */
+const CIZI_ULICE = /(strasse|str\.|gasse|platz|\bweg\b|\ballee\b|\bhof\b)/;
+const CIZI_MESTA = /\b(wien|berlin|hamburg|munchen|koln|frankfurt|stuttgart|leipzig|dresden|chemnitz|nurnberg|erfurt|bochum|essen|dortmund|bonn|graz|linz|salzburg)\b/;
+const CIZI_ZEME = /\b(bayern|sachsen|thuringen|nordrhein|rheinland|hessen|brandenburg|niedersachsen|westfalen|schleswig|saarland|steiermark|tirol|karnten)\b/;
+/** Vypadá jméno místa na německou nebo rakouskou adresu? */
+export function ciziAdresa(place) {
+  if (typeof place !== 'string' || !place) return false;
+  const t = place.toLowerCase().replace(/\u00df/g, 'ss')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return CIZI_ULICE.test(t) || CIZI_MESTA.test(t) || CIZI_ZEME.test(t);
+}
 async function geocodeObec(place) {
+  /* Před mezipamětí schválně: viz ciziAdresa() výš — mezipaměť nese
+     53 cizích adres posazených na české souřadnice. */
+  if (ciziAdresa(place)) return null;
   const key = (place + '|*').toLowerCase();
   if (key in GEO_CACHE) return GEO_CACHE[key];
   if (geoZed()) return null;
@@ -3914,7 +3954,7 @@ async function fetchBezrealitky() {
      ukazoval do jiného okresu, `dohledano` = geokodér neodpověděl
      vůbec, takže by nabídka spadla pod „bez okresu". */
   let rozsouzenoAdresou = 0, dohledanoZAdresy = 0;
-  let bezJmena = 0, geoNeznal = 0, nadStrop = 0, zMezipametiJmen = 0;
+  let bezJmena = 0, geoNeznal = 0, nadStrop = 0, zMezipametiJmen = 0, ciziZeme = 0;
   const cekajiciJmena = new Set();
   /* VZOREK ODKAZŮ, KTERÝM GEOKODÉR NEROZUMÍ — INSTRUMENTACE, NE OPRAVA.
      NAMĚŘENO 10. 11. po opravě stropu: strop 1 400 dotazů padne celý na
@@ -3959,6 +3999,9 @@ async function fetchBezrealitky() {
     const usek = posledniUsek(a.geo);
     pricti(usekVse, usek);
     if (!place) { bezOkresu++; bezJmena++; continue; }
+    /* Německá nebo rakouská adresa: ven se neposílá nic a rozpočet
+       dotazů zůstane českým obcím. Viz ciziAdresa() výš. */
+    if (ciziAdresa(place)) { bezOkresu++; ciziZeme++; continue; }
     /* OKRES Z ADRESY INZERÁTU VYHRÁVÁ NAD GEOKODÉREM — a je i součástí
        klíče slovníku. Bez toho si dvě různé „Kamenice" (u Jihlavy a
        v Praze-východ) přepisovaly jeden záznam: která se vyřešila
@@ -4155,7 +4198,7 @@ async function fetchBezrealitky() {
     .map(([k, v]) => `${k} ${v}×`).join(', ');
   console.log(`  Bezrealitky (sitemapa + detaily): v sitemapě ${inzeraty.length} inzerátů na prodej,`
     + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu}`
-    + ` = bez jména obce ${bezJmena} + geokodér neznal ${geoNeznal}`
+    + ` = bez jména obce ${bezJmena} + cizí země ${ciziZeme} + geokodér neznal ${geoNeznal}`
     + ` + nad stropem dotazů ${nadStrop} (${cekajiciJmena.size} různých jmen čeká),`
     + ` obec z adresy inzerátu ${opravenychUlic}×, geokodér ${geoDotazu}× ze stropu ${BR_STROP_GEO}`
     + `, okres rozsoudila adresa ${rozsouzenoAdresou}× (geokodér ukazoval jinam)`

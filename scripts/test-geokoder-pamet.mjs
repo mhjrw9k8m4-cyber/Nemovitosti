@@ -18,10 +18,11 @@
    každou noc znovu.
    ================================================================== */
 import http from 'node:http';
+import fs from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { volnyPort } from './port-zkousky.mjs';
-import { geoDotaz, geoZapis, geoZed, geoPoDotazu, geoStavReset, GEO_SELHANI_STROP }
-  from './fetch-opportunities.mjs';
+import { geoDotaz, geoZapis, geoZed, geoPoDotazu, geoStavReset, GEO_SELHANI_STROP,
+  ciziAdresa } from './fetch-opportunities.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -105,4 +106,69 @@ pravda('jedna odpověď počítadlo vynuluje', geoZed() === false,
   'počítadlo se po úspěšné odpovědi nevynulovalo — náhodné nezdary by se sčítaly přes celý běh');
 
 server.close();
+
+/* CIZÍ ADRESA SE NESMÍ DO GEOKODÉRU DOSTAT VŮBEC.
+   ------------------------------------------------------------------
+   Zapamatovaná neodpověď (výš) ušetří dotaz od druhé noci. Tahle část
+   hlídá to, co ušetří dotaz hned při prvním setkání: německou nebo
+   rakouskou adresu pozná robot sám z jejího tvaru. Změřeno 11. 11.
+   2026: 2 266 ze 3 152 marných dotazů, tedy přes 40 minut běhu
+   a stejný počet dotazů z rozpočtu BR_STROP_GEO.
+   Nejde jen o úsporu: u 53 cizích adres Nominatim NAŠEL stejně
+   pojmenovanou ulici v Česku, takže německý dům visel na českém
+   špendlíku. Proto filtr stojí před mezipamětí. */
+for (const cizi of ['weißenhorner straße 9a', 'lorystrasse 134/1/7 wien',
+  'güntzelstr.66 berlin wilmersdorf berlin 10717', 'chemnitz gablenz sachsen 09126',
+  'münchen', 'goethestraße 11', 'bahnhofstr. 22', 'holzgasse 46',
+  'alte poststraße 83', 'am marktplatz 3', 'tirol']) {
+  pravda('pozná cizí adresu: ' + cizi, ciziAdresa(cizi) === true,
+    'tohle jméno robot pošle do geokodéru s countrycodes=cz, kde na ně není odpověď');
+}
+
+/* PAST §454: „š" JE V JS NESLOVNÍ ZNAK, takže `\b` uvnitř českého slova
+   vytvoří hranici. Vzorek `\bkoln\b` (pro Köln) proto nejdřív odmítal
+   „**š**kolní" — opravdovou českou ulici, kterou geokodér zná
+   („školní|šumperk" má v mezipaměti [49.97162, 16.95808]). Filtr proto
+   musí sundat diakritiku DŘÍV, než hranice slova začnou rozhodovat. */
+for (const ceske of ['školní', 'Školní 25, Šumperk', 'Šumperk', 'Praha',
+  'Horní Dvořiště', 'Hostinné', 'Hodkovičky', 'Šonov', 'Žďár nad Sázavou',
+  'Čížkov', 'Luhačovice', 'Třešť']) {
+  pravda('propustí české jméno: ' + ceske, ciziAdresa(ceske) === false,
+    'filtr by zahodil českou obec nebo ulici — nabídka by ztratila okres a zmizela z webu');
+}
+
+/* BEZPEČNOST NA OSTRÝCH DATECH, ne na vymyšleném seznamu: žádná
+   nabídka, která se na web dostala (má okres), nesmí filtru padnout
+   za oběť. */
+{
+  let data = null;
+  try { data = JSON.parse(fs.readFileSync('data/opportunities.json', 'utf8')); } catch (e) { data = null; }
+  const pole = Array.isArray(data) ? data : (data && data.opportunities) || [];
+  const zasazene = pole.filter(o => o && o.okres && ciziAdresa(o.place));
+  pravda(`na ${pole.length} živých nabídkách filtr nezasáhl ani jednu s okresem`,
+    pole.length > 100 && zasazene.length === 0,
+    pole.length <= 100 ? 'data/opportunities.json má jen ' + pole.length + ' nabídek — zkouška by nic neměřila'
+      : 'filtr by zahodil nabídky, které na webu jsou: '
+        + zasazene.slice(0, 5).map(o => o.place + ' (' + o.okres + ')').join(', '));
+}
+
+/* A ŽE JE FILTR OPRAVDU ZAPOJEN — na dvou místech, každé jinak.
+   Samotná funkce může být bezvadná a přitom ji nikdo nevolá. */
+{
+  const zdroj = fs.readFileSync('scripts/fetch-opportunities.mjs', 'utf8');
+  const telo = zdroj.slice(zdroj.indexOf('async function geocodeObec(place) {'));
+  const doMezipameti = telo.slice(0, telo.indexOf('in GEO_CACHE'));
+  pravda('geocodeObec se filtru ptá PŘED mezipamětí',
+    /ciziAdresa\(place\)/.test(doMezipameti),
+    'mezipaměť nese 53 cizích adres s českými souřadnicemi — za mezipamětí by filtr na ně nedosáhl');
+  const smycka = zdroj.slice(zdroj.indexOf('bezOkresu++; bezJmena++; continue;'));
+  const predStropem = smycka.slice(0, smycka.indexOf('BR_STROP_GEO'));
+  pravda('Bezrealitky filtrují jméno dřív, než ubere z rozpočtu dotazů',
+    /ciziAdresa\(place\)/.test(predStropem) && /ciziZeme\+\+/.test(predStropem),
+    'cizí adresa by sice neodešla ven, ale počítadlo geoDotazu by o ni přišlo');
+  pravda('hlášení Bezrealitek cizí země přiznává jmenovitě',
+    /cizí země \$\{ciziZeme\}/.test(zdroj),
+    'zahozené bez jména jsou slepé místo — viz pravidlo o jmenovitě zahozených');
+}
+
 hotovo();
