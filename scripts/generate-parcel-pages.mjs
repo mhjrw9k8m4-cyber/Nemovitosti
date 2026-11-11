@@ -810,9 +810,12 @@ export function migrujPredvykresleni(sablona, h) {
    Stránka pozemku si nese ostrůvek `window.PK_POZEMEK={…,"r":"data/okres/
    blansko.json"}` a podle něj si js/pozemek.js vezme ŘEZ okresu místo
    celých dat. Jenže na ukončených stránkách se ostrůvek octl AŽ ZA
-   blokem skriptů — migrujSkripty vkládá celý blok na místo prvního
-   vyjmutého skriptu, a to je nad ostrůvkem. Když skript běží, proměnná
-   ještě neexistuje, takže sáhne po záloze: data/opportunities.json.
+   blokem skriptů: migrujSkripty tehdy vkládal celý blok na místo
+   prvního vyjmutého skriptu, a to bylo nad ostrůvkem. (Od 11. 11. se
+   blok dělí na dvě skupiny ke kotvám </head> a </body> — první skript
+   tedy stojí v hlavičce, tedy pořád nad ostrůvkem, pokud ho tahle
+   migrace nepřesune.) Když skript běží a proměnná ještě neexistuje,
+   sáhne po záloze: data/opportunities.json.
    Naměřeno: 639 kB místo 12 kB řezu, a to při každém otevření takové
    stránky. Ohlásila to scripts/test-data-stranky.mjs, jakmile se jí do
    vzorku dostala ukončená stránka.
@@ -906,26 +909,35 @@ export function migrujStyl(sablona, h) {
 
 export function migrujSkripty(sablona, h) {
   const VZOR = /<script src="(js\/(?:min\/)?([A-Za-z0-9_-]+)\.js)(?:\?v=[A-Za-z0-9]+)?"([^>]*)><\/script>\n?/g;
-  const zPredlohy = [...sablona.matchAll(VZOR)].map((m) => ({ cela: m[0].replace(/\n$/, ''), jmeno: m[2] }));
+  /* DVĚ SKUPINY, NE JEDEN BLOK — A JE TO ZMĚŘENÁ OPRAVA.
+     Do 11. 11. se celý seznam skriptů vkládal na místo PRVNÍHO
+     vyjmutého skriptu. Na ukončené stránce je ten první `neosobni.js`
+     v <head>, takže se tam přistěhovaly i ty, které v předloze stojí
+     až na konci <body> — a čtrnáct z nich nemá `defer`, takže zastaví
+     skládání stránky, dokud se nestáhnou. Naměřeno 11. 11. na všech
+     13 314 stránkách nabídek: 9 322 ukončených a přestěhovaných jich
+     má v hlavičce 14 (dohromady 130 508 výskytů), živých 3 992 nemá
+     ani jeden. Čte je člověk, který přišel z „Uložené", ze sdíleného
+     odkazu nebo z výsledku hledání — tedy 70 % stránek webu.
+     Skupiny se proto dělí podle PŘEDLOHY: co v ní stojí před
+     </head>, jde před </head>; zbytek před </body>, kde to předloha
+     má. Kotvou je značka dokumentu, ne poloha starého skriptu, takže
+     se blok nemá o co posunout (dřív to řešila dočasná značka
+     <!--PK-SEM-SKRIPTY-->, viz zkouška v scripts/test-ukonceno.mjs
+     o mrtvém skriptu před prvním skriptem předlohy). */
+  const konecHlavy = sablona.indexOf('</head>');
+  if (konecHlavy < 0) throw new Error('migrujSkripty: v předloze není </head> — změnil se zápis?');
+  const zPredlohy = [...sablona.matchAll(VZOR)].map((m) => ({
+    cela: m[0].replace(/\n$/, ''), jmeno: m[2], vHlave: m.index < konecHlavy }));
   if (!zPredlohy.length) throw new Error('migrujSkripty: v předloze nejsou žádné skripty js/ — změnil se zápis?');
   const znam = new Set(zPredlohy.map((x) => x.jmeno));
 
   /* Nejdřív se ze stránky vyjmou VŠECHNY skripty, které předloha zná;
-     cizí (kdyby někdy nějaký byl) zůstanou na místě. Pak se na místo
-     prvního vyjmutého vloží celá sekvence z předlohy. Tím se opraví
-     i pořadí, ne jen chybějící kusy. */
-  /* KAM se blok vloží, se nesmí počítat jako odstup ve VSTUPU. Ten odstup
-     platí ve `h`, ale krájí se jím `out`, tedy text UŽ bez vyjmutých
-     skriptů — a jakmile něco padne před prvním skriptem předlohy, vloží
-     se blok o ten kus dál. Naměřeno na pozemek-beroun-beroun-cpw8uy.html,
-     kde mrtvý skript stál před menu.js: blok se usadil o 55 znaků dál,
-     doprostřed komentáře („MUSÍ <script src=…"), takže `<!--` spolklo
-     všech devatenáct skriptů stránky. Místo odstupu tu proto stojí
-     značka, kterou si text odnese sám, ať se před ní vyjme cokoli. */
-  const ZNACKA = '<!--PK-SEM-SKRIPTY-->';
-  if (h.indexOf(ZNACKA) >= 0) throw new Error('migrujSkripty: ve stránce už je značka ' + ZNACKA);
-  let prvni = -1;
-  let out = h.replace(VZOR, (cela, adr, jmeno, _zbytek, odkud) => {
+     cizí (kdyby někdy nějaký byl) zůstanou na místě. Pak se obě
+     skupiny vloží ke svým kotvám. Tím se opraví i pořadí, ne jen
+     chybějící kusy. */
+  let naslo = 0;
+  const out = h.replace(VZOR, (cela, adr, jmeno) => {
     if (!znam.has(jmeno)) {
       /* CIZÍ SKRIPT ZŮSTÁVÁ — ALE JEN KDYŽ OPRAVDU EXISTUJE.
          „Cizí" tu znamenalo „plátno nezná předloha", a to sedělo, dokud
@@ -939,12 +951,22 @@ export function migrujSkripty(sablona, h) {
       try { if (!fs.existsSync(path.join(ROOT, adr))) return ''; } catch (e) {}
       return cela;
     }
-    if (prvni < 0) { prvni = odkud; return ZNACKA; }
+    naslo++;
     return '';
   });
-  if (prvni < 0) throw new Error('migrujSkripty: ve stránce není ani jeden skript předlohy — nemám kam vložit');
-  const blok = zPredlohy.map((x) => x.cela).join('\n') + '\n';
-  return out.replace(ZNACKA, blok);
+  if (!naslo) throw new Error('migrujSkripty: ve stránce není ani jeden skript předlohy — nemám co vyměnit');
+  /* Kotva se hledá v UŽ upraveném textu a vkládá se před ni, takže
+     je jedno, co se před ní vyjmulo. </head> první, </body> poslední:
+     to jsou ty, které uzavírají dokument. */
+  const vloz = (text, kotva, skupina, odkud) => {
+    if (!skupina.length) return text;
+    const i = odkud === 'prvni' ? text.indexOf(kotva) : text.lastIndexOf(kotva);
+    if (i < 0) throw new Error('migrujSkripty: ve stránce není ' + kotva + ' — nemám kam vložit skripty');
+    return text.slice(0, i) + skupina.map((x) => x.cela).join('\n') + '\n' + text.slice(i);
+  };
+  return vloz(
+    vloz(out, '</head>', zPredlohy.filter((x) => x.vHlave), 'prvni'),
+    '</body>', zPredlohy.filter((x) => !x.vHlave), 'posledni');
 }
 
 const VETA_UKONCENO = 'Nabídka už není aktuální.';

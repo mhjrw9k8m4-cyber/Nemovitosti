@@ -711,6 +711,42 @@ console.log('\nStránky jednotlivých pozemků');
   }
 }
 
+/* ŽÁDNÝ SKRIPT V HLAVIČCE NESMÍ ZASTAVIT SKLÁDÁNÍ STRÁNKY.
+   NALEZENO 11. 11. posudkem zvenčí a potvrzeno měřením na všech
+   13 314 stránkách nabídek: 9 322 ukončených a přestěhovaných mělo
+   v <head> čtrnáct skriptů bez `defer` (dohromady 130 508 výskytů),
+   zatímco živých 3 992 nemělo ani jeden. Příčina byla v migraci:
+   celý seznam skriptů se vkládal na místo prvního vyjmutého, a tím
+   je `neosobni.js` v hlavičce (viz migrujSkripty v generátoru).
+   Prohlížeč na takovém skriptu zastaví skládání stránky, dokud ho
+   nestáhne a nespustí — a tyhle stránky čte člověk, který přišel
+   z „Uložené", ze sdíleného odkazu nebo z výsledku hledání.
+   MĚŘÍ SE VŠECHNY STRÁNKY, NE VZOREK: je to statické čtení souborů,
+   takže to stojí jeden průchod, a vada se právě ve vzorku živých
+   stránek schovala. Předpoklad se kontroluje zvlášť — bez stránek
+   v kořeni by kontrola prošla o prázdnu. */
+{
+  const vsechny = fs.readdirSync(ROOT).filter((f) => /^pozemek-.+\.html$/.test(f));
+  pravda(`našly se stránky nabídek (${vsechny.length})`, vsechny.length > 0,
+    'v kořeni není ani jedna — kontrola níž by mlčela o ničem');
+  const VZOR = /<script\b[^>]*\bsrc=[^>]*>/g;
+  let spatnych = 0, nejvic = 0, kde = '';
+  for (const f of vsechny) {
+    const h = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    const i = h.indexOf('</head>');
+    if (i < 0) continue;
+    const blokujici = (h.slice(0, i).match(VZOR) || [])
+      .filter((x) => !/\sdefer\b/.test(x) && !/\sasync\b/.test(x));
+    if (blokujici.length) {
+      spatnych++;
+      if (blokujici.length > nejvic) { nejvic = blokujici.length; kde = f; }
+    }
+  }
+  pravda('žádná stránka nabídky nemá v hlavičce skript bez defer', spatnych === 0,
+    `takových stránek je ${spatnych} z ${vsechny.length}, nejvíc ${nejvic} v ${kde}`
+    + ' — prohlížeč na nich zastaví skládání stránky, než skripty stáhne');
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb`);
 if (chyb) console.log('::error::Stránky pozemků: kontroly neprošly.');
