@@ -7881,7 +7881,15 @@
                slepí v předčítání i ve výběru textu „6okres Praha".
                Naměřeno 4. 11. na index.html („6okres"). */
             (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
-            (sub ? '<span class="opp-sub">' + sub + '</span>' : '') +
+            /* PARCELNÍ ČÍSLO PROJDE SAZBOU A ESCAPEM. Text sem jde z dat
+               („parc. nově dle GP p.č. 1442/10, p.č. 1442/9"), tedy
+               cestou, která sestavením neprojde — a právě na něm padla
+               11. 11. zkouška sazby v prohlížeči: za „č." tu zůstávala
+               obyčejná mezera, kterou statická stránka nese nezlomitelnou.
+               Escape je tu proto, že branka z textů vyhazuje < > ", ale
+               ampersand v nich zůstává; sám se nevykreslí špatně, do
+               innerHTML ale nemá co nehotové lézt. */
+            (sub ? '<span class="opp-sub">' + PKCisteni.sazba(esc(sub)) + '</span>' : '') +
           '</div>' +
           /* 3. ŘÁDEK — CENA. Největší písmo na kartě a až pod tím, co se
              prodává a kde: podle ceny se rozhoduje, podle zbytku vybírá. */

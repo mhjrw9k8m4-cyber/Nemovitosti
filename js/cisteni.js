@@ -244,8 +244,9 @@
      ní hledat, porovnávat a skládat adresa, a nezlomitelná mezera uvnitř
      dat je past: právě na ní 22. 10. zhavarovala zkouška, která
      porovnávala jméno z vygenerované stránky s textem odznaku.
-     Plné pravidlo (i o číslech a jednotkách) je v scripts/sazba.mjs; tady
-     je jen ta jeho část, kterou si prohlížeč musí udělat sám. */
+     CELÉ PRAVIDLO JE DOLE V TOMHLE SOUBORU a sestavení (scripts/sazba.mjs)
+     si ho odtud bere. Do 11. 11. tu byla jen jeho část o předložkách —
+     viz důvod u sazba(). */
   /* =================================================================
      JAK SE NABÍDKA JMENUJE — „Prodej orné půdy"
      =================================================================
@@ -320,13 +321,94 @@
     return akce + ' ' + ve2p;
   }
 
+  /* ================================================================
+     PRAVIDLA ČESKÉ SAZBY. JEDNA DEFINICE PRO PROHLÍŽEČ I PRO SESTAVENÍ.
+     ================================================================
+     Do 11. 11. 2026 tu stála jen ta část o jednopísmenných předložkách
+     a plné pravidlo žilo zvlášť v scripts/sazba.mjs. Dvě podoby jednoho
+     pravidla, jedna z nich slabší — a zkouška sazby v prohlížeči
+     (scripts/test-sazba-dom.mjs) přitom měří tím PLNÝM. Padla na
+     index.html na podtitulu karty: „parc. nově dle GP p.č. 1442/10,
+     p.č. 1442/9" mělo dvě obyčejné mezery za „č.", které statická
+     stránka nese nezlomitelné a prohlížeč ne. Nebyla to vada té jedné
+     nabídky: tím podtitulem jde parcelní číslo KAŽDÉ nabídky z dat,
+     a dat se mění každou noc.
+     Pravidla jsou proto tady — prohlížeč je potřebuje za běhu a modul
+     sestavení si tenhle soubor načítá (createRequire), stejně jako si
+     odsud bere tabulku jmen nabídek (hlavaNabidky výš).
+
+     ŽÁDNÝ POHLED DOZADU. Vzor tisíců byl v sestavení psaný jako
+     `(?<![\d\u00a0])…`. Safari umí `(?<=` teprve od 16.4, tenhle web
+     drží podlahu 15.4 (scripts/test-safari.mjs) a tam by to byl
+     SyntaxError při načtení — nespustil by se celý modul, tedy branka
+     na všechna data. Hranice se proto chytá do skupiny. Změřeno na
+     1 755 605 úsecích textu všech stránek a všech řetězců v datech:
+     oba tvary daly 0 rozdílů.
+
+     MEZERA SE PÍŠE JAKO \u0020. V žádném z těchhle řetězců nesmí být
+     obyčejná mezera: minifikace sází literály v js/ (scripts/minifikace.mjs)
+     a vzoru vlastního pravidla by tím mohla vložit nezlomitelnou mezeru
+     dovnitř. Bez mezery nemá sazba za co chytit a řetězec projde
+     beze změny. */
   var JEDNOPISMENNA = 'aiouvkszAIOUVKSZ';
+  /* Hranice vlevo: začátek úseku, mezera, otevírací závorka, uvozovka,
+     pomlčka nebo konec značky. Vpravo musí následovat mezera a po ní
+     písmeno, číslice nebo otevírací uvozovka — jinak jde o něco jiného
+     než předložku se slovem. */
+  var ZLEVA = '[\\s(\\[\u201e"\u2018\u2019\u201a\u201c\u2013\u2014>]';
   var VZOR_SAZBA = new RegExp(
-    '(^|[\\s(\\[\u201e"])([' + JEDNOPISMENNA + '])[ \\t]+(?=[0-9A-Za-z\u00c1-\u017e])', 'g');
-  function sazba(t) { return String(t == null ? '' : t).replace(VZOR_SAZBA, '$1$2\u00a0'); }
+    '(^|' + ZLEVA + ')([' + JEDNOPISMENNA + '])[\\u0020\\t]+(?=[0-9A-Za-z\u00c1-\u017e\u201e\u201a])', 'g');
+  /* Číslo a jeho jednotka taky patří k sobě: „76 220" na konci řádku
+     a „Kč" na dalším je ta nejviditelnější podoba téhle chyby, protože
+     cena je to nejčtenější, co na webu je. Týž seznam jednotek
+     potřebují okraje vložených výrazů v šablonách (sazPoVyrazu
+     v scripts/sazba.mjs), proto je vyvedený. */
+  var JEDNOTKY = 'K\u010d|m\u00b2|m|ha|km|%|\u00d7';
+  var VZOR_JEDNOTKA = new RegExp(
+    '(\\d)[\\u0020\\t]+(' + JEDNOTKY + ')(?![\\w\u00c1-\u017e])', 'g');
+  /* ČÍSLO SE NESMÍ ROZLOMIT SAMO V SOBĚ. Tisíce se v češtině oddělují
+     mezerou, a když je obyčejná, prohlížeč v ní řádek klidně zlomí:
+     na kolik-stoji-koupe-pozemku.html stálo na konci řádku „2" a na
+     dalším „000 Kč". Generované ceny nezlomitelnou mezeru mají, ručně
+     psaná čísla v textu ne — bylo jich padesát.
+     Vzor bere číslo CELÉ, i o několika skupinách („1 378 000"), a nelepí
+     dvě různá čísla za sebou: před první skupinou nesmí stát číslice
+     ani nezlomitelná mezera, takže „2026 123" zůstane dvěma čísly. */
+  var VZOR_TISICE = new RegExp(
+    '(^|[^\\d\\u00a0])(\\d{1,3}(?:[\\u0020\\t]\\d{3})+)(?!\\d)', 'g');
+  /* DATUM SE V ČEŠTINĚ NELÁME VŮBEC. Na nove-pozemky.html se na telefonu
+     rozlomilo jedenáctkrát: „13." na konci řádku a „10." na dalším.
+     Spojuje se den s měsícem i měsíc s rokem, takže „14. 10. 2026" drží
+     pohromadě celé. */
+  var VZOR_DATUM = new RegExp(
+    '(\\d{1,2}\\.)[\\u0020\\t]+(?=\\d{1,2}\\.[\\u0020\\t]|\\d{4}(?!\\d))', 'g');
+  /* PARAGRAF. Tohle NENÍ oprava nálezu: na 22 stránkách a dvou šířkách
+     se § na konci řádku neobjevil ani jednou. Je to pojistka stejného
+     druhu jako u jednotky — stojí jeden znak a 728 míst na webu tím
+     přestane na zlomu záležet. */
+  var VZOR_PARAGRAF = new RegExp('(\u00a7)[\\u0020\\t]+(?=\\d)', 'g');
+  /* „zákon č. 480/2004" se na ochrana-udaju.html na telefonu rozlomil
+     za „č.". Záměrně se nebere „Kč." — to není zkratka čísla, ale konec
+     věty za cenou. */
+  var VZOR_CISLO = new RegExp(
+    '(^|[^0-9A-Za-z\u00c1-\u017e])(\u010d\\.)[\\u0020\\t]+(?=\\d)', 'g');
+  function nezlomit(c) { return c.replace(/[\u0020\t]/g, '\u00a0'); }
+  function sazba(t) {
+    var s = String(t == null ? '' : t);
+    if (s.indexOf(' ') === -1) return s;
+    /* Dvakrát za sebou: vzor spotřebuje znak vlevo, takže „a i v lese"
+       by se jinak ošetřilo obden. */
+    return s.replace(VZOR_SAZBA, '$1$2\u00a0').replace(VZOR_SAZBA, '$1$2\u00a0')
+      .replace(VZOR_TISICE, function (_c, pred, cislo) { return pred + nezlomit(cislo); })
+      .replace(VZOR_DATUM, '$1\u00a0')
+      .replace(VZOR_JEDNOTKA, '$1\u00a0$2')
+      .replace(VZOR_PARAGRAF, '$1\u00a0')
+      .replace(VZOR_CISLO, '$1$2\u00a0');
+  }
 
   return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
     majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, sazba: sazba,
+    JEDNOPISMENNA: JEDNOPISMENNA, JEDNOTKY: JEDNOTKY,
     kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY,
     hlavaNabidky: hlavaNabidky, akceNabidky: akceNabidky, DRUH_2P: DRUH_2P };
 });

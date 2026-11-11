@@ -14,50 +14,19 @@
  * script/style/pre/code/textarea se přeskakuje celý.
  */
 
-/* Jednopísmenná slova, která se v češtině nenechávají na konci řádku:
-   předložky k s v z o u a spojky a i. Velká písmena na začátku věty
-   taky — „V katastru…" se láme stejně ošklivě. */
-const JEDNOPISMENNA = 'aiouvkszAIOUVKSZ';
-
-/* Hranice vlevo: začátek úseku, mezera, otevírací závorka nebo uvozovka.
-   Vpravo musí následovat mezera a po ní písmeno nebo číslice — jinak
-   jde o něco jiného než předložku se slovem. */
-const VZOR = new RegExp(
-  '(^|[\\s(\\[„"\u2018\u2019\u201a\u201c\u2013\u2014>])([' + JEDNOPISMENNA + '])[ \\t]+(?=[0-9A-Za-zÁ-Žá-ž\u201e\u201a])',
-  'g'
-);
-
-/* Číslo a jeho jednotka taky patří k sobě: „76 220" na konci řádku
-   a „Kč" na dalším je ta nejviditelnější podoba téhle chyby, protože
-   cena je to nejčtenější, co na webu je. */
-const VZOR_JEDNOTKA = /(\d)[ \t]+(Kč|m²|m|ha|km|%|×)(?![\wÁ-Žá-ž])/g;
-
-/* ČÍSLO SE NESMÍ ROZLOMIT SAMO V SOBĚ. Tisíce se v češtině oddělují
-   mezerou, a když je obyčejná, prohlížeč v ní řádek klidně zlomí:
-   na kolik-stoji-koupe-pozemku.html stálo na konci řádku „2" a na
-   dalším „000 Kč". Generované ceny nezlomitelnou mezeru mají, ručně
-   psaná čísla v textu ne — bylo jich padesát.
-   Vzor bere číslo CELÉ, i o několika skupinách („1 378 000"), a nelepí
-   dvě různá čísla za sebou: před první skupinou nesmí stát číslice,
-   takže „2026 123" zůstane dvěma čísly. */
-const VZOR_TISICE = /(?<![\d\u00a0])\d{1,3}(?:[ \t]\d{3})+(?!\d)/g;
-
-/* DATUM SE V ČEŠTINĚ NELÁME VŮBEC. Na nove-pozemky.html se na telefonu
-   rozlomilo jedenáctkrát: „13." na konci řádku a „10." na dalším.
-   Spojuje se den s měsícem i měsíc s rokem, takže „14. 10. 2026" drží
-   pohromadě celé. */
-const VZOR_DATUM = /(\d{1,2}\.)[ \t]+(?=\d{1,2}\.[ \t]|\d{4}(?!\d))/g;
-
-/* PARAGRAF. Tohle NENÍ oprava nálezu: na 22 stránkách a dvou šířkách
-   se § na konci řádku neobjevil ani jednou. Je to pojistka stejného
-   druhu jako u jednotky — stojí jeden znak a 728 míst na webu tím
-   přestane na zlomu záležet. */
-const VZOR_PARAGRAF = /(§)[ \t]+(?=\d)/g;
-
-/* „zákon č. 480/2004" se na ochrana-udaju.html na telefonu rozlomil
-   za „č.". Záměrně se nebere „Kč." — to není zkratka čísla, ale konec
-   věty za cenou. */
-const VZOR_CISLO = /(^|[^0-9A-Za-zÁ-Žá-ž])(č\.)[ \t]+(?=\d)/g;
+/* JEDNA DEFINICE, DVĚ STRANY. Vzory pro čistý text (jednopísmenné
+   předložky, tisíce, datum, číslo s jednotkou, § a „č.") stojí
+   v js/cisteni.js a tenhle modul si je odtud bere. Důvod je měřený:
+   prohlížeč skládá texty z DAT, která sestavením neprojdou, a dokud
+   měl svou vlastní, slabší kopii pravidla, padala na nich zkouška
+   sazby v prohlížeči — 11. 11. na podtitulu karty „parc. nově dle GP
+   p.č. 1442/10". Zdůvodnění každého vzoru i s měřeními, kde se která
+   vada našla, je u nich v js/cisteni.js. Touž cestou se odtud bere
+   tabulka jmen nabídek (hlavaNabidky), takže je to zavedený směr,
+   ne výjimka pro sazbu. */
+import { createRequire } from 'node:module';
+const CISTENI = createRequire(import.meta.url)('../js/cisteni.js');
+const JEDNOPISMENNA = CISTENI.JEDNOPISMENNA;
 
 const PRESKOCIT = /^(script|style|pre|code|textarea)$/i;
 
@@ -208,7 +177,7 @@ export function osaz(vstup) {
    Úzké schválně: jen jednopísmenné slovo na konci a jen známá
    jednotka na začátku. Nic jiného se o vloženém výrazu neví. */
 const PRED_VYRAZEM = new RegExp('(^|[\\s(\\[„"‘’‚“–—])([' + JEDNOPISMENNA + '])[ \\t]+$');
-const PO_VYRAZU = /^[ \t]+(Kč|m²|m|ha|km|%|×)(?![\wÁ-Žá-ž])/;
+const PO_VYRAZU = new RegExp('^[\\u0020\\t]+(' + CISTENI.JEDNOTKY + ')(?![\\wÁ-Žá-ž])');
 
 export function sazPredVyrazem(t) { return t.replace(PRED_VYRAZEM, '$1$2\u00a0'); }
 export function sazPoVyrazu(t) { return t.replace(PO_VYRAZU, '\u00a0$1'); }
@@ -219,15 +188,10 @@ export function sazPoVyrazu(t) { return t.replace(PO_VYRAZU, '\u00a0$1'); }
 export function sazText(t) { return sazTextem(t); }
 
 function sazTextem(t) {
+  /* Prázdný i nedefinovaný vstup se vrací, jak přišel: tenhle modul ho
+     dostává z krájení HTML a nemá co měnit tvar. */
   if (!t || t.indexOf(' ') === -1) return t;
-  /* Dvakrát za sebou: vzor spotřebuje znak vlevo, takže „a i v lese"
-     by se jinak ošetřilo obden. */
-  return t.replace(VZOR, '$1$2\u00a0').replace(VZOR, '$1$2\u00a0')
-    .replace(VZOR_TISICE, (c) => c.replace(/[ \t]/g, '\u00a0'))
-    .replace(VZOR_DATUM, '$1\u00a0')
-    .replace(VZOR_JEDNOTKA, '$1\u00a0$2')
-    .replace(VZOR_PARAGRAF, '$1\u00a0')
-    .replace(VZOR_CISLO, '$1$2\u00a0');
+  return CISTENI.sazba(t);
 }
 
 /* Předložka těsně PŘED řádkovou značkou — „…bydlení v <a>katastru</a>".

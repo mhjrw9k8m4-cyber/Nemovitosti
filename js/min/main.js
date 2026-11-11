@@ -4631,7 +4631,8 @@
             '</span>' +
 
             (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
-            (sub ? '<span class="opp-sub">' + sub + '</span>' : '') +
+
+            (sub ? '<span class="opp-sub">' + PKCisteni.sazba(esc(sub)) + '</span>' : '') +
           '</div>' +
 
           '<div class="opp-cenarad">' +

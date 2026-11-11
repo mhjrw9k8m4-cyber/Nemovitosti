@@ -184,12 +184,41 @@
   }
 
   var JEDNOPISMENNA = 'aiouvkszAIOUVKSZ';
+
+  var ZLEVA = '[\\s(\\[\u201e"\u2018\u2019\u201a\u201c\u2013\u2014>]';
   var VZOR_SAZBA = new RegExp(
-    '(^|[\\s(\\[\u201e"])([' + JEDNOPISMENNA + '])[ \\t]+(?=[0-9A-Za-z\u00c1-\u017e])', 'g');
-  function sazba(t) { return String(t == null ? '' : t).replace(VZOR_SAZBA, '$1$2\u00a0'); }
+    '(^|' + ZLEVA + ')([' + JEDNOPISMENNA + '])[\\u0020\\t]+(?=[0-9A-Za-z\u00c1-\u017e\u201e\u201a])', 'g');
+
+  var JEDNOTKY = 'K\u010d|m\u00b2|m|ha|km|%|\u00d7';
+  var VZOR_JEDNOTKA = new RegExp(
+    '(\\d)[\\u0020\\t]+(' + JEDNOTKY + ')(?![\\w\u00c1-\u017e])', 'g');
+
+  var VZOR_TISICE = new RegExp(
+    '(^|[^\\d\\u00a0])(\\d{1,3}(?:[\\u0020\\t]\\d{3})+)(?!\\d)', 'g');
+
+  var VZOR_DATUM = new RegExp(
+    '(\\d{1,2}\\.)[\\u0020\\t]+(?=\\d{1,2}\\.[\\u0020\\t]|\\d{4}(?!\\d))', 'g');
+
+  var VZOR_PARAGRAF = new RegExp('(\u00a7)[\\u0020\\t]+(?=\\d)', 'g');
+
+  var VZOR_CISLO = new RegExp(
+    '(^|[^0-9A-Za-z\u00c1-\u017e])(\u010d\\.)[\\u0020\\t]+(?=\\d)', 'g');
+  function nezlomit(c) { return c.replace(/[\u0020\t]/g, '\u00a0'); }
+  function sazba(t) {
+    var s = String(t == null ? '' : t);
+    if (s.indexOf(' ') === -1) return s;
+
+    return s.replace(VZOR_SAZBA, '$1$2\u00a0').replace(VZOR_SAZBA, '$1$2\u00a0')
+      .replace(VZOR_TISICE, function (_c, pred, cislo) { return pred + nezlomit(cislo); })
+      .replace(VZOR_DATUM, '$1\u00a0')
+      .replace(VZOR_JEDNOTKA, '$1\u00a0$2')
+      .replace(VZOR_PARAGRAF, '$1\u00a0')
+      .replace(VZOR_CISLO, '$1$2\u00a0');
+  }
 
   return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
     majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, sazba: sazba,
+    JEDNOPISMENNA: JEDNOPISMENNA, JEDNOTKY: JEDNOTKY,
     kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY,
     hlavaNabidky: hlavaNabidky, akceNabidky: akceNabidky, DRUH_2P: DRUH_2P };
 });
