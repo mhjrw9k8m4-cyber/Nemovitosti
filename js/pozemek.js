@@ -2875,15 +2875,13 @@
         skokEl.hidden = false;
         skokEl.addEventListener('click', function () {
           var box = poznEl.closest ? poznEl.closest('.pz-pozn-box') : null;
-          /* KDO SI VYPNE POHYB, TOMU SE NEROLUJE PLYNULE. Stylopis to
-             respektuje (`@media (prefers-reduced-motion:reduce)` vypíná
-             scroll-behavior), ale `behavior:'smooth'` zadané ze skriptu
-             by to pravidlo přebilo — a plynulé rolování přes dva tisíce
-             pixelů je přesně ten pohyb, kvůli kterému si ho lidé vypínají. */
-          var klidne = false;
-          try { klidne = !!(window.matchMedia
-            && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
-          try { (box || poznEl).scrollIntoView({ block: 'center', behavior: klidne ? 'auto' : 'smooth' }); }
+          /* KDO SI VYPNE POHYB, TOMU SE NEROLUJE PLYNULE — a rozhoduje
+             o tom STYLOPIS, ne tenhle řádek. `behavior` se proto
+             nezadává vůbec: bez něj platí `scroll-behavior` z css
+             (plynule), které `@media (prefers-reduced-motion:reduce)`
+             vypíná. Do 11. 11. si to tady počítal každý soubor sám
+             (pět kopií dotazu na médium, čtrnáct míst bez něj). */
+          try { (box || poznEl).scrollIntoView({ block: 'center' }); }
           catch (e) { (box || poznEl).scrollIntoView(); }
           /* Zaostření AŽ PO doskoku: na telefonu vyskočí klávesnice
              a stránkou to hne, takže kdyby se zaostřilo hned, přistál

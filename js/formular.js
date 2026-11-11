@@ -44,7 +44,7 @@
       hlaska.className = 'st-hlaska je-chyba';
     }
     try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el.scrollIntoView({ block: 'center' });
   }
 
   function posli(telo) {

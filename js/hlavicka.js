@@ -265,7 +265,7 @@ var KOTVA_PRIHLASENI = {
   premer();
 
   b.addEventListener('click', function (e) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0 });
     /* Skok pohledem nestačí: kdo chodí klávesou, zůstal by v pořadí
        tabulátoru dole u patičky a další Tab by ho vrátil tam, odkud
        odjel. Kurzor proto putuje s obrazem.

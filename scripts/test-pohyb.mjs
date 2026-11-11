@@ -19,7 +19,7 @@
 // A hlavně: kdo má v systému vypnuté animace, nesmí dostat nic z toho —
 // a zároveň musí pruh pořád ukazovat správnou hodnotu, ne nulu.
 import { chromium } from 'playwright-core';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
@@ -384,6 +384,68 @@ for (const [jmeno, adresa] of [['úvodní stránka', `${BASE}/index.html`], ['st
     `nekonečné animace: ${vyp.nekonecne.slice(0, 4).join(' | ') || 'žádné'}`
     + `\n      posuny: ${vyp.posuny.slice(0, 4).join(' | ') || 'žádné'}`);
 }
+
+/* ---- A ROLOVÁNÍ JE POHYB TAKY ----
+   Našlo se to 11. 11. měřením: s `prefers-reduced-motion: reduce` hlásil
+   stylopis správně `scroll-behavior: auto`, ale klepnutí na „nahoru"
+   udělalo 39 mezipoloh — stejně jako bez omezení. Skripty si totiž
+   plynulost zadávaly samy (`behavior:'smooth'` na 18 místech v js/),
+   a to pravidlo ze stylopisu přebije. Rolování přes dva tisíce pixelů
+   je přitom přesně ten pohyb, kvůli kterému si ho lidé vypínají.
+   Měří se obojí: bez omezení mezipolohy BÝT MUSÍ (jinak by kontrola
+   s omezením prošla nad rozbitou stránkou), s omezením žádná. */
+const rolovani = {};
+for (const vypnuto of [true, false]) {
+  const ctx = await kontext(vypnuto);
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/pozemky-okres-benesov.html`, { waitUntil: 'load' }).catch(() => {});
+  await domUtichlo(p, 400);
+  rolovani[vypnuto ? 'vypnuto' : 'zapnuto'] = await p.evaluate(async () => {
+    const knoflik = document.querySelector('.to-top');
+    if (!knoflik) return { chyba: 'tlačítko „nahoru" na stránce není' };
+    /* Dolů se jede OKAMŽITĚ, ať se neměří tenhle posun, ale ten zpátky. */
+    window.scrollTo({ top: 2500, behavior: 'instant' });
+    await new Promise((r) => setTimeout(r, 200));
+    const zacatek = Math.round(window.pageYOffset);
+    const polohy = [];
+    const id = setInterval(() => polohy.push(Math.round(window.pageYOffset)), 16);
+    knoflik.click();
+    await new Promise((r) => setTimeout(r, 900));
+    clearInterval(id);
+    return { zacatek, konec: Math.round(window.pageYOffset),
+      mezipoloh: [...new Set(polohy)].filter((y) => y > 5 && y < zacatek - 5).length };
+  });
+  await ctx.close();
+}
+// PŘEDPOKLAD: bez odrolované stránky, která se klepnutím vrátí, se neměří nic
+pravda('je z čeho měřit — stránka se odrolovala a knoflík ji vrátil nahoru',
+  !!rolovani.zapnuto && !rolovani.zapnuto.chyba && rolovani.zapnuto.zacatek >= 2000
+  && rolovani.zapnuto.konec === 0 && rolovani.vypnuto.konec === 0,
+  JSON.stringify(rolovani));
+pravda(`bez omezení pohybu se roluje plynule (${(rolovani.zapnuto || {}).mezipoloh} mezipoloh)`,
+  !!rolovani.zapnuto && rolovani.zapnuto.mezipoloh > 3,
+  JSON.stringify(rolovani.zapnuto));
+pravda('s omezením pohybu se stránka vrátí skokem, bez mezipoloh',
+  !!rolovani.vypnuto && rolovani.vypnuto.mezipoloh === 0,
+  JSON.stringify(rolovani.vypnuto) + ' — někdo si zadal behavior:\'smooth\' ze skriptu');
+
+/* A ŽÁDNÝ SKRIPT SI TU PLYNULOST NESMÍ ZADÁVAT SÁM. Kontrola výš měří
+   jedno tlačítko na jedné stránce; tahle hlídá celé js/, protože tu
+   vadu udělalo osmnáct různých míst a devatenácté by se v měření
+   neukázalo. Rozhodovat má stylopis (`.opp-list, .map-side, .zp-msgs`
+   a `html`), ne volající. `js/min/` se nekontroluje — vzniká z těchhle
+   souborů sestavením. */
+const vynucene = [];
+for (const f of readdirSync(path.join(KOREN, 'js'))) {
+  if (!f.endsWith('.js')) continue;
+  const zdroj = readFileSync(path.join(KOREN, 'js', f), 'utf8');
+  /* Hledá se jen KÓD, ne komentáře: v js/pozemek.js o tom pravidle
+     komentář je a ten zmizet nemá. */
+  const bezKomentaru = zdroj.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[\t ]*\/\/.*$/gm, '');
+  if (/behavior\s*:\s*['"]smooth['"]/.test(bezKomentaru)) vynucene.push(f);
+}
+pravda('žádný skript v js/ si nevynucuje plynulé rolování', vynucene.length === 0,
+  'vynucují: ' + vynucene.join(', '));
 
 await prohlizec.close();
 console.log('\nPohyb — drobná odezva, a pro koho ne, tak žádná');

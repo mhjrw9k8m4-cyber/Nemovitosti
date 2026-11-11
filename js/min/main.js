@@ -434,7 +434,7 @@
     zrcadli();
 
     btn.addEventListener('click', function () {
-      try { pas.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { pas.scrollIntoView(); }
+      try { pas.scrollIntoView({ block: 'center' }); } catch (e) { pas.scrollIntoView(); }
 
       setTimeout(function () {
         try { pole.focus({ preventScroll: true }); } catch (e) { pole.focus(); }
@@ -2504,9 +2504,9 @@
       var hd = document.querySelector('header');
       var vys = hd ? hd.getBoundingClientRect().height : 0;
       var cil = holderEl.getBoundingClientRect().top + window.pageYOffset - vys - 10;
-      window.scrollTo({ top: Math.max(0, cil), behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, cil) });
     } catch (e) {
-      try { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e2) {}
+      try { holderEl.scrollIntoView({ block: 'start' }); } catch (e2) {}
     }
   }
 
@@ -2630,7 +2630,7 @@
       try {
         var hd = document.querySelector('header');
         var vys = hd ? hd.getBoundingClientRect().height : 0;
-        window.scrollTo({ top: Math.max(0, cil.getBoundingClientRect().top + window.pageYOffset - vys - 10), behavior: 'smooth' });
+        window.scrollTo({ top: Math.max(0, cil.getBoundingClientRect().top + window.pageYOffset - vys - 10) });
       } catch (e) {}
     }, 90);
   }
@@ -2662,7 +2662,7 @@
 
     if (cil !== 'seznam') setTimeout(function () {
       var odznak = document.querySelector('#ms-chipy .msch[data-okoli]');
-      if (odznak) { try { odznak.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
+      if (odznak) { try { odznak.scrollIntoView({ block: 'center' }); } catch (e) {} }
     }, 420);
 
     if (!mistoUlozeno) { hlasNeulozeneMisto('Vybrané okolí'); return; }
@@ -4037,15 +4037,15 @@
       var ram = rodicSRolovanim(cil);
       if (ram) {
         var yr = ram.scrollTop + cil.getBoundingClientRect().top - ram.getBoundingClientRect().top - 8;
-        ram.scrollTo({ top: Math.max(0, yr), behavior: 'smooth' });
+        ram.scrollTo({ top: Math.max(0, yr) });
         return;
       }
       var hd = document.querySelector('header');
       var vys = hd ? hd.getBoundingClientRect().height : 0;
       var y = cil.getBoundingClientRect().top + window.pageYOffset - vys - 8;
-      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+      window.scrollTo({ top: Math.max(0, y) });
     } catch (e) {
-      try { cil.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e2) {}
+      try { cil.scrollIntoView({ block: 'start' }); } catch (e2) {}
     }
   }
 
@@ -5111,7 +5111,7 @@
     updateMapView();
     highlightMarker(target._id);
     highlightList(target._id);
-    if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
+    if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, 150);
 
     setTimeout(frame, 500);
   }
@@ -5659,7 +5659,7 @@
       }
       if (typeof lockDots === 'function') lockDots(false);
       renderList();
-      if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+      if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ block: 'start' }); }, 250);
       cleanUrl();
       return true;
     }
@@ -5679,7 +5679,7 @@
       if (posObec && typeof map !== 'undefined' && map) {
         try { map.setView([posObec.lat, posObec.lng], Math.max(map.getZoom(), 10), { animate: true }); } catch (e) {}
       }
-      if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+      if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ block: 'start' }); }, 250);
       cleanUrl();
       return true;
     }
@@ -5709,7 +5709,7 @@
           return true;
         };
         if (!jdiNaOkres() && !mapaVzdana) { chciMapu(); azBudeMapa(jdiNaOkres); }
-        if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+        if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ block: 'start' }); }, 250);
         cleanUrl();
         return true;
       }
@@ -5725,7 +5725,7 @@
           Object.keys(krajByName).forEach(function (name) { if (name.toLowerCase() === low) hit = name; });
           if (!hit) return false;
           selectKraj(hit);
-          if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+          if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ block: 'start' }); }, 250);
           return true;
         };
         if (Object.keys(krajByName).length) {

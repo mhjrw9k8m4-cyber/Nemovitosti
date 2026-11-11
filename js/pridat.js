@@ -1032,7 +1032,7 @@
   if (addAnother) addAnother.addEventListener('click', function () {
     var succ = document.getElementById('add-success'); if (succ) succ.hidden = true;
     var card = prodejForm && prodejForm.closest('.add-card');
-    if (card) { card.hidden = false; try { card.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (x) {} }
+    if (card) { card.hidden = false; try { card.scrollIntoView({ block: 'start' }); } catch (x) {} }
     if (prodejForm) prodejForm.reset();
     var lpThumb = document.getElementById('lp-thumb'); if (lpThumb) lpThumb.innerHTML = '<span class="ph"><svg class="ik" viewBox="0 0 24 24"><use href="#i-spendlik"/></svg></span>';
     vybraneFotky.forEach(function (x) { try { URL.revokeObjectURL(x.url); } catch (e) {} });
@@ -1126,7 +1126,7 @@
           el.setAttribute('aria-invalid', 'true');
           popisPridej(el, msgId);
           try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
-          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          el.scrollIntoView({ block: 'center' });
         }
         return;
       }
@@ -1144,7 +1144,7 @@
             var card = form.closest('.add-card');
             if (card) card.hidden = true;
             succ.hidden = false;
-            try { succ.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (x) {}
+            try { succ.scrollIntoView({ block: 'center' }); } catch (x) {}
           }
         } else if (r === 'geo') {
           ms.textContent = 'Nepodařilo se najít obec na mapě. Zkontrolujte prosím název obce (např. „Kolín").';

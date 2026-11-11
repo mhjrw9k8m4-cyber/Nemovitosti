@@ -112,7 +112,7 @@ var KOTVA_PRIHLASENI = {
   premer();
 
   b.addEventListener('click', function (e) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0 });
 
     if (e.detail !== 0) return;
     var cil = document.querySelector('.skip-link') || document.querySelector('header a');

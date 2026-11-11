@@ -1557,10 +1557,7 @@
         skokEl.addEventListener('click', function () {
           var box = poznEl.closest ? poznEl.closest('.pz-pozn-box') : null;
 
-          var klidne = false;
-          try { klidne = !!(window.matchMedia
-            && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
-          try { (box || poznEl).scrollIntoView({ block: 'center', behavior: klidne ? 'auto' : 'smooth' }); }
+          try { (box || poznEl).scrollIntoView({ block: 'center' }); }
           catch (e) { (box || poznEl).scrollIntoView(); }
 
           setTimeout(function () {

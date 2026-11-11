@@ -1031,7 +1031,20 @@
    scroll-padding na kořeni platí pro VŠECHNA posouvání v té ploše,
    takže stačí jedno místo. */
 html{scroll-behavior:smooth; scroll-padding-top:calc(var(--vyska-hlavicky, 85px) + 14px);}
-@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
+/* Rolovatelné desky uvnitř stránky dostávají plynulost odtud, ne ze
+   skriptu. Do 11. 11. si ji skripty zadávaly samy (`behavior:'smooth'`)
+   — a tím přebíjely pravidlo o řádek níž: kdo si v systému vypne pohyb,
+   dostal plynulé rolování i tak. Naměřeno na okresní stránce: klepnutí
+   na „nahoru" udělalo 39 mezipoloh ve VŠECH režimech, i když
+   `scroll-behavior` vycházel `auto`. Skripty teď `behavior` nezadávají,
+   takže rozhoduje stylopis — a ten přání respektuje. */
+.opp-list, .map-side, .zp-msgs{scroll-behavior:smooth;}
+@media (prefers-reduced-motion:reduce){
+  /* Kořen i každá rolovatelná deska: `scroll-behavior` se nedědí, takže
+     hvězdička tu není z lenosti — bez ní by pravidlo platilo jen pro
+     stránku a vnitřní desky by zůstaly plynulé. */
+  *{scroll-behavior:auto !important; animation:none !important; transition:none !important;}
+}
 
 html, body{max-width:100%; width:100%;}
 body{ color:var(--text); font-family:var(--font-ui); line-height:1.6; -webkit-font-smoothing:antialiased; overscroll-behavior-x:none; position:relative;}
