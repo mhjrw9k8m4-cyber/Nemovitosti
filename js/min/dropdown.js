@@ -58,7 +58,8 @@
       var btn = document.createElement('button');
       btn.type = 'button'; btn.className = 'map-select cdd-btn';
       btn.setAttribute('aria-haspopup', 'listbox'); btn.setAttribute('aria-expanded', 'false');
-      if (sel.getAttribute('aria-label')) btn.setAttribute('aria-label', sel.getAttribute('aria-label'));
+
+      var popisAria = sel.getAttribute('aria-label') || '';
       var ikJm = sel.getAttribute('data-ikona');
       if (ikJm && IKONY[ikJm]) {
         var ik = document.createElement('span');
@@ -71,6 +72,10 @@
       if (pop) {
         var pe = document.createElement('span');
         pe.className = 'cdd-k'; pe.textContent = pop; btn.appendChild(pe);
+      } else if (popisAria) {
+        var pes = document.createElement('span');
+        pes.className = 'visually-hidden'; pes.textContent = popisAria + ' ';
+        btn.appendChild(pes);
       }
       var lbl = document.createElement('span'); lbl.className = 'cdd-lbl'; btn.appendChild(lbl);
       var sipJm = sel.getAttribute('data-sipka');
@@ -82,7 +87,13 @@
       }
       root.appendChild(btn);
 
+      sel.addEventListener('focus', function () {
+        if (document.activeElement === sel) btn.focus();
+      });
+
       var panel = document.createElement('div'); panel.className = 'cdd-panel'; panel.setAttribute('role', 'listbox');
+
+      if (pop || popisAria) panel.setAttribute('aria-label', pop || popisAria);
       panel.id = 'cdd-panel-' + (++poradiPanelu);
       btn.setAttribute('aria-controls', panel.id);
       panel.style.display = 'none';

@@ -106,7 +106,18 @@
       var btn = document.createElement('button');
       btn.type = 'button'; btn.className = 'map-select cdd-btn';
       btn.setAttribute('aria-haspopup', 'listbox'); btn.setAttribute('aria-expanded', 'false');
-      if (sel.getAttribute('aria-label')) btn.setAttribute('aria-label', sel.getAttribute('aria-label'));
+      /* JMÉNO TLAČÍTKA SKLÁDÁ JEHO OBSAH, NE `aria-label`.
+         Do 11. 11. se sem kopíroval `aria-label` ze <select>u — a ten
+         obsah tlačítka PŘEBIJE, takže vybraná hodnota se do
+         přístupného jména nikdy nedostala: odečítač po výběru přečetl
+         zase jen „Řazení příležitostí, tlačítko" a co je zvoleno,
+         neřekl (WCAG 4.1.2). Jméno teď vzniká z toho, co je na
+         tlačítku vidět: popisek („Řazení") a hodnota („Doporučené").
+         KDE VIDITELNÝ POPISEK NENÍ, nese ho skrytý text — jinak by
+         jméno bylo jen holá hodnota („libovolná"), což neřekne čeho.
+         Text musí ZAČÍNAT tím, co je vidět (WCAG 2.5.3 Štítek
+         v názvu), aby ovládání hlasem našlo, na co se ukazuje. */
+      var popisAria = sel.getAttribute('aria-label') || '';
       var ikJm = sel.getAttribute('data-ikona');
       if (ikJm && IKONY[ikJm]) {
         var ik = document.createElement('span');
@@ -123,6 +134,10 @@
       if (pop) {
         var pe = document.createElement('span');
         pe.className = 'cdd-k'; pe.textContent = pop; btn.appendChild(pe);
+      } else if (popisAria) {
+        var pes = document.createElement('span');
+        pes.className = 'visually-hidden'; pes.textContent = popisAria + ' ';
+        btn.appendChild(pes);
       }
       var lbl = document.createElement('span'); lbl.className = 'cdd-lbl'; btn.appendChild(lbl);
       var sipJm = sel.getAttribute('data-sipka');
@@ -133,8 +148,22 @@
         btn.appendChild(sip);
       }
       root.appendChild(btn);
+      /* KLEPNUTÍ NA VIDITELNÝ POPISEK MÍŘÍ NA SKRYTÝ <select>.
+         Rozbalovátko „Cena za m²" leží uvnitř <label>, takže klepnutí
+         na jeho nápis zaměří první popisovatelný prvek — a to je
+         původní <select>, který je po vylepšení 1×1 px a aria-hidden.
+         Zaměření by tedy skončilo na něčem, co není vidět. Tenhle
+         posluchač ho posune na tlačítko, které vidět je.
+         `inert` by to vyřešilo elegantněji, ale Safari ho umí teprve
+         od 15.5 a web drží podlahu 15.4 (scripts/test-safari.mjs). */
+      sel.addEventListener('focus', function () {
+        if (document.activeElement === sel) btn.focus();
+      });
 
       var panel = document.createElement('div'); panel.className = 'cdd-panel'; panel.setAttribute('role', 'listbox');
+      /* SEZNAM MUSÍ MÍT JMÉNO. `role="listbox"` bez jména se ohlásí
+         jako „seznam" a není z čeho poznat, čeho se volby týkají. */
+      if (pop || popisAria) panel.setAttribute('aria-label', pop || popisAria);
       panel.id = 'cdd-panel-' + (++poradiPanelu);
       btn.setAttribute('aria-controls', panel.id);
       panel.style.display = 'none';

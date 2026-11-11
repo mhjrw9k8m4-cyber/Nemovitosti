@@ -246,6 +246,46 @@ pravda(`a záložky na Hlídání se opravdu postavily (${poStrankach['hlidani.h
     .concat(odznaky.souhrn && !odznaky.souhrn.slovo ? [odznaky.souhrn] : []);
   pravda('žádný odznak počtu se nečte jako holé číslo', beze.length === 0,
     `bez slova: ${JSON.stringify(beze)} — „Cena 2" neřekne, čeho se dvojka týká`);
+  /* ROZBALOVAČ MUSÍ ŘÍCT, CO JE ZVOLENO.
+     js/dropdown.js dělá z <select>u tlačítko se seznamem. Do 11. 11.
+     si na tlačítko kopíroval `aria-label` ze <select>u — a ten obsah
+     tlačítka přebije, takže vybraná hodnota se do přístupného jména
+     nikdy nedostala: po výběru odečítač přečetl zase jen „Řazení
+     příležitostí, tlačítko". Měří se proto přibližné jméno týmž
+     pravidlem, jaké používá prohlížeč: je-li `aria-label`, platí on,
+     jinak viditelný text. */
+  const rozbal = await p.evaluate(() => {
+    const sel = document.getElementById('map-sort');
+    const btn = document.querySelector('.ms-vysledky > .cdd > .cdd-btn');
+    const jmeno = (e) => !e ? null : (e.getAttribute('aria-label')
+      || (e.textContent || '').replace(/\s+/g, ' ').trim());
+    const panelId = btn ? btn.getAttribute('aria-controls') : '';
+    const panel = panelId ? document.getElementById(panelId) : null;
+    /* Hodnota se přepne na jinou, ať se pozná, že jméno hodnotu
+       opravdu NESE a nejen se náhodou shoduje s výchozí. */
+    let jina = null;
+    if (sel) {
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value !== sel.value) { jina = sel.options[i]; break; }
+      }
+      if (jina) { sel.value = jina.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    return { jmeno: jmeno(btn), hodnota: jina ? jina.textContent.trim() : null,
+      panelJmeno: panel ? panel.getAttribute('aria-label') : null,
+      perm2: jmeno(document.querySelector('#map-perm2')) };
+  });
+  pravda('rozbalovač řazení se postavil a jde ho pojmenovat', !!rozbal.jmeno && !!rozbal.hodnota,
+    JSON.stringify(rozbal) + ' — bez tlačítka by kontroly níž mlčely');
+  if (rozbal.jmeno && rozbal.hodnota) {
+    pravda(`jméno rozbalovače nese zvolenou hodnotu („${rozbal.hodnota}")`,
+      rozbal.jmeno.indexOf(rozbal.hodnota) >= 0,
+      `jméno je „${rozbal.jmeno}" — odečítač po výběru neřekne, podle čeho se řadí`);
+    pravda('a seznam voleb má jméno', !!rozbal.panelJmeno,
+      'role="listbox" bez jména se ohlásí jako „seznam" a není z čeho poznat, čeho se volby týkají');
+  }
+  pravda('jméno rozbalovátka „Cena za m²" začíná viditelným popiskem',
+    !!rozbal.perm2 && rozbal.perm2.indexOf('Cena za m²') === 0,
+    `jméno je „${rozbal.perm2}" — ovládání hlasem „klepni na Cena za m²" netrefí (WCAG 2.5.3)`);
   await ctx.close();
 }
 

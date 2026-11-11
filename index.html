@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-sCgndvP1iwNrtkb9X7w6AT550YkOLMH5nzrvXwvVokI=' 'sha256-FG3jyRg19eofkaQ+ZixVsDTZx2z2ErYhtHFiGaDTy/0=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-g2mmAXVj9Ogse5gsM9FOg4BOc3tv1hHE1zGIGQBOX8c=' 'sha256-FG3jyRg19eofkaQ+ZixVsDTZx2z2ErYhtHFiGaDTy/0=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -526,7 +526,7 @@
                    sítěmi, takže kdo nastavoval cenu, musel ji hledat
                    o dva bloky níž — a přitom je to totéž kritérium. -->
               <label class="mc-field mc-hodnota-radek"><span class="mc-cap">Cena za m²</span>
-                <select class="map-select" id="map-perm2" aria-label="Maximální cena za metr čtvereční">
+                <select class="map-select" id="map-perm2" aria-label="Cena za m² — nejvýš">
                   <option value="">libovolná</option>
                   <option value="20">do 20 Kč/m²</option>
                   <option value="50">do 50 Kč/m²</option>
@@ -1147,7 +1147,7 @@
 <script src="js/min/cisteni.js?v=bbea1ba1"></script>
 <script src="js/min/config.js?v=ae0b35df" defer></script>
 <script src="js/min/auth.js?v=13c37bab" defer></script>
-<script src="js/min/dropdown.js?v=97aa1947" defer></script>
+<script src="js/min/dropdown.js?v=068dc7ba" defer></script>
 <script src="js/min/snimek.js?v=45b2b4c1" defer></script>
 <script src="js/min/terminy.js?v=cf102557" defer></script>
 <!-- STAŽENÍ VÝBĚRU. Dřív to bylo jedno klepnutí a hned soubor: tabulka
