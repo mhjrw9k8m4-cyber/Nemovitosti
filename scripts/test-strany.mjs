@@ -15,6 +15,7 @@
  * se opravdu dá dojít až na konec.
  */
 import { chromium } from 'playwright-core';
+import { otevriSkupinu } from './rozbal-hledani.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
@@ -115,8 +116,11 @@ pravda('„Předchozí" vrátí zpět', (await stav()).strana === 1);
      trefí mapu. Naměřeno: čip 230×44 px na (762, 195), v jeho středu
      sedí `path` z `.leaflet-overlay-pane`. Panel se proto otevírá
      klepnutím na jeho vlastní hlavičku, jako to udělá člověk. */
-  await p.click('#ms-filters > summary').catch(() => {});
-  await p.waitForTimeout(600);
+  /* Od 10. 11. má každá skupina filtrů svůj otvírač a čip „Dražba"
+     bydlí v „Druh nabídky", ne v „Další filtry". Otevírá je společná
+     pomůcka zkoušek — a otevře JEN tu skupinu, protože pět
+     otevřených panelů leží přes sebe a klepnutí by trefilo vrchní. */
+  await otevriSkupinu(p, '.filter-chip[data-type="drazba"]');
   await p.click('.filter-chip[data-type="drazba"]').catch((chyba) => {
     zpravy.push('  ✕ na čip „Dražba" se nedalo klepnout\n      ' + String(chyba).split('\n')[0]);
     chyb++;

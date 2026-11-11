@@ -1253,6 +1253,9 @@ button, input, select, textarea, optgroup{ font-family:inherit; }
          40    našeptávač na mapě
          41    oprava překlepu nad ním
          45    výsledky hledání na mapě
+         46    lišta s počtem a zrušením filtrů, dokud je otevřená
+               skupina filtrů: nad jejím panelem (45), aby se na ni
+               dalo klepnout
          90    stín pod vysunutou nabídkou
          91    vysunutá nabídka
         100    odkaz „přeskočit na obsah"
@@ -2286,6 +2289,24 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    ===================================================================== */
 button:disabled, input:disabled, select:disabled, textarea:disabled,
 [aria-disabled="true"]{opacity:0.45; cursor:not-allowed; box-shadow:none;}
+/* ČTYŘI OVLADAČE, KTERÝM RECEPT O ŘÁDEK VÝŠ NESTAČIL. Pravidlo nad
+   tímhle komentářem má specifičnost jedné třídy a jedné pseudotřídy
+   (0,1,1). Tyhle čtyři si kurzor ukazováčku nastavují selektorem
+   o dvou a třech třídách — třeba .ms-vysledky > .cdd > .cdd-btn —
+   takže vypnutému stavu zůstala průhlednost 0,45, ale kurzor dál
+   tvrdil „klepni na mě". Naměřeno 11. 11. na tlačítku řazení nad
+   výpisem: ze šesti prvních viditelných ovladačů hlásilo pět
+   not-allowed a tenhle pointer. Pořadí v souboru tu nepomůže (vyšší
+   specifičnost vyhraje bez ohledu na něj), proto přidané pseudotřídy
+   a atributy, ne přesun. Hlídá to scripts/test-afordance.mjs. */
+.ms-vysledky > .cdd > .cdd-btn:disabled,
+.ms-vysledky > .cdd > .cdd-btn[aria-disabled="true"],
+.mc-toggles .mc-prep:disabled,
+.mc-toggles .mc-prep[aria-disabled="true"],
+.rv-konec .rv-dalsi:disabled,
+.rv-konec .rv-dalsi[aria-disabled="true"],
+.map-select:disabled,
+.map-select[aria-disabled="true"]{cursor:not-allowed;}
 /* Vypnuté se nehýbe a nesvítí — jinak slibuje, že se dá stisknout. */
 button:disabled:hover, input:disabled:hover, select:disabled:hover,
 [aria-disabled="true"]:hover{border-color:var(--line-ui); color:inherit;
@@ -2578,22 +2599,16 @@ h1 em{ color:var(--znacka-svetla);
 .map-controls-panel .ms-lupa{color:var(--text-zastupny);}
 /* Co stojí VEDLE pole, je ovladač na desce: tlumená výplň, světlý obrys
    (--pas-obrys má na desce 3,97 : 1) a zelená značka na ikoně. */
-/* TŘI TŘÍDY, A JE TO ZMĚŘENÉ. „Druh, cena, výměra a další" je
-   <details> a nad 1040 px má bílou výplň <summary> z pravidla
-   `.ms-filters .msf-summary` — dvě třídy, a stojí v souboru NÍŽ než
-   tenhle oddíl. Dvoutřídní zápis tu tedy prohrál a v prohlížeči z toho
-   vyšel bílý obdélník s bílým textem (naměřeno: bg rgb(255,255,255),
-   color rgb(255,255,255) — tedy neviditelné tlačítko). Výplň proto nese
-   shrnutí, ne nádoba, a selektor má o třídu navíc. */
-.map-controls-panel .ms-filters{background:transparent; border-color:var(--pas-obrys);}
-.map-controls-panel .ms-filters .msf-summary{background:var(--pas-dlazdice);
-  border-color:var(--pas-obrys); color:var(--pas-text);}
-.map-controls-panel .ms-filters[open] .msf-summary{background:var(--pas-dlazdice);
-  border-color:var(--pas-akcent); color:var(--pas-text);}
-.map-controls-panel .ms-filters .msf-summary:hover{color:var(--pas-akcent);}
-/* Rozbalený panel filtrů je bílá karta — text v ní se nesmí nakazit
-   bílou barvou, kterou deska dává svým potomkům. */
-.map-controls-panel .map-controls{color:var(--text);}
+/* OTVÍRAČ FILTRŮ MÁ NA DESCE TÝŽ OBRYS JAKO „NABÍDKY V OKOLÍ" VEDLE.
+   Deska je bílá (--plocha-karta), takže bílý ovladač na ní nevymezí
+   plocha, ale linka — a je to tatáž linka, jakou má tlačítko vedle
+   (--obrys-tlacitka). Dvě různé plochy pro dva ovladače v jedné liště
+   už tu jednou byly a hlídač vzhledu je právem shodil (viz „BÍLÉ JAKO
+   ČIPY VEDLE" o kus níž). */
+.map-controls-panel .mf-btn{border-color:var(--obrys-tlacitka); color:var(--text);}
+/* Panel skupiny je bílá karta — text v ní se nesmí nakazit barvou,
+   kterou deska dává svým potomkům. */
+.map-controls-panel .mf-panel{color:var(--text);}
 /* BÍLÉ JAKO ČIPY VEDLE. Tlačítko „Pozemky v okolí" neslo tutéž
    tlumenou dlaždici jako čipy před 29. 10.; čipy zbělely, a kdyby
    tohle zůstalo šedé, byly by na jednom pásu dva druhy ovladačů.
@@ -2602,16 +2617,13 @@ h1 em{ color:var(--znacka-svetla);
 .map-controls-panel .map-okoli button{background:var(--plocha-karta);
   border-color:var(--obrys-tlacitka); color:var(--text);}
 .map-controls-panel .map-okoli button svg,
-.map-controls-panel .msf-summary svg{color:var(--pas-akcent);}
+.map-controls-panel .mf-ic{color:var(--pas-akcent);}
 /* Druhové pilulky v pásu tu měly vlastní plochu a vlastní zelenou.
    Od 29. 10. jsou uvnitř panelu mezi ostatními filtry a berou si
    jejich recept (.filter-chip výš), takže pás do nich nemá co mluvit. */
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
 .map-holder{grid-column:2; grid-row:2;}
 .map-controls-panel .map-search{margin-top:0;}
-/* Tlačítko „Hotovo" sbaluje rozšířené hledání — jen na telefonu.
-   Na širokém displeji se nic nesbaluje, takže by nemělo co zavírat. */
-.msr-hotovo{display:none;}
 /* LUPA A VĚTŠÍ PÍSMO. Pole říkalo, co do něj jde psát, dlouhou větou
    („Obec, druh, cena, do 30 km od Brna…"). Vešla se sice všude — měřeno
    252 px textu do 272 px místa i na nejužším telefonu, takže se nic
@@ -2672,11 +2684,6 @@ h1 em{ color:var(--znacka-svetla);
    vnitřku — a zástupný text „Obec, druh, cena…" měří 145 px, takže by
    se začal ořezávat na prázdném poli, tedy přesně tam, kde je
    nejpotřebnější. Když je v poli text, zástupný text nikoho nezajímá. */
-/* TLAČÍTKO FILTRŮ SE NA ŠIROKÉM DISPLEJI NEUKAZUJE.
-   Tam je panel „Druh, cena, výměra a další" otevřený pořád, takže
-   druhý otvírač nemá co otevřít a jen by mátl. Zapíná se až
-   v bloku do 1040 px (viz tam). */
-.ms-filtr{display:none;}
 .ms-x{position:absolute; right:4px; top:50%; transform:translateY(-50%);
   display:inline-flex; align-items:center; justify-content:center;
   width:44px; height:44px; padding:0; border:0; background:transparent;
@@ -2837,44 +2844,127 @@ h1 em{ color:var(--znacka-svetla);
    Barvy druhů zůstávají tam, kde nesou význam — na mapě a v legendě. */
 .filter-chip.active{background:var(--plocha-znacka); border-color:var(--plocha-znacka); color:#fff;}
 /* Rozbalovací panel „Cena, výměra a řazení" — výchozí stav je klidný, detaily na klepnutí */
-/* Filtry v jednom bloku. Dřív to byla šedá krabička uvnitř bílého panelu a
-   v ní další bílé krabičky — každé políčko vypadalo jako samostatná věc.
-   Teď je to jedna plocha se stejnou linkou jako ostatní ovládání. */
-.ms-filters{margin-top:12px; border:1px solid var(--line-strong); border-radius:var(--r-ovladani); background:var(--plocha-karta); overflow:hidden;}
-/* Barva se ZÁLOŽNÍ hodnotou. Kdyby proměnná u tohohle prvku z jakéhokoli
+/* ŘÁDEK FILTRŮ: JEDNA SKUPINA = JEDEN OTVÍRAČ = JEDEN KRÁTKÝ PANEL.
+   Do 10. 11. byly všechny filtry za jediným otvíračem („Druh, cena,
+   výměra a další") a změřeno v prohlížeči to vyšlo takhle: na 1440 px
+   měl otevřený panel 1 408×520 px, ale 1 133 px obsahu — tedy 613 px,
+   které se v něm musely odrolovat, a skupina „Cena a výměra" začínala
+   79 px POD jeho spodní hranou, takže se po otevření neukázala vůbec.
+   Na 390 px měl panel 1 524 px a cena v něm byla 766 px od začátku.
+   Teď má každá skupina svůj otvírač a svůj panel. Panel jedné skupiny
+   měří 116 až 349 px, takže se v něm neroluje a ke ceně vede jedno
+   klepnutí.
+
+   ŘÁDEK SE ZALAMUJE, NEROLUJE — a je to ZMĚŘENÉ ROZHODNUTÍ, ne
+   pohodlí. Napoprvé to byl vodorovně rolovaný pruh (jedna výška
+   ovladače, zbytek se odhrne prstem), jenže rolovaný pruh je
+   odstřihávací nádoba: `overflow-x:auto` s `overflow-y:visible` se
+   podle normy spočítá jako `overflow-y:auto`, takže panel, který
+   z otvírače visí dolů, nádoba uřízla. Naměřeno v prohlížeči na
+   390 px: na dolní třetině panelu „Cena a výměra" už neležel panel,
+   ale obsah pod lištou (elementFromPoint vrátil .map-count).
+   Zalomení stojí na telefonu o jednu až dvě výšky ovladače víc; ta
+   cena je proti uříznutému panelu malá a jiná cesta by znamenala
+   panel na `position:fixed` a dopočítávat mu polohu skriptem. */
+.mc-rada{position:relative; display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+.mc-rada > *{flex:none;}
+/* Otvírač je týž ovladač jako ostatní bílé ovladače nad výpisem:
+   44 px na prst, --r-ovladani, obrys --line-ui.
+   Barva se ZÁLOŽNÍ hodnotou. Kdyby proměnná u tohohle prvku z jakéhokoli
    důvodu nebyla k dispozici, `color` by se nestalo výchozím tmavým, ale
    ZDĚDILO by se po rodiči — a na bílém panelu uvnitř světlé sekce to
    znamená bílý text na bílém pozadí. Přesně tak vypadal snímek, na kterém
    z lišty zbyla jen ikona a odznak; text ani šipka (ta dědí currentColor)
-   vidět nebyly. Reprodukovat se to tady nepovedlo, ale tahle jedna
-   záložní hodnota ten způsob selhání vylučuje a nic nestojí. */
-.msf-summary{display:flex; align-items:center; gap:8px; padding:12px 12px; font-size:14px; font-weight:600; color:var(--text, #12241A); cursor:pointer; list-style:none; -webkit-tap-highlight-color:transparent; user-select:none;}
-.msf-summary::-webkit-details-marker{display:none;}
-/* Bílý text po najetí byl zbytek po tmavém motivu — nikdo ho při
-   přebarvení webu na světlo nepřepsal. Panel pod řádkem je bílý, takže
-   po najetí zmizel POPISEK i ŠIPKA (kreslí se currentColor) a zůstala
-   jen ikona s odznakem: řádek vypadal prázdný, jen s číslem. Na
-   telefonu je to horší než bliknutí — :hover tam po klepnutí visí,
-   dokud člověk neklepne jinam. Přesně tohle přišlo jako stížnost.
-   Hlídá to scripts/test-najeti.mjs. */
-.msf-summary:hover{background:var(--plocha-tlumena); color:var(--znacka);}
+   vidět nebyly. */
+.mf-btn{display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 12px;
+  border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+  background:var(--plocha-karta); color:var(--text, #12241A);
+  font-family:var(--font-ui); font-size:14px; font-weight:600; line-height:1;
+  white-space:nowrap; cursor:pointer; list-style:none;
+  -webkit-tap-highlight-color:transparent; user-select:none; transition:var(--prechod);}
+.mf-btn::-webkit-details-marker{display:none;}
+/* Po najetí se mění OBRYS, ne barva textu. Bílý text po najetí byl
+   zbytek po tmavém motivu a na světlém ovladači zmizel popisek i šipka
+   (kreslí se currentColor) — zůstala jen ikona s odznakem. Na telefonu
+   je to horší než bliknutí: :hover tam po klepnutí visí, dokud člověk
+   neklepne jinam. Hlídá scripts/test-najeti.mjs. */
+.mf-btn:hover{border-color:var(--znacka-svetla);}
+.mf-btn:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
+/* Otevřený otvírač a otvírač se zapnutou volbou se poznají od
+   ostatních: jedno je akce, druhé stav. */
+.mf[open] > .mf-btn{border-color:var(--znacka-svetla); background:var(--plocha-zapustena);}
+.mf:has(.mf-n:not([hidden])) > .mf-btn{border-color:var(--znacka-svetla);}
 /* IKONY: TAH SE VYKRESLUJE VŽDY 1,5 px.
    Čísla u stroke-width se proto u každé velikosti LIŠÍ a je to tak
    správně: ikony jsou kreslené do viewBoxu 24, takže tah se musí
    zmenšovat spolu s ikonou. Vykreslený tah = šířka × stroke-width ÷ 24
-   a ten má vyjít 1,5. Odtud 2,25 u šestnácti pixelů, 2,77 u třinácti,
-   1,57 u dvaceti tří. Jedno společné číslo by znamenalo, že malé ikony
-   jsou vlasové a velké tučné.
-   Naměřeno v prohlížeči: ze 47 ikon na pěti stránkách jich 43 leželo
-   na 1,5 px a čtyři vypadly — ne kvůli jinému záměru, ale protože
-   u nich stroke-width vůbec nestálo a zdědilo se cizí. Hlídá to
-   zkouška test-tahy.mjs, která tah měří v prohlížeči. */
-.msf-ic{width:var(--ik-xs); height:var(--ik-xs); flex:none; fill:none; stroke:var(--znacka-svetla); stroke-width:var(--ik-xs-tah); stroke-linecap:round; stroke-linejoin:round;}
-.msf-text{flex:1;}
+   a ten má vyjít 1,5. Jedno společné číslo by znamenalo, že malé ikony
+   jsou vlasové a velké tučné. Hlídá to zkouška test-tahy.mjs, která
+   tah měří v prohlížeči. */
+.mf-ic{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah); flex:none;}
+/* KRÁTKÁ PODOBA POPISKU DO 1040 px — zdůvodnění i čísla jsou u řádku
+   v index.html. Mez je tatáž, na které se mění celé rozvržení lišty
+   (od 1041 px má lišta mřížku a řádek filtrů vlastní pruh), a je
+   změřená: s dlouhými popisky měří otvírače 856 px plus mezery, takže
+   se na 768 px zalomily do dvou řádků a lišta měla 374 px. S krátkými
+   měří 501 px, tedy jeden řádek do 1040 px i na tabletu. */
+.mf-jm-k{display:none;}
+@media (max-width:1040px){
+  .mf-jm{display:none;}
+  .mf-jm-k{display:inline;}
+  /* Šipka je ozdoba stavu, který už nese obrys a plocha otvírače;
+     na úzkém displeji stojí 21 px z 358 a kvůli ní by řada zabrala
+     o jeden řádek víc. */
+  .mf-chev{display:none;}
+}
+.mf-chev{width:var(--ik-xs); height:var(--ik-xs); flex:none; fill:none; stroke:currentColor;
+  stroke-width:var(--ik-xs-tah); stroke-linecap:round; stroke-linejoin:round;
+  transition:var(--prechod);}
+.mf[open] > .mf-btn .mf-chev{transform:rotate(180deg);}
+/* POČET ZAPNUTÝCH FILTRŮ. Nese ho celkové číslo u akcí (#msf-badge)
+   i počet u každého otvírače (.mf-n) — jedna deska na jednu práci.
+   `[hidden]` TU MUSÍ BÝT VYPSANÉ: `display:inline-flex` z autorského
+   stylopisu přebíjí `display:none`, které atributu `hidden` dává
+   prohlížeč, takže by u nezapnuté skupiny svítil prázdný zelený
+   obdélníček. */
 .msf-badge{min-width:18px; height:18px; padding:0 4px; border-radius:var(--r-sm); background:var(--znacka); color:var(--plocha-zapustena); font-size:12px; font-weight:700; display:inline-flex; align-items:center; justify-content:center;}
-.msf-chev{width:var(--ik-xs); height:var(--ik-xs); flex:none; fill:none; stroke:currentColor; stroke-width:var(--ik-xs-tah); stroke-linecap:round; stroke-linejoin:round; transition:var(--prechod);}
-.ms-filters[open] .msf-chev{transform:rotate(180deg);}
-.ms-filters[open] .msf-summary{border-bottom:1px solid var(--line-strong);}
+.msf-badge[hidden]{display:none;}
+/* OTVÍRAČ BEZ OBSAHU SE NEUKAZUJE. „Typ nemovitosti" se skrývá,
+   dokud je v datech jedna kategorie (js/main.js dává `hidden` na jeho
+   blok) — bez tohohle by zbylo tlačítko, které otevře prázdno. */
+.mf:has(> .mf-panel > [hidden]:only-child){display:none;}
+/* PANEL VISÍ, NEODSOUVÁ. Na úzkém displeji je přes celou šířku řádku
+   (proto `position:relative` na .mc-rada a `left/right:0` tady), na
+   širokém se zavěsí pod svůj vlastní otvírač — viz blok od 1041 px.
+   Starší poučení „rozbaluje se v toku, ne přes obrazovku" platilo pro
+   panel se VŠEMI filtry: ten měl na telefonu 1 524 px a jako překryv
+   zakrýval výpis. Panel jedné skupiny má 116–349 px, nemá zatmívací
+   plochu ani past na zaměření a zavírá se Escapem i klepnutím vedle
+   (js/main.js, zavirani()). */
+/* ZAVŘENÝ PANEL NEMÁ MÍT ŽÁDNÝ OBDÉLNÍK — a je to ZMĚŘENÁ oprava,
+   ne úklid. `<details>` svůj obsah nekreslí, ale v prohlížeči mu dává
+   `content-visibility:hidden`, takže prvky uvnitř obdélník MAJÍ, jen
+   podivný: hlídač dotyku našel ve zavřených panelech pět „ovladačů
+   menších než 44 px" (26×54, 39×91, 1×54) a hlídač rozvržení k tomu
+   čtyři „překrývající se dvojice". Nic z toho nebylo na obrazovce —
+   byla to vada měření, kterou dřív nešlo udělat, protože se celý blok
+   filtrů schovával `display:none`. Tímhle pravidlem se to vrací do
+   téhož stavu: co není otevřené, nemá ani rozměr. */
+.mf:not([open]) > .mf-panel{display:none;}
+.mf-panel{position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:45;
+  max-height:min(60vh, 520px); overflow-y:auto; overscroll-behavior:contain;
+  padding:16px; background:var(--plocha-karta); color:var(--text);
+  border:1px solid var(--line); border-radius:var(--r-plocha); box-shadow:var(--e3);}
+/* PANEL SE MUSÍ VEJÍT DO OKNA, ne jen pod otvírač — a tohle pravidlo
+   musí stát ZA základním, jinak ho základ přebije (naměřeno: dolní
+   hrana panelu na 892 px v okně vysokém 844, protože `max-height`
+   z bloku nad základem neplatil; táž past jako u ploché karty).
+   Na 320 px má lišta 396 px, takže panelu zbývá 442 px z 844 — se
+   60 vh (506 px) přetékal dolní hranu okna o 48 px a rolovalo by se
+   stránkou, čímž by zmizel i otvírač, kterým se zavírá. */
+@media (max-width:1040px){
+  .mf-panel{max-height:min(44vh, 520px);}
+}
 /* Konec panelu filtrů: „kolik jich zbylo" a „zrušit". Drží se dole
    panelu, aby na ně člověk narazil právě ve chvíli, kdy dofiltroval. */
 /* PŘILEPENÉ DOLE. Panel je na telefonu delší než obrazovka, takže
@@ -2884,7 +2974,46 @@ h1 em{ color:var(--znacka-svetla);
 .mcf-akce{display:flex; gap:8px; align-items:stretch; margin-top:12px; padding:12px 0 2px;
   border-top:1px solid var(--line); position:sticky; bottom:0; z-index:5;
   background:linear-gradient(180deg, rgba(255,255,255,0) 0, var(--plocha-karta) 12px);}
+/* OTEVŘENÝ PANEL LEŽEL PŘES HLAVNÍ TLAČÍTKO WEBU.
+   ====================================================================
+   Panely skupin jsou absolutně umístěné pod řádkem otvíračů (z-index
+   45), takže zakrývaly lištu, která je hned pod ním — tedy „Zobrazit
+   N nemovitostí", odznak s počtem i „Zrušit filtry". Naměřeno 11. 11.
+   na 390 px: při otevřené skupině „Další filtry" sedělo na středu
+   tlačítka „Zrušit filtry" (16, 468, 358×46) tělo panelu, ne tlačítko,
+   a klepnutí se tedy nedalo provést vůbec. A přesně při filtrování je
+   ten počet nejpotřebnější: je to jediné místo, kde web řekne, kolik
+   nabídek po zaškrtnutí zbývá.
+   Lišta se proto na dobu, kdy je otevřená některá skupina, přilepí ke
+   spodní hraně obrazovky a jde nad panel (z-index 46 proti 45) — týž
+   postup, jaký mají velké weby s filtry na telefonu. Zavřením panelu
+   se vrátí do toku stránky. */
+.map-controls-panel:has(details.mf[open]) .mcf-akce{position:fixed;
+  left:0; right:0; bottom:0; z-index:46; margin:0;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top:1px solid var(--line); background:var(--plocha-karta);
+  box-shadow:var(--e3);}
+/* A AŤ POD TOU LIŠTOU NEZŮSTANE POSLEDNÍ OVLADAČ. Přilepená lišta
+   leží na spodním kusu panelu (naměřeno na 390 px: lišta od 697 px,
+   panel do 766 px, tedy 69 px přesahu; na 1 280 px je lišta vysoká
+   67 px). Panel se roluje, takže stačí mu dole přidat tolik místa,
+   kolik lišta zabere — rolováním se pak každý ovladač dostane nad ni.
+   Čísla jsou s rezervou: na úzkém displeji jdou obě tlačítka pod sebe
+   (dvakrát 46 px a odstupy), na monitoru stojí v jednom řádku. */
+@media (max-width:1040px){
+  .map-controls-panel:has(details.mf[open]) .mf-panel{padding-bottom:calc(128px + 32px);}
+}
+@media (min-width:1041px){
+  .map-controls-panel:has(details.mf[open]) .mf-panel{padding-bottom:96px;}
+}
 .mcf-hotovo{flex:1; min-height:46px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  /* ODSAZENÍ, KTERÉ TU NEBYLO ŽÁDNÉ. Na telefonu má tlačítko šířku
+     celého pruhu, takže se nápis vystředil a chyba nebyla vidět. Na
+     monitoru si šířku bere podle obsahu — a naměřeno 11. 11. na
+     1 280 px, že nápis „Zobrazit 3 601 nemovitostí" končil na 264 px,
+     tedy přesně na pravé hraně tlačítka: text se opíral o zaoblený
+     okraj. Hlavní tlačítko webu tak vypadalo jako uříznuté. */
+  padding:0 20px;
   border:0; border-radius:var(--r-ovladani); background:var(--plocha-znacka); color:#fff; font:inherit;
   font-size:16px; font-weight:700; cursor:pointer; box-shadow:var(--glow);
   transition:var(--prechod);}
@@ -3301,14 +3430,11 @@ h1 em{ color:var(--znacka-svetla);
   .map-controls > * + *{position:relative; padding-top:16px;}
   .map-controls > * + *::before{content:""; position:absolute; left:0; right:0; top:0;
     height:1px; background:var(--line);}
-  /* Poslední řádek jsou akce („Zobrazit N pozemků"), ty mají vlastní
-     odsazení a druhá linka by tam byla navíc. */
-  /* Řádek akcí taky přes celou šířku. Držel se v jednom sloupci mřížky,
-     takže hlavní tlačítko „Zobrazit N pozemků" mělo 194 px z 328 a vedle
-     něj leželo 134 px prázdna — a jeho vlastní horní linka byla kvůli
-     tomu kratší než ostatní oddělovače. */
-  .map-controls > .mcf-akce{grid-column:1 / -1; padding-top:4px;}
-  .map-controls > .mcf-akce::before{display:none;}
+  /* ŘÁDEK AKCÍ TU UŽ NENÍ — dvě pravidla pro `.map-controls > .mcf-akce`
+     (šířka přes celou mřížku a potlačení druhé linky) jsou od 10. 11.
+     mrtvá: lišta „Zobrazit N / Zrušit filtry" není dítětem panelu, stojí
+     pod celým řádkem otvíračů a platí pro všechny skupiny. Smazána,
+     ať v souboru nezůstává pravidlo, které nemá na co sednout. */
 }
 
 /* Příležitosti mají dlouhé popisky („Pod obvyklou cenou"), takže
@@ -3819,9 +3945,9 @@ h1 em{ color:var(--znacka-svetla);
 /* Srdíčko na fotce (vpravo nahoře) */
 /* Pilulka se slovem, ne kolečko s ikonou — protějšek tlačítka „Skrýt"
    v druhém rohu snímku. Tmavý podklad, protože leží na fotce. */
-.opp-media .opp-fav{position:absolute; top:8px; right:8px; z-index:3; min-height:32px; padding:0 12px; display:inline-flex; align-items:center; gap:4px; width:auto; height:auto; border-radius:var(--r-pill); background:rgba(var(--text-rgb),0.74); color:#fff; font:inherit; font-size:13px; font-weight:600; line-height:1;}
-.opp-media .opp-fav svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
-.opp-media .opp-fav:hover, .opp-media .opp-fav.on{color:var(--znacka-svetla);}
+.opp-item .opp-fav{position:absolute; top:8px; right:8px; z-index:3; min-height:32px; padding:0 12px; display:inline-flex; align-items:center; gap:4px; width:auto; height:auto; border-radius:var(--r-pill); background:rgba(var(--text-rgb),0.74); color:#fff; font:inherit; font-size:13px; font-weight:600; line-height:1;}
+.opp-item .opp-fav svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
+.opp-item .opp-fav:hover, .opp-item .opp-fav.on{color:var(--znacka-svetla);}
 /* Tělo karty pod fotkou */
 /* TEXT POD FOTKOU V POŘADÍ SREALITY: co to je → kde to je → za kolik.
    Odsazení je nulové, protože karta nemá plochu, do které by se dalo
@@ -4953,12 +5079,46 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Střed dole bere dotek odkazu na zdroj (3 polohy ze 101) — proto
      se odtud knoflík v listopadu stěhoval. Pravý roh nebere dotek
      nikomu, zato v 15 polohách sedí na slově „Uložit": přesně to,
-     co majitel reklamoval (úkol 181). Odsazení 112 px je jediné,
-     kde jsou obě čísla nulová a kde je navíc nejméně dotyků s čímkoli
-     (5 místo 21 a 29): knoflík stojí v pruhu mezi levým a pravým
-     sloupcem ovladačů, 4 px vlevo od pilulky „Uložit".
-     112 = 4 × 28, tedy číslo ze stupnice odstupů. */
-  .to-top{bottom:12px; right:112px; left:auto; width:48px; height:48px; margin-left:0;}
+     co majitel reklamoval (úkol 181). Odsazení 112 px bylo jediné,
+     kde byla obě čísla nulová.
+
+     PŘEMĚŘENO 11. 11., PROTOŽE SE ZMĚNILA KARTA. „Uložit" a „Skrýt"
+     se na ploché kartě přestěhovaly k sobě do pravého dolního rohu
+     (náhled nad nimi má jen 70 px výšky a tlačítka na něm ležela na
+     odznaku kategorie), takže pruh mezi dvěma sloupci ovladačů
+     zmizel — a odsazení 112 px začalo zakrývat STŘED NADPISU karty
+     (naměřeno: nadpis má střed na 244–249 px, knoflík stál na
+     230–278). Nové měření, 51 poloh rolování (2 200–4 200 px krokem
+     40) pro osm odsazení, 390 px:
+
+       odsazení   knoflík     zakryté středy          dotyky
+       12 px      330–378     „Uložit"                nadpis
+       60 px      282–330     „Skrýt", nadpis         „Uložit", nadpis
+       90 px      252–300     „Skrýt", nadpis         nadpis
+       112 px     230–278     nadpis                  „Skrýt", nadpis
+       140 px     202–250     nadpis                  nadpis
+       171 px     171–219     nadpis                  nadpis
+       200 px     142–190     nadpis                  nadpis
+       230 px     112–160     nic                     nadpis
+       280 px      62–110     nic                     nic
+       310 px      32– 80     nic                     nic
+       330 px      12– 60     nic                     nic
+
+     Tři poslední řádky jsou shodně čisté, a z nich je 330 px LEVÝ
+     DOLNÍ ROH: knoflík patří do rohu, ne doprostřed karty, a v tom
+     rohu nemá karta žádný ovladač (nejblíž je odznak kategorie, který
+     se neklepá). Zapisuje se proto jako `left:12px`, tedy odstup ze
+     stupnice, ne jako odsazení zprava.
+     (Sloupec „nápis tlačítka pod knoflíkem" z listopadového měření se
+     tu už neuvádí: na ploché kartě je odkazem celá karta, takže na
+     každé poloze odpoví „nadpis" a nic tím neřekne.) */
+  .to-top{bottom:12px; left:12px; right:auto; width:48px; height:48px; margin-left:0;}
+  /* A KDYŽ SE FILTRUJE, KNOFLÍK JE PRYČ. Lišta „Zobrazit N / Zrušit
+     filtry" se při otevřené skupině filtrů přilepí ke spodní hraně
+     obrazovky (viz .mcf-akce výš) a knoflík by jí seděl na levé části,
+     tedy na „Zrušit filtry" — týž druh překryvu, kvůli kterému se
+     stěhuje. Při filtrování navíc nikdo výpis nečte. */
+  body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events:none;}
 }
 
 /* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */
@@ -5163,25 +5323,23 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
        v panelu mezi ostatními filtry, takže řádek zmizel a lišta je
        o jeden nižší — na notebooku 1280×700 je to 52 px navíc pro
        výpis. */
+    /* ŘÁDEK FILTRŮ MÁ VLASTNÍ PRUH (10. 11.). Dokud byl otvírač
+       jeden, vešel se do lišty vedle hledání. Pět otvíračů se vedle
+       hledání nevejde a zalomením by si vzaly dvojí výšku, takže mají
+       druhý pruh přes celou šířku — tak jako v nástrojích velkých
+       realitních webů: hledání nahoře, filtry pod ním. */
     grid-template-areas:
-      "hledani okoli filtry .";}
-  /* OBAL ROZBALOVÁNÍ TU NESMÍ BÝT VIDĚT. `.ms-rozsirene` přibylo kvůli
-     telefonu (schová všechno kromě pole s lupou) a tiše rozbilo tuhle
-     mřížku: okolí, rychlé filtry a „Druh, cena, výměra a další" přestaly
-     být přímými dětmi lišty, spadly do JEDNÉ buňky a srovnaly se pod
-     sebe. Naměřeno na 1440×900: pole s lupou 570×46 stálo samo v levé
-     polovině lišty vysoké 174 px — 570 × 128 px prázdna — a tři ovládací
-     prvky se tísnily ve sloupci 512 px vpravo. `display:contents` obal
-     z vykreslování vyjme a jeho děti se do mřížky vrátí.
-     Selektory proto musí být potomkové, ne přímé: `display:contents`
-     mění vykreslování, ne strom, takže `>` by dál nesedělo. */
-  .ms-rozsirene{display:contents;}
+      "hledani okoli ."
+      "filtry filtry filtry"
+      "akce akce akce";}
   .map-controls-panel > .map-search{grid-area:hledani;}
   .map-controls-panel .map-okoli{grid-area:okoli;}
-  .map-controls-panel .ms-filters{grid-area:filtry; justify-self:stretch;}
-  /* Tlačítko zavírání patří jen telefonu — na širokém displeji se nic
-     neschovává, takže by to byl pátý prvek v liště bez práce. */
-  .map-controls-panel .msr-hotovo{display:none;}
+  .map-controls-panel .mc-rada{grid-area:filtry;}
+  .map-controls-panel .mcf-akce{grid-area:akce; margin-top:8px; padding:0;
+    border-top:0; justify-content:flex-start;}
+  /* Na široké liště se hlavní akce neroztahuje přes celou šířku:
+     tlačítko přes 1 400 px by vypadalo jako pás, ne jako ovladač. */
+  .map-controls-panel .mcf-hotovo{flex:0 0 auto; min-width:220px;}
   /* Rozpoznané odznaky jsou věty, ne tlačítka: dostanou vlastní řádek
      pod lištou, přes celou šířku. */
   .map-controls-panel .ms-chipy{grid-column:1 / -1;}
@@ -5195,8 +5353,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   .map-app:has(.map-controls-panel .ms-chipy:not([hidden])){min-height:660px;}
   /* V liště nestojí nic na sobě, takže odsazení shora (14 px, 12 px, 8 px)
      by jen rozhodila svislé zarovnání. */
-  .map-controls-panel > *,
-  .map-controls-panel .ms-rozsirene > *{margin-top:0;}
+  .map-controls-panel > *{margin-top:0;}
   .map-controls-panel > .map-search{min-width:0;}
   .map-controls-panel .map-near-btn{margin-top:0; width:auto; white-space:nowrap;}
   /* Rozpoznané odznaky na jeden řádek: v liště nesmí druhý řádek
@@ -5206,17 +5363,17 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;}
   .map-controls-panel .ms-chipy::-webkit-scrollbar{display:none;}
   .map-controls-panel .ms-chipy > *{flex:none;}
-  /* Filtry jako plovoucí panel. Rám i pozadí drží panel, ne <details>. */
-  .ms-filters{border:0; background:none; overflow:visible;}
-  .ms-filters .msf-summary{border:1px solid var(--line-strong); border-radius:var(--r-ovladani);
-    background:var(--plocha-karta); padding:12px 12px;}
-  .ms-filters[open] .msf-summary{border-color:var(--znacka-svetla); border-bottom-width:1px;
-    background:var(--plocha-zapustena);}
-  .ms-filters > .map-controls{position:absolute; top:calc(100% + 1px); left:16px; right:16px;
-    z-index:45; max-height:min(60vh, 520px); overflow-y:auto; overscroll-behavior:contain;
-    padding:16px; background:var(--plocha-karta); border:1px solid var(--line);
-    border-radius:var(--r-plocha); box-shadow:var(--e3);
-    grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px 20px;}
+  /* PANEL VISÍ POD SVÝM OTVÍRAČEM, ne přes celou lištu. Na úzkém
+     displeji je přes celou šířku řádku (základní pravidlo u .mf-panel),
+     tady se zavěsí pod to tlačítko, kterým se otevřel — jinak by se
+     u pátého otvírače otevíral na druhém konci lišty. */
+  .mf{position:relative;}
+  .mf-panel{left:0; right:auto; width:min(420px, 92vw);}
+  /* Poslední otvírač stojí u pravého okraje, takže jeho panel se musí
+     zarovnat vpravo, aby nevytekl z lišty. */
+  .mc-rada > .mf:last-of-type .mf-panel{left:auto; right:0;}
+  /* „Další filtry" nesou dvě skupiny vedle sebe, ne pod sebou. */
+  .mf-panel.map-controls{grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px 20px;}
   /* NÁHLED V POSTRANNÍM SLOUPCI JE NIŽŠÍ. Karta měla 420 px (náhled 208,
      tedy polovinu) a do seznamu vysokého 399–483 px se nevešla celá ani
      jedna nabídka. Z karty se přitom nedá ubrat nic textového: podřádek
@@ -5296,71 +5453,20 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      na y=105). */
   .map-app{border-top:0;}
 
-  /* HLEDÁNÍ SE ROZBALÍ AŽ NA KLEPNUTÍ.
+  /* ROZBALOVÁNÍ HLEDÁNÍ TU BYLO DO 10. 11.
      ------------------------------------------------------------------
-     Vidět zůstává jen pole s lupou (a odznaky toho, co web z napsané
-     věty pochopil). Okolí, druhy nabídek a „Druh, cena, výměra a další"
-     se ukážou, až se do pole klepne — naměřeno, ušetří to nad výpisem
-     365 px z 844, tedy 43 % obrazovky.
-     Je to ROZBALENÍ V TOKU: blok se jen objeví pod polem a odsune
-     výpis. Překryv přes obrazovku (první pokus) musel řešit zatmívací
-     plochu, vrstvy, Escape i zavírání po výběru obce; blok v toku nemá
-     co překrýt, takže z toho nezbylo nic. */
-  .ms-rozsirene{display:none;}
-  body.hledani-rozbalene .ms-rozsirene{display:block;}
-  /* TLAČÍTKO FILTRŮ SDÍLÍ ŘÁDEK S PŘEPÍNAČEM Seznam/Mapa.
-     Tím si nebere ani pixel výšky navíc a úspora rozbalování
-     (365 px z 844) zůstává celá — viz komentář u něj v index.html.
-     Smrsknutí přepínače stojí o pár set řádků níž, u jeho vlastního
-     pravidla: tam má `flex:1 1 100%` a to by tohle přebilo.
-     Naměřeno: s pravidlem tady panel narostl ze 164 na 216 px. */
-  .ms-filtr{flex:0 0 auto; display:inline-flex; align-items:center; gap:8px;
-    /* 44 px je chytací plocha pro prst, stejně jako u přepínače vedle. */
-    min-height:44px; padding:0 12px; border:1px solid var(--line-ui);
-    border-radius:var(--r-ovladani); background:var(--plocha-karta);
-    color:var(--text); font:inherit; font-size:14px; font-weight:600;
-    line-height:1; cursor:pointer; transition:var(--prechod);}
-  .ms-filtr .ik{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
-  .ms-filtr:hover{border-color:var(--znacka-svetla);}
-  /* Rozbalený panel je stav, ne jen akce — ať je z tlačítka poznat. */
-  body.hledani-rozbalene .ms-filtr{border-color:var(--znacka-svetla); color:var(--znacka);}
-  /* Kolik filtrů je zapnutých. Totéž číslo, jaké nese odznak
-     u zavřeného panelu (#msf-badge) — počítá ho jedna funkce. */
-  .ms-filtr-n{display:inline-flex; align-items:center; justify-content:center;
-    min-width:20px; height:20px; padding:0 4px; border-radius:var(--r-pill);
-    background:var(--znacka); color:#fff; font-size:12px; font-weight:700;}
-  .ms-filtr-n[hidden]{display:none;}
-  /* NA NEJUŽŠÍM TELEFONU ZBUDE JEN IKONA.
-     Na 320 px má řádek 288 px vnitřku a přepínač Seznam/Mapa se pod
-     svou vlastní šířku nestlačí: s nápisem „Filtry" (85 px) se obojí
-     nevešlo a tlačítko se zalomilo pod něj — naměřeno, panel narostl
-     ze 164 na 216 px. Ikona filtru je srozumitelná sama o sobě a
-     přístupné jméno zůstává celé, protože nápis se jen schová okem
-     (visually-hidden), nevyhodí se ze stromu. */
-  @media (max-width:360px){
-    /* 44 px i na šířku, ne jen na výšku: chytací plocha pro prst má
-       být čtverec 44×44 (naměřeno: se samotnou ikonou a 10px vycpávkou
-       vyšlo 40 px). */
-    .ms-filtr{padding:0 12px; min-width:44px; justify-content:center;}
-    .ms-filtr > span:not(.ms-filtr-n){position:absolute; width:1px; height:1px;
-      margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap;}
-  }
-  /* Když je rozbaleno, je u toho čím to zavřít. Na širokém displeji
-     se tenhle blok nikdy neschovává, takže tam tlačítko nesvítí. */
-  /* HLAVNÍ AKCE PANELU VYPADÁ JAKO HLAVNÍ AKCE.
-     Tlačítko bylo bílé s obrysem — tedy vizuálně totéž co „Uložené",
-     „Doporučené" nebo „Stáhnout výběr", kterých je v horní části
-     telefonu pět. Majitel: „uživatel nepozná, co je hlavní akce."
-     Teď je to jediná plná plocha ve značkové zeleni v celém panelu;
-     ostatní ovládání zůstává v obrysu. Pravidlo webu zní: plná zeleň
-     pro JEDNU hlavní akci, obrys pro vedlejší (viz .btn-secondary). */
-  .msr-hotovo{display:block; width:100%; margin-top:12px; padding:12px;
-    border:1px solid var(--plocha-znacka); border-radius:var(--r-ovladani);
-    background:var(--plocha-znacka); color:#fff;
-    font-family:var(--font-ui); font-size:16px; font-weight:700; cursor:pointer;
-    box-shadow:var(--e1);
-    transition:var(--prechod);}
-  .msr-hotovo:active{background:var(--znacka); transform:translateY(1px);}
+     Vidět zůstávalo jen pole s lupou a odznaky; okolí, druhy nabídek
+     i „Druh, cena, výměra a další" se ukázaly až po klepnutí do pole.
+     Ušetřilo to nad výpisem 365 px z 844, tedy 43 % obrazovky — jenže
+     to, co se schovávalo, byly FILTRY, tedy hlavní funkce webu.
+     Naměřeno, že na 320, 390 i 768 px měly nulovou velikost, dokud se
+     do hledání neklepne. Odešla s tím tři pravidla, která tu vadu
+     obcházela nebo obsluhovala: tlačítko „Filtry" (.ms-filtr) s jeho
+     počtem, zúžení na ikonu do 360 px a „Hotovo" (.msr-hotovo), které
+     rozbalení zavíralo.
+     Místo nich je řádek otvíračů (.mc-rada), který se vodorovně roluje
+     a bere si JEDNU výšku ovladače; panely jednotlivých skupin visí
+     nad obsahem, takže výpis neodsouvají vůbec. */
   .map-side{order:2; border-right:0; max-height:none;}
   /* STEJNÁ ÚROVEŇ JAKO VÝPIS (31. 10.). V seznamu začíná první
      ovladač 16 px pod pásem s hledáním, mapa začínala rovnou na něm —
@@ -5504,12 +5610,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     background:var(--plocha-karta);
     border:0; box-shadow:inset 0 0 0 1px var(--line-ui), var(--e1);
     border-radius:var(--r-ovladani); padding:0; overflow:visible;}
-  /* A ZMĚŘENO ZŮSTÁVÁ: přepínač pustí tlačítko „Filtry" na svůj řádek.
-     `flex:1 1 100%` výš ho roztáhne přes celou šířku, takže by se
-     tlačítko zalomilo pod něj a panel by narostl o 52 px (naměřeno
-     164 → 216 px na 390 px). Tady se bázi vezme 100 % a přepínač se
-     smrskne přesně o to, co si vedle něj vezme tlačítko. */
-  .mcp-hledani:has(.ms-filtr) .mv-toggle{flex:1 1 auto; min-width:0;}
+
   /* Jezdec. Stojí 3 px od okrajů dráhy a v pravé poloze mu 3 px
      zbydou i napravo — proto šířka `50% - 6px` a posun o vlastní
      šířku plus těch 6 px. Je to přesně ten obdélník, který si pod
@@ -5669,8 +5770,8 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Stálo tu width:38px — pilulka se do toho nevešla, text se ořízl
      a vypadalo to, že přetéká přes okraj karty (naměřeno: tlačítko
      38 px, samotné slovo v něm 36 px). */
-  .opp-media .opp-fav{min-height:38px; top:10px; right:10px;}
-  .opp-media .opp-fav svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
+  .opp-item .opp-fav{min-height:38px; top:10px; right:10px;}
+  .opp-item .opp-fav svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
   .opp-body{padding:12px 12px 12px;}
   .opp-chips{gap:4px;}
   .opp-chips > span{font-size:13px; padding:4px 8px;}
@@ -9507,18 +9608,26 @@ body > footer{flex:none;}
    totéž, co karty: PLOCHU SE SVĚTLEM SHORA a zvednutí nad podklad.
    Přeliv je směr světla, ne ozdoba: stín pod tlačítkem říká „svítí
    shora", a plochá výplň nad ním si s tím odporovala. */
-.mc-rychly{background-color:var(--plocha-znacka); border-color:transparent; color:#fff;
-  background-image:var(--preliv-znacka);
-  font-weight:700; box-shadow:var(--e1), var(--glow);}
-/* A vedlejší ovladače v téže sestavě jsou bílé klávesy, ne ploché
+/* „PROCHÁZET PO JEDNOM" UŽ NENÍ DRUHÁ HLAVNÍ AKCE.
+   ====================================================================
+   Do 11. 11. to byla sytě zelená plocha přes celou šířku — tedy totéž,
+   čím se na webu značí hlavní akce. Na telefonu tak stála dvě plná
+   zelená tlačítka 140 px od sebe: „Zobrazit 3 601 nemovitostí" (lišta
+   filtrů, y 349) a „Procházet po jednom" (y 489). Dvě hlavní akce
+   vedle sebe znamenají, že hlavní není ani jedna — a role těch dvou
+   je přitom různá: první POUŽIJE FILTRY a pošle člověka na výsledky,
+   druhá jen přepne ZPŮSOB ČTENÍ už hotového výpisu. Je to tedy
+   sourozenec „Uložených" a „Stáhnout výběr", ne jejich nadřízený:
+   bere si proto tutéž bílou klávesu jako ony (pravidlo o řádek níž)
+   a zelená zůstává ikoně. */
+/* Vedlejší ovladače v téže sestavě jsou bílé klávesy, ne ploché
    obrysy: týž přeliv o řád slabší a stín `--e1`. Zapnuté „Uložené"
    (`.mc-prep.on`) se vynechává — to nese sytou značkovou plochu
-   a druhý přeliv přes ni by ji jen zašpinil. */
-.ms-vysledky .mc-nastroj:not(.mc-rychly), .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn{background-color:var(--plocha-karta); background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 52%, rgba(var(--plocha-tmava-2-rgb),0.055)); box-shadow:var(--e1);}
-.mc-rychly .mcn-ic{color:#fff;}
-.mc-rychly:hover{background-color:var(--znacka); border-color:transparent; color:#fff;
-  box-shadow:var(--e2), var(--glow-lg);}
-.mc-rychly:hover .mcn-ic{color:#fff;}
+   a druhý přeliv přes ni by ji jen zašpinil. Od 11. 11. sem patří
+   i „Procházet po jednom" (viz komentář výš). */
+.ms-vysledky .mc-nastroj, .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn{background-color:var(--plocha-karta); background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 52%, rgba(var(--plocha-tmava-2-rgb),0.055)); box-shadow:var(--e1);}
+/* Ikona nese značku, plocha ne — jako u ostatních kláves v sestavě. */
+.mc-rychly .mcn-ic{color:var(--znacka-svetla);}
 
 /* NA ŠIROKÉM DISPLEJI JE VÝPIS V ÚZKÉM SLOUPCI VEDLE MAPY A LIŠTA NAD
    NÍM MU NESMÍ SEBRAT MÍSTO. Naměřeno na 1280×900: nad výpisem stálo
@@ -9538,7 +9647,27 @@ body > footer{flex:none;}
   .map-side{overflow-y:auto; overscroll-behavior:contain;}
   .opp-list{overflow:visible; flex:none;}
   .mc-akce{gap:4px;}
-  .mc-nastroj{min-height:32px; padding:0 8px; font-size:13px;}
+  /* JEDNA VÝŠKA A JEDNO PÍSMO PRO CELOU SESTAVU NAD VÝPISEM.
+     Naměřeno 11. 11. na 1 280 px: řazení 44 px / 16 px / 700,
+     „Uložené" 36 / 13 / 600, „Stáhnout výběr" i „Procházet po jednom"
+     32 / 13 / 700 — tři výšky a tři řezy na čtyřech tlačítkách, která
+     leží vedle sebe v jednom pruhu. Žádné z těch čísel nebylo
+     rozhodnutí o roli, jen zbytek po třech různých předcích.
+     Role je přitom u všech táž: vedlejší ovladač výpisu. Dostávají
+     proto 36 px (výška, na kterou se sestava vešla už dřív) a 14/600,
+     tedy týž řez jako otvírače filtrů o kus výš. Na telefonu zůstává
+     44 px a 16 px — tam se ovládá prstem a místa je celá šířka. */
+  .mc-nastroj, .ms-vysledky .msv-ulozene, .ms-vysledky > .cdd > .cdd-btn{
+    min-height:36px; height:auto; padding:0 12px; font-size:14px; font-weight:600;}
+  /* A POČET Z NÁPISU PRYČ — TÁŽ ÚZKÁ SESTAVA JAKO NA TELEFONU.
+     Sloupec s výpisem má vedle mapy 400 px, tedy míň než displej
+     telefonu, a „Stáhnout výběr (3 601)" se do něj vedle „Procházet
+     po jednom" nevejde: naměřeno 11. 11. na 1 280 px, že nápis
+     končil za pravou hranou sloupce. Pro telefon tu je od 26. 10.
+     hotové pravidlo (.mc-pocet mizí do 480 px) a platí pro ně týž
+     důvod — číslo stojí o dva řádky výš v nadpisu výpisu a celé
+     znění drží aria-label. */
+  .ms-vysledky .mc-pocet{display:none;}
 }
 
 /* =====================================================================
@@ -9727,7 +9856,7 @@ body > footer{flex:none;}
      a fotka v něm jen 116 px široká miniatura: dva plné kroužky po 44 px
      by na ní zabraly 38 % šířky. Takhle je ta dvojice na miniatuře
      MENŠÍ než dnes (32 místo 36 px), a přesto se do ní dá trefit. */
-  .opp-media .opp-fav{min-height:44px; padding:0 12px;}
+  .opp-item .opp-fav{min-height:44px; padding:0 12px;}
   /* Tlačítko se slovem už není kolečko: má vlastní plochu i obrys,
      takže kroužek z ::before (dělaný pro holou ikonu) nepotřebuje.
      Výška 44 px je dotykový terč. */
@@ -11423,7 +11552,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    z dvaadvaceti ploch přeliv nedostalo — na .filter-chip.active bylo
    změřeno background-image:none. Shoda specificity rozhoduje pořadím,
    takže tohle pravidlo musí být poslední. */
-.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .msr-hotovo, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet, .skip-link, .vm-vetsi, .vm-ok, .reset-btn, .copy-btn, .rv-uvod-ok, .vyv-ok, .st-btn-1, .zp-btn, .mc-toggles .mc-prep.on, .mcv-btn.mcv-nula.on, .mc-info[aria-expanded="true"] span, .map-podklad button.on, .mv-v.on, .ms-vysledky .msv-ulozene.on, .vm-km input:checked + span, .as-num, .uc-tab-pocet, .msch, .pp-titulka, .msf-badge{background-image:var(--preliv-znacka);}
+.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet, .skip-link, .vm-vetsi, .vm-ok, .reset-btn, .copy-btn, .rv-uvod-ok, .vyv-ok, .st-btn-1, .zp-btn, .mc-toggles .mc-prep.on, .mcv-btn.mcv-nula.on, .mc-info[aria-expanded="true"] span, .map-podklad button.on, .mv-v.on, .ms-vysledky .msv-ulozene.on, .vm-km input:checked + span, .as-num, .uc-tab-pocet, .msch, .pp-titulka, .msf-badge{background-image:var(--preliv-znacka);}
 /* ===== PLOCHÁ KARTA NA TELEFONU ====================================
    ZMĚŘENO, PROČ: na 390 px měla karta medián 360 px, 24 karet tedy
    8 640 px a celá úvodní stránka 15 940 px = 18,9 obrazovek telefonu.
@@ -11455,15 +11584,47 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   .opp-meta{font-size:13px;}
   .opp-cenarad{margin-top:4px;}
   .opp-price{font-size:24px; margin-top:0;}
-  /* Tlačítka zůstávají na náhledu, ale jen jako ikona — slovo se do
-     112 px nevejde. Chytací plocha je dál 44 px (test-dotyk). */
-  .opp-media .opp-fav, .opp-media .opp-skryt{min-height:44px; min-width:44px;
+  /* TLAČÍTKA JDOU Z NÁHLEDU NA OKRAJ KARTY — a je to měřené.
+     Na svislé kartě měl náhled 370×231 px a tři prvky (odznak vlevo
+     dole, uložit vpravo nahoře, skrýt vlevo nahoře) se na něm
+     nepotkaly. Na ploché kartě má náhled 112×70 px a nestalo se nic
+     menšího, než že se potkaly všechny tři: naměřeno, že „Skrýt"
+     (44×44 na 25..69 px) leží 4 px od středu náhledu, kam míří prst
+     při otevírání nabídky, a zároveň na odznaku kategorie (26..41 ×
+     717..732). Křížek, který nabídku odstraní, tedy sedí přesně tam,
+     kam prst míří — a to je vada, kterou test-rozvrzeni popsal už
+     v říjnu („klikám na pozemky a skrývají se mi a nevím proč").
+     Na ploché kartě je terčem CELÁ KARTA (358×166), ne náhled, takže
+     tlačítka patří na její okraj: uložit a skrýt vedle sebe vpravo
+     dole, odznak kategorie vlevo dole. Měřeno po změně: „Skrýt" je
+     253 px od středu náhledu (dřív 4) a odznak kategorie je na druhé
+     straně karty.
+     Obě tlačítka jsou proto od 10. 11. dětmi KARTY, ne náhledu (viz
+     js/main.js) — stylem to nešlo: `position:static` na náhledu pustí
+     na kartu i samotný snímek a jeho ztmavení, které jsou uvnitř
+     náhledu umístěné absolutně, a výpis zčerná. */
+  /* VEDLE SEBE V PRAVÉM DOLNÍM ROHU KARTY, a to je ZMĚŘENÁ volba ze
+     tří. Nad tělem (vpravo nahoře, pod sebou) by si tlačítka vzala
+     100 px z nadpisu a řádek s výměrou a cenou za metr by se v tom
+     zbytku zalomil: naměřeno, karta ze 166 na 188 px, stránka
+     o 394 px delší. Přes tělo bez odsazení by text běžel pod nimi.
+     Vpravo dole kryjí řádek odznaků, který se na ploché kartě stejně
+     ořezává na jeden (`.opp-chips` níž), takže karta zůstala na
+     166 px (131–214) a stránka na 11 682 px. */
+  .opp-item .opp-fav{top:auto; bottom:4px; right:4px; left:auto;}
+  .opp-item .opp-skryt{top:auto; bottom:4px; right:52px; left:auto;}
+  .opp-badge{top:auto; bottom:4px; left:4px;}
+  /* Odznaky nesmí běžet pod tlačítky: 100 px jsou obě i s mezerami. */
+  .opp-chips{padding-right:96px;}
+  /* Tlačítka zůstávají jen jako ikona — slovo se do 44px kruhu
+     nevejde. Chytací plocha je dál 44 px (test-dotyk). */
+  .opp-item .opp-fav, .opp-item .opp-skryt{min-height:44px; min-width:44px;
     padding:0; justify-content:center; align-items:center;}
   /* Slovo v tlačítku zůstává ve značce pro odečítač, jen se nekreslí —
      do 44px kruhu se „Uložit" ani „Skrýt" nevejde a ořezávalo se.
      Platí pro OBĚ tlačítka: napoprvé tu stálo jen .opp-fav a měření
      pak našlo 24 useknutých prvků, po jednom na kartu — to „Skrýt". */
-  .opp-media .opp-fav .os-t, .opp-media .opp-skryt .os-t{position:absolute;
+  .opp-item .opp-fav .os-t, .opp-item .opp-skryt .os-t{position:absolute;
     width:1px; height:1px; overflow:hidden; clip-path:inset(50%);}
   /* JEDEN ODZNAK, NE TŘI. Do 196 px zbylých po náhledu se tři odznaky
      („Dražba za 3 dny", „−47 % proti okolí", „Doporučujeme") nevejdou

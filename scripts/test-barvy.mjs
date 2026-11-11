@@ -17,7 +17,7 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { otevriPanel } from './rozbal-hledani.mjs';
+import { otevriSkupinu } from './rozbal-hledani.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
 import { domUtichlo } from './zkouska-pripraveno.mjs';
@@ -207,11 +207,13 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
      poslal („toto by mělo být spojené se zbytkem"), takže ve sbaleném
      panelu není vidět a `isVisible()` by všech pět kategorií přeskočil
      — zkouška by prošla naprázdno a pojistka „aspoň tři kategorie" to
-     právem shodila. Panel se proto otevře. */
-  await otevriPanel(p);
-  await domUtichlo(p, 300);
+     právem shodila. Panel se proto otevře — a od 10. 11. jen TEN, kde
+     čip bydlí: otevřených panelů je pět, leží přes sebe a klepnutí by
+     trefilo ten vrchní (viz scripts/rozbal-hledani.mjs). */
   let mereno = 0;
   for (const k of KATEGORIE) {
+    await otevriSkupinu(p, `[data-type="${k}"]`);
+    await domUtichlo(p, 300);
     const btn = await p.$(`[data-type="${k}"]`);
     pravda(`filtr „${k}" na úvodu je`, !!btn, 'bez něj se ke kartě té kategorie nedostanu');
     if (!btn) continue;

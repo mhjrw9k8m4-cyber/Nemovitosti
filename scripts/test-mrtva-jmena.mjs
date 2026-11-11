@@ -25,8 +25,12 @@
    který něco schová.
 
    JAK SE POZNÁ ŽIVÉ JMÉNO BEZ PRAVIDLA. Jsou dva legitimní druhy:
-   úchyt pro JS (`os-t`, které si skript hledá, aby přepsal slovo
-   v tlačítku) a úchyt pro zkoušku (`pk-maska`). Oba patří do tabulky
+   úchyt pro JS a úchyt pro zkoušku (`pk-maska`). Příkladem prvního
+   druhu bylo do 11. 11. `os-t` — jméno, které si skript hledá, aby
+   v tlačítku karty přepsal „Uložit" na „Uloženo". Pravidlo mu přibylo
+   s plochou kartou (nápis se na ní skrývá a zbude ikona), takže
+   výjimku už nepotřebuje a je smazaná: tabulka výjimek má být krátká
+   a každý řádek v ní živý. Oba patří do tabulky
    výjimek, a ke každému musí být napsané, KDO ho čte — jinak tabulka
    tiše roste a kontrola přestane být k něčemu. A platí to obojím
    směrem: výjimka na jméno, které se na stránkách už neobjevuje, se
@@ -54,7 +58,6 @@ function pravda(popis, vyslo, proc) {
 /* Jméno, které v DOM je a pravidlo k němu není — a přesto je živé.
    Ke každému KDO ho čte; bez toho tu nemá co dělat. */
 const VYJIMKY = {
-  'os-t': 'úchyt pro skript: js/main.js si ho hledá, aby v tlačítku přepsal „Uložit" na „Uloženo" (a čte ho i scripts/test-klic-ulozenych.mjs)',
   'pz-pozn-skok-t': 'úchyt pro skript: js/pozemek.js si jím přepisuje text v tlačítku „Přidat poznámku"',
   'pk-maska': 'úchyt pro zkoušky: scripts/test-maska.mjs a scripts/test-obrys.mjs si jím hledají závoj nad mapou',
   'leaflet-dots-pane': 'jméno vlastní vrstvy, kterou si web v Leafletu zakládá na tečky pozemků; hledají si ji scripts/test-pohyb.mjs, test-obec.mjs a test-tvary.mjs',

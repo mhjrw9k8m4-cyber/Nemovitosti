@@ -6648,8 +6648,7 @@
     if (akceZrusit) akceZrusit.hidden = !jeNecoZapnute();
   }
   if (akceHotovo) akceHotovo.addEventListener('click', function () {
-    var panel = document.getElementById('ms-filters');
-    if (panel) panel.open = false;
+    zavriPanely(null);
     /* Přepnout na seznam, ne jen sjet: kdo filtruje, chce vidět nabídky.
        Když už je seznam zapnutý, klepnutí nic nezkazí. */
     var tab = document.querySelector('.mvt-btn[data-mv="seznam"]');
@@ -6658,33 +6657,80 @@
   });
   if (akceZrusit) akceZrusit.addEventListener('click', function () {
     resetFilters();
-    var panel = document.getElementById('ms-filters');
-    if (panel) panel.open = false;
+    zavriPanely(null);
     scrollNaVypis();
   });
 
-  /* ZAVÍRÁNÍ PLOVOUCÍHO PANELU. Od šířky 1041 px panel filtrů neleží
-     v toku stránky, ale visí z lišty přes mapu — je to vrstva. Vrstva se
-     musí dát zavřít i jinak než trefením se zpátky do záhlaví: klávesou
-     Esc a klepnutím vedle. (Dokud panel roztahoval sloupec, nic z toho
-     nebylo potřeba; teď zakrývá mapu, takže otevřený panel překáží.)
-     Na užších displejích panel v toku pořád je a zavírání klepnutím
-     vedle by tam jen vadilo, proto se poslouchá jen nad 1041 px. */
+  /* ZAVÍRÁNÍ PANELŮ SKUPIN — na všech šířkách, protože od 10. 11. visí
+     panel nad obsahem na všech šířkách. Vrstva se musí dát zavřít
+     i jinak než trefením se zpátky do otvírače: Escapem a klepnutím
+     vedle.
+     JEDEN OTEVŘENÝ NAJEDNOU. Pět otevřených panelů nad sebou by se
+     překrývalo (jsou absolutně umístěné) a člověk by nevěděl, který
+     ovladač patří ke které skupině.
+     KLEPNUTÍ V ZACHYCOVACÍ FÁZI, NE `pointerdown` — zůstalo to
+     z rozbalování hledání, které tu bylo do 10. 11., a stálo to jednu
+     pokaženou zkoušku: na dotek prstu se panel složil ještě před
+     dopadem klepnutí, obsah pod prstem vyskočil nahoru a klepnutí
+     přistálo na něčem jiném (test-okoli).
+     A NEZAVÍRAJÍ okna, která se nad panelem otevírají: okno s rozsahem
+     ceny se zavírá tlačítkem uvnitř sebe, a to leží mimo panel
+     (test-naseptavac). */
+  var NEZAVIRA_PANEL = '.rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
+  function zavriPanely(krome) {
+    var p = document.querySelectorAll('details.mf');
+    for (var i = 0; i < p.length; i++) if (p[i] !== krome && p[i].open) p[i].open = false;
+  }
   (function zavirani() {
-    var panel = document.getElementById('ms-filters');
-    if (!panel || !window.matchMedia) return;
-    var siroko = window.matchMedia('(min-width:1041px)');
-    function vrstva() { return panel.open && siroko.matches; }
+    var panely = document.querySelectorAll('details.mf');
+    if (!panely.length) return;
+    for (var i = 0; i < panely.length; i++) {
+      /* ZAVÍRÁ SE PŘI KLEPNUTÍ NA SOUHRN, NE V `toggle`.
+         `toggle` se vykoná až po otevření a ještě ne hned: naměřeno,
+         že hned po klepnutí na druhý otvírač jsou otevřené DVA
+         panely, protože zavření prvního čeká ve frontě, a dva
+         absolutně umístěné panely přes sebe jsou na jeden snímek
+         vidět. Souhrn proto zavírá ostatní rovnou při klepnutí, ještě
+         než se ten svůj otevře. Klávesnice tím není ošizená: Enter
+         ani mezerník na souhrnu `click` nevynechají.
+         A `toggle` SCHVÁLNĚ NEHLÍDÁ. Kdyby hlídal, nedal by se žádný
+         panel otevřít ze skriptu jinak než po jednom — každé
+         otevření by zavřelo předchozí — a zkoušky, které měří
+         ovladače z několika skupin naráz, by měřily jen tu poslední
+         (naměřeno: z pěti zůstal jeden). Dvě otevřené naráz nejsou
+         vada, kterou by bylo třeba vynucovat kódem: člověk se k nim
+         neklepne, a kdo si je otevře prohlížečem (hledání na
+         stránce rozbaluje <details> samo), má radši obojí vidět než
+         jedno zavřené pod rukou. */
+      (function (d) {
+        var sum = d.querySelector('summary');
+        if (sum) sum.addEventListener('click', function () { if (!d.open) zavriPanely(d); });
+      }(panely[i]));
+    }
+    function otevreny() {
+      var p = document.querySelectorAll('details.mf');
+      for (var j = 0; j < p.length; j++) if (p[j].open) return p[j];
+      return null;
+    }
     document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape' || !vrstva()) return;
-      panel.open = false;
-      var sum = panel.querySelector('summary');
+      if (e.key !== 'Escape' && e.key !== 'Esc') return;
+      var d = otevreny();
+      if (!d) return;
+      /* ESCAPE ZAVÍRÁ JEN TO NEJVRCHNĚJŠÍ. Nad panelem se otevírají
+         další okna a Escape patří jim — jinak by člověku zmizelo
+         i to, kam se má po zavření okna vrátit (test-naseptavac). */
+      var kde = document.activeElement;
+      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
+      d.open = false;
+      var sum = d.querySelector('summary');
       if (sum) sum.focus();
     });
-    document.addEventListener('pointerdown', function (e) {
-      if (!vrstva() || panel.contains(e.target)) return;
-      panel.open = false;
-    });
+    document.addEventListener('click', function (e) {
+      var cil = e.target;
+      if (!cil || !cil.closest) return;
+      if (cil.closest('details.mf') || cil.closest(NEZAVIRA_PANEL)) return;
+      zavriPanely(null);
+    }, true);
   })();
 
   /* Které omezení výpis vyprázdnilo. Zkusí se každé zvlášť vypnout
@@ -6899,154 +6945,25 @@
   var posledniOtiskFiltru = null;
   // Ukazatel u „Cena, výměra a řazení" — kolik doplňkových filtrů je aktivních,
   // ať uživatel pozná, že něco filtruje, i když je panel sbalený.
-  /* OTEVÍRÁNÍ HLEDÁNÍ NA TELEFONU.
-     Panel je na úzkém displeji překryv přes celou obrazovku; tady se
-     jen přepíná třída na <body>, zbytek je styl. Zavírá se čtyřmi
-     způsoby — tlačítkem „Hotovo", Escapem, druhým klepnutím na
-     „Upravit hledání" a klepnutím mimo panel; výsledky se překreslují
-     průběžně, takže „Hotovo" nic nepotvrzuje, jen zavírá. */
-  /* ROZBALENÍ HLEDÁNÍ NA TELEFONU.
+  /* ROZBALOVÁNÍ HLEDÁNÍ TU BYLO DO 10. 11. A JE PRYČ — a je to velká
+     úspora kódu za lepší chování.
      ------------------------------------------------------------------
-     Vidět je pořád jen pole s lupou; okolí, druhy nabídek a „Druh,
-     cena, výměra a další" se ukážou, až se do pole klepne. Zavírá se
-     tlačítkem „Hotovo" pod nimi.
-
-     PRVNÍ POKUS BYL PŘEKRYV PŘES OBRAZOVKU a byla to chyba v návrhu,
-     ne v provedení: do panelu patří i našeptávač obcí, odznaky
-     rozpoznaných filtrů a „Pozemky v okolí", tedy věci, které musí
-     být vidět i po zavření. Každá oprava toho překryvu si vyžádala
-     další (zatmívací plocha → vrstvy → Escape → zavírání po výběru
-     obce). Tohle je rozbalení V TOKU: blok se objeví pod polem a
-     odsune výpis, takže nemá co překrýt a nic z toho neplatí.
-
-     ROZBALUJE SE I ZAMĚŘENÍM, ne jen klepnutím: kdo se do pole dostane
-     tabulátorem nebo mu ho vyplní prohlížeč, má mít filtry po ruce
-     stejně jako ten, kdo klepl. */
-  (function rozbaleniHledani() {
-    var pole = document.getElementById('map-search');
-    var blok = document.getElementById('ms-rozsirene');
-    if (!pole || !blok) return;
-    function prepni(na) {
-      document.body.classList.toggle('hledani-rozbalene', na);
-      pole.setAttribute('aria-expanded', na ? 'true' : 'false');
-      /* Tlačítko „Filtry" říká týž stav. Bez toho by odečítač hlásil
-         „sbaleno" i nad otevřeným panelem — a hlásil by to pokaždé,
-         protože zavírá i Escape, odrolování a klepnutí mimo. */
-      var fb = document.getElementById('ms-filtr');
-      if (fb) fb.setAttribute('aria-expanded', na ? 'true' : 'false');
-    }
-    ['click', 'focus'].forEach(function (typ) {
-      pole.addEventListener(typ, function () { prepni(true); });
-    });
-    /* Lupa je jen obrázek vedle pole, ale je to terč, do kterého se
-       prstem trefí každý druhý — ať dělá totéž co pole. */
-    var lupa = document.querySelector('.map-controls-panel .ms-lupa');
-    if (lupa) lupa.addEventListener('click', function () { prepni(true); try { pole.focus(); } catch (e) {} });
-    /* TLAČÍTKO „FILTRY" VEDLE PŘEPÍNAČE Seznam/Mapa.
-       Do 1040 px je to jediná cesta k filtrům, která je vidět:
-       otvírač panelu („Druh, cena, výměra a další") leží uvnitř
-       rozbalení, takže má na telefonu nulovou velikost (naměřeno
-       6. 11. na 320, 390 i 768 px). Celé zdůvodnění je u tlačítka
-       v index.html.
-       PŘEPÍNÁ, NEOTEVÍRÁ. Druhé klepnutí zavírá — jinak by se filtry
-       nedaly schovat jinak než odrolováním nebo Escapem a tlačítko
-       by si odporovalo se svým vlastním aria-expanded.
-       ZAMĚŘENÍ SE NEPŘENÁŠÍ DO POLE. Kdo chce filtry, nechce
-       klávesnici přes půl obrazovky. */
-    var filtrBtn = document.getElementById('ms-filtr');
-    if (filtrBtn) filtrBtn.addEventListener('click', function () {
-      var otevrit = !document.body.classList.contains('hledani-rozbalene');
-      prepni(otevrit);
-      if (!otevrit) return;
-      /* Panel uvnitř rozbalení je <details> a zavřený se otevře až
-         klepnutím na svůj souhrn. Kdo klepl na „Filtry", chce vidět
-         filtry, ne další věc, na kterou se musí klepnout. */
-      var panel = document.getElementById('ms-filters');
-      if (panel) {
-        panel.open = true;
-        /* Až po vykreslení: rozbalený blok teprve vznikl, takže
-           dřív by se rolovalo na místo, kde ještě nic není. */
-        requestAnimationFrame(function () {
-          try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
-        });
-      }
-    });
-    var hotovo = document.getElementById('msr-hotovo');
-    if (hotovo) hotovo.addEventListener('click', function () {
-      prepni(false);
-      /* Zaměření zpátky na pole by blok hned zase rozbalilo. */
-      try { hotovo.blur(); } catch (e) {}
-    });
-    /* A TEĎ TO, CO TU CELOU DOBU CHYBĚLO: ZAVÍRÁNÍ.
-       Komentář o kus výš sliboval čtyři způsoby, jak hledání zavřít
-       (Hotovo, Escape, klepnutí mimo, druhé klepnutí), ale v kódu byl
-       jediný — tlačítko „Hotovo". Jedno klepnutí do pole tedy otevřelo
-       filtry NATRVALO: naměřeno, že po Escapu, po odrolování o 1 200 px
-       i po klepnutí na kartu zůstala třída `hledani-rozbalene` na
-       <body> viset dál. Majitel webu: „proč to vidím, i když
-       nevyhledávám — má to být vidět, jen když vyhledávám."
-       Zavírá se tedy třemi dalšími způsoby:
-         · Escape (klávesnice),
-         · klepnutí kamkoli MIMO panel (prst),
-         · Enter v poli, tedy „už jsem zadal, co jsem chtěl".
-       Klepnutí uvnitř panelu nezavírá nic — jsou v něm i našeptávač
-       obcí a odznaky filtrů, a ty se musí dát použít. Posluchač je
-       v zachycovací fázi (`true`), aby zavření nezáviselo na tom,
-       jestli si klepnutí cestou někdo nevezme pro sebe. */
-    function zavri() {
-      if (!document.body.classList.contains('hledani-rozbalene')) return;
-      prepni(false);
-      try { pole.blur(); } catch (e) {}
-    }
-    /* ZAVÍRÁ SE AŽ NA KLEPNUTÍ, NE NA DOTEK PRSTU — a stálo to jednu
-       pokaženou zkoušku. Nejdřív to viselo na `pointerdown`, tedy na
-       okamžiku, kdy se prst dotkne: panel se složil ještě PŘED tím,
-       než klepnutí dopadlo, obsah pod prstem vyskočil o tři sta pixelů
-       nahoru a klepnutí přistálo na něčem úplně jiném. Chytila to
-       zkouška test-okoli („Zvětšit okruh na 50 km" se klepnout
-       nepodařilo) a na telefonu by to dělalo přesně to samé:
-       s otevřeným hledáním by klepnutí na kartu otevřelo jinou.
-       `click` v zachycovací fázi je to pravé: cíl už má prohlížeč
-       určený, takže se obsah posune až potom — a zachycovací fáze
-       znamená, že zavření nezávisí na tom, jestli si klepnutí cestou
-       někdo nevezme pro sebe (stopPropagation). */
-    /* Co hledání NEZAVÍRÁ: klepnutí uvnitř panelu (jsou v něm
-       našeptávač i filtry) a klepnutí v okně, které se nad panelem
-       otevřelo. Druhé je stejně důležité jako první a zjistila to
-       zkouška test-naseptavac: okno s rozsahem ceny se otevírá
-       z panelu a zavírá tlačítkem „Hotovo" uvnitř sebe — jenže to
-       tlačítko leží mimo panel, takže se po něm složil i panel pod
-       ním. Člověk se po zavření okna neměl kam vrátit: „Druh, cena,
-       výměra a další" už nebylo vidět. */
-    var NEZAVIRA = '.map-controls-panel, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
-    document.addEventListener('click', function (e) {
-      var cil = e.target;
-      if (cil && cil.closest && cil.closest(NEZAVIRA)) return;
-      zavri();
-    }, true);
-    document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape' && e.key !== 'Esc') return;
-      /* ESCAPE ZAVÍRÁ JEN TO NEJVRCHNĚJŠÍ. Nad hledáním se otevírají
-         další okna (rozsah ceny a výměry, rychlý výběr) a Escape patří
-         jim: kdyby zavíral i panel pod nimi, zmizel by člověku zpod
-         rukou — po zavření okna by se neměl kam vrátit. Naměřeno na
-         zkoušce test-naseptavac: Escape nad otevřeným oknem filtrů
-         složil i panel a tlačítko „Druh, cena, výměra a další" pak
-         nešlo klepnout, protože už nebylo vidět.
-         Rozhoduje tedy zaměření: Escape složí hledání jen tehdy,
-         když je člověk uvnitř hledání. */
-      var kde = document.activeElement;
-      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
-      zavri();
-    });
-    pole.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter') return;
-      /* Našeptávač si Enter bere na výběr obce ze seznamu. Zavřít se
-         smí až potom, jinak by zmizel seznam dřív, než se z něj
-         vybere — proto na konec fronty, ne hned. */
-      setTimeout(zavri, 0);
-    });
-  }());
+     Na úzkém displeji bylo vidět jen pole s lupou a všechno ostatní
+     (okolí, druhy nabídek, „Druh, cena, výměra a další") se ukázalo až
+     po klepnutí do pole. Ušetřilo to nad výpisem 365 px z 844, jenže
+     schovávalo to FILTRY, tedy hlavní funkci webu: naměřeno, že na
+     320, 390 i 768 px měly nulovou velikost, dokud se do hledání
+     neklepne, a nikoho nenapadne klepat do hledání kvůli filtrům.
+     Šlo s tím 125 řádků: přepínání třídy na <body>, tlačítko „Filtry",
+     tlačítko „Hotovo", zavírání Escapem, zavírání klepnutím mimo
+     a zavírání Enterem v poli.
+     CO Z TOHO ZŮSTALO, zůstalo v zavirani() níž, protože to platí
+     i pro panely jednotlivých skupin: zavírá se v ZACHYCOVACÍ fázi
+     `click`, ne na `pointerdown` (na dotek prstu se panel složil ještě
+     před dopadem klepnutí a obsah pod prstem vyskočil — chytila to
+     zkouška test-okoli), a nezavírá klepnutí v oknech, která se nad
+     panelem otevírají (test-naseptavac: okno s rozsahem ceny se zavírá
+     tlačítkem uvnitř sebe, a to leží mimo panel). */
 
 
   var msfBadge = document.getElementById('msf-badge');
@@ -7057,24 +6974,52 @@
      zvlášť. Číslo tedy klidně ukazovalo „2" u pěti zapnutých filtrů.
      Teď se počítá z TÉHOŽ seznamu, ze kterého se kreslí odznaky —
      kolik odznaků je vidět, tolik jich číslo hlásí. */
+  function zapnutaOmezeni() {
+    return omezeni().filter(function (o) { return o.popis; });
+  }
   function pocetFiltru() {
     var casti = (dotazFiltr && dotazFiltr.casti) || [];
-    return casti.length + (mistoFiltr ? 1 : 0) +
-      omezeni().filter(function (o) { return o.popis; }).length;
+    return casti.length + (mistoFiltr ? 1 : 0) + zapnutaOmezeni().length;
   }
-  /* Totéž číslo nese i tlačítko „Filtry" na telefonu: tam je panel
-     zavřený a bez čísla by nebylo poznat, že výpis něco omezuje.
-     Počítá ho TÁŽ funkce, aby se ta dvě čísla nemohla rozejít. */
-  var msFiltrN = document.getElementById('ms-filtr-n');
+  /* POČET U KAŽDÉHO OTVÍRAČE — kolik voleb je zapnutých v JEHO skupině.
+     Jména jsou tatáž, jakými se omezení pojmenovávají v omezeni(),
+     takže odznak nemůže počítat něco, co výpis nefiltruje, ani naopak.
+     Co do žádné skupiny nepatří (hledaný text, vybrané místo, kraj,
+     okolí, „jen uložené"), se u otvíračů nepočítá — v žádném z nich se
+     to ani nenastavuje. Celkový odznak u akcí počítá všechno, takže
+     součet skupin může být menší; jsou to dvě různé otázky („co je
+     zapnuté v téhle skupině" a „kolik toho výpis omezuje"), ne dvě
+     odpovědi na jednu.
+     ŽE JMÉNA SEDÍ, SE MĚŘÍ V PROHLÍŽEČI, ne tvrdí v komentáři: každou
+     skupinu zapne scripts/test-filtry-radek.mjs a ptá se, jestli se
+     u jejího otvírače ukázal počet. Překlep ve jménu by tedy spadl,
+     místo aby tiše ukazoval nulu. */
+  var SKUPINY_FILTRU = [
+    ['mf-druh', ['druh nabídky']],
+    ['mf-typ', ['typ nemovitosti']],
+    ['mf-pozemek', ['druh pozemku']],
+    ['mf-cena', ['cena', 'výměra', 'cena za metr']],
+    ['ms-filters', ['vybavení z inzerátu', '„jen celé pozemky"',
+      '„pod obvyklou cenou"', '„zlevněné"', 'blížící se termín']]
+  ];
   function updateFilterBadge() {
-    var n = pocetFiltru();
+    var akt = zapnutaOmezeni();
+    var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    var n = casti.length + (mistoFiltr ? 1 : 0) + akt.length;
     if (msfBadge) {
       if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
       else { msfBadge.hidden = true; }
     }
-    if (msFiltrN) {
-      if (n > 0) { msFiltrN.textContent = n; msFiltrN.hidden = false; }
-      else { msFiltrN.hidden = true; }
+    var jmena = akt.map(function (o) { return o.nazev; });
+    for (var i = 0; i < SKUPINY_FILTRU.length; i++) {
+      var id = SKUPINY_FILTRU[i][0], patri = SKUPINY_FILTRU[i][1];
+      var el = document.getElementById(id);
+      var odznak = el && el.querySelector('.mf-n');
+      if (!odznak) continue;
+      var kolik = 0;
+      for (var j = 0; j < jmena.length; j++) if (patri.indexOf(jmena[j]) >= 0) kolik++;
+      if (kolik > 0) { odznak.textContent = kolik; odznak.hidden = false; }
+      else { odznak.hidden = true; }
     }
   }
 
@@ -7737,8 +7682,27 @@
       chips = jednaBarva(chips);
       if (jeSkryty(d)) li.classList.add('je-skryty');
       li.innerHTML =
+        /* TLAČÍTKA JSOU DĚTI KARTY, NE NÁHLEDU — a stálo to jednu
+           ztmavlou stránku. Na ploché kartě (telefon) má náhled
+           112×70 px a tři překryvné prvky se na něm nepotkaly jen tak
+           tak: „Skrýt" leželo 4 px od jeho středu, kam míří prst při
+           otevírání nabídky, a na odznaku kategorie. Chtěl jsem je
+           proto zavěsit na kartu, a šlo to zkusit stylem —
+           `.opp-media{position:static}`. Jenže uvnitř náhledu jsou
+           absolutně umístěné i SAMOTNÝ SNÍMEK (.opp-map) a jeho
+           ztmavení (.opp-mgrad): statický náhled je pustil na kartu
+           taky, takže se tmavý obdélník roztáhl přes celou kartu
+           a výpis zčernal. Naměřeno snímkem obrazovky, a hlídač
+           test-skryt-videt to hlásil jako „tlačítko se nekreslí".
+           Správné místo je tedy ve značce, ne ve stylu: obě tlačítka
+           jsou dětmi <li class="opp-item">, který je `position:
+           relative`, a náhled si dál ořezává jen svůj snímek.
+           Na širokém displeji se tím nemění nic — tam náhled zabírá
+           celou šířku karty nahoře, takže „vpravo nahoře" je pořád
+           nad fotkou. */
         '<div class="opp-media">' +
           mapThumb(d) +
+        '</div>' +
           '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
           /* Záložka má taky slovo, ze stejného důvodu jako křížek vedle:
              ikona sama o sobě neřekne, jestli ukládá, sdílí nebo hlásí.
@@ -7761,7 +7725,6 @@
              křížek". Teď je u znaku slovo. */
           '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vratit"/></svg>' : '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>') + '</span>' +
           '<span class="os-t">' + (jeSkryty(d) ? 'Vrátit' : 'Skrýt') + '</span></button>' +
-        '</div>' +
         /* ROZVRŽENÍ TEXTU POD FOTKOU — TŘI ŘÁDKY, NE PĚT.
            Karta měla pod velkým náhledem pět samostatných odstavců za
            sebou (cena / název / okres / druh / výměra) a každý jiné
@@ -8194,20 +8157,10 @@
        postavil vedle. */
     var obalRazeni = sortEl && ((sortEl.closest && sortEl.closest('.cdd')) || sortEl);
     if (obalRazeni) obalRazeni.hidden = (matched === 0);
-    /* HLAVNÍ AKCE V PANELU FILTRŮ ŘÍKÁ, KOLIK JICH ZBYLO.
-       Tlačítko pod filtry neslo slovo „Hotovo" — tedy nic o tom, co
-       člověk právě nastavil. Majitel chtěl vidět, jak filtr mění počet
-       výsledků, a je to i jediné místo, kde se to dá říct dřív, než
-       panel zmizí: „Zobrazit 1 420 pozemků". Text se přepisuje při
-       každém přepočtu výběru, takže číslo nikdy nelže. Když nevyhovuje
-       nic, nehlásí „Zobrazit 0 pozemků" (to je nabídka, která nic
-       nenabízí), ale „Zavřít filtry". */
-    var hotovoBtn = document.getElementById('msr-hotovo');
-    if (hotovoBtn) {
-      hotovoBtn.textContent = matched > 0
-        ? ('Zobrazit ' + fmt(matched) + ' ' + plPozemek(matched))
-        : 'Zavřít filtry';
-    }
+    /* „Zobrazit N pozemků" psalo do 10. 11. DVOJE ruční přepisování:
+       tohle místo do zrušeného #msr-hotovo a prekresliAkceFiltru() do
+       #mcf-hotovo-t. Zbylo to druhé, a s ním jedna věta pro jedno
+       tlačítko. */
     ohlasVysledky(matched);
     /* Tlačítka do VLASTNÍHO obalu, ne do hlavičky. Vedle nich stojí
        „Uložené" a rozbalovač řazení, které se nepřekreslují — kdyby se

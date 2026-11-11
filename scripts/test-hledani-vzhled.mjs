@@ -26,6 +26,7 @@
  * v CSS — proto pozná i to, co se rozbije až složením pravidel.
  */
 import { chromium } from 'playwright-core';
+import { otevriPanel } from './rozbal-hledani.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
@@ -112,6 +113,10 @@ try {
   }
 
   /* --- 2) ODZNAKY DRUHŮ -------------------------------------------- */
+  /* Od 10. 11. jsou odznaky druhu nabídky v panelu skupiny „Druh
+     nabídky"; zavřený panel nemá žádný obdélník, takže by se našlo
+     nula odznaků. */
+  await otevriPanel(p);
   const d = await p.evaluate(() => {
     const chipy = [...document.querySelectorAll('#map-filters .filter-chip')].filter((c) => c.offsetParent);
     const vypnute = chipy.filter((c) => !c.classList.contains('active'));
@@ -179,9 +184,10 @@ try {
      77 / 77 / 58 / 58 / 58 / 58 / 58 / 58. Kontrola měřila jinou skupinu,
      než o které mluvila. Proto čistá stránka. */
   await nacteno();
-  await p.click('#map-search');
-  await p.waitForSelector('.ms-filters summary, .ms-filters .msf-summary', { state: 'visible', timeout: 10000 });
-  await p.evaluate(() => { const s = document.querySelector('.ms-filters summary, .ms-filters .msf-summary'); if (s) s.click(); });
+  /* Od 10. 11. má každá skupina filtrů svůj panel; políčka druhů jsou
+     v „Druh pozemku", ne v jednom bloku za „Druh, cena, výměra
+     a další". Otevře je společná pomůcka zkoušek. */
+  await otevriPanel(p);
   /* MĚŘÍ SE VÝSLOVNĚ POLÍČKA DRUHŮ, NE „první .mcv-btn na stránce".
      Vzor .mcv-btn tu stál holý a bral prvního, koho našel. Dokud byl
      v panelu jediný takový blok, bylo to totéž; jak nad druhy přišla

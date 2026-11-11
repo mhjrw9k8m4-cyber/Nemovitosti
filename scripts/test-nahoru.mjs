@@ -471,10 +471,13 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
      vodorovný střed ovladače padne do sloupce, ve kterém knoflík
      stojí. To se dá změřit bez loterie a platí to pro všechny polohy
      najednou.
-     Karta na telefonu má ovladače ve dvou sloupcích u obou okrajů
-     („Skrýt" vlevo, „Uložit" vpravo) a široký odkaz přes tělo. Knoflík
-     proto stojí v pruhu mezi nimi — viz naměřená tabulka u .to-top
-     v css/styles.css. Rolování tu zůstává jen proto, aby se ovladače
+     Do 10. 11. měla karta na telefonu ovladače ve dvou sloupcích
+     u obou okrajů („Skrýt" vlevo, „Uložit" vpravo) a knoflík stál
+     v pruhu mezi nimi. Na ploché kartě jsou od 11. 11. oba ovladače
+     vedle sebe v pravém dolním rohu, takže ten pruh zmizel a knoflík
+     se přestěhoval do LEVÉHO DOLNÍHO ROHU — jediné místo, kde
+     nezakrývá střed žádného ovladače ani se ho nedotkne. Obě měření
+     jsou v tabulce u .to-top v css/styles.css. Rolování tu zůstává jen proto, aby se ovladače
      stihly vykreslit a aby bylo co měřit. */
   let mereno = 0, nalezy = [], videno = 0;
   for (let y = 2600; y <= 3560; y += 120) {

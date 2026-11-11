@@ -1,22 +1,36 @@
-/* Test: rozbalené hledání se zase zavře.
+/* Test: otevřený panel filtrů se zase zavře — opravdovým prstem.
    ==================================================================
    Spuštění: node scripts/test-hledani-zavirani.mjs
      (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=…/chrome)
+   Volá ji .github/workflows/testy.yml (krok „Otevřený panel filtrů
+   se zase zavře").
 
-   PROČ. Na telefonu je vidět jen pole s lupou; okolí, druhy nabídek
-   a „Druh, cena, výměra a další" se rozbalí, až se do pole klepne.
-   Rozbalit se umělo, zavřít ne: v kódu byl jediný způsob (tlačítko
-   „Hotovo"), přestože komentář u něj sliboval čtyři. Jedno klepnutí
-   do pole tedy otevřelo filtry natrvalo — naměřeno, že po Escapu, po
-   odrolování o 1 200 px i po klepnutí na kartu zůstala třída
-   `hledani-rozbalene` viset dál. Majitel webu: „proč to vidím, i když
+   PROČ. Do 10. 11. tahle zkouška hlídala ROZBALOVÁNÍ HLEDÁNÍ: na
+   telefonu bylo vidět jen pole s lupou a filtry se rozbalily, až se do
+   pole klepnulo. Rozbalit se umělo, zavřít ne — v kódu byl jediný
+   způsob (tlačítko „Hotovo"), přestože komentář u něj sliboval čtyři,
+   a naměřeno bylo, že po Escapu, po odrolování o 1 200 px ani po
+   klepnutí na kartu se nezavřelo. Majitel webu: „proč to vidím, i když
    nevyhledávám — má to být vidět, jen když vyhledávám."
+   Rozbalování je od 10. 11. pryč (schovávalo hlavní funkci webu, viz
+   scripts/test-filtry-radek.mjs) a jeho místo zaujaly panely
+   jednotlivých skupin filtrů. Vrstva nad obsahem se musí dát zavřít
+   stejně jako dřív, takže TÁŽ zkouška měří touž věc na novém prvku.
 
-   Hlídají se proto obě strany téže věci:
-     · po načtení je zavřeno a klepnutí do pole otevře,
-     · Escape, klepnutí mimo panel i Enter zavřou,
-     · klepnutí UVNITŘ panelu nezavře (jsou v něm našeptávač obcí
-       a filtry — ty se musí dát použít). */
+   PROČ ZVLÁŠŤ, KDYŽ ZAVÍRÁNÍ MĚŘÍ I test-filtry-radek: ten posílá
+   události skriptem (`dispatchEvent`), tady se opravdu KLEPE prstem na
+   dotykovém zařízení. Je to rozdíl, který už jednou vadu odhalil:
+   zavírání viselo na `pointerdown`, takže se panel složil ještě před
+   dopadem klepnutí, obsah pod prstem vyskočil a klepnutí přistálo na
+   něčem jiném.
+
+   Hlídají se obě strany téže věci:
+     · po načtení je zavřeno a klepnutí na otvírač otevře,
+     · Escape i klepnutí mimo panel zavřou,
+     · klepnutí UVNITŘ panelu nezavře (jsou v něm ovladače, které se
+       musí dát použít),
+     · klepnutí na JINÝ otvírač zavře ten první (jinak by se dva
+       absolutně umístěné panely překrývaly). */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
@@ -30,7 +44,7 @@ const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
    Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
    všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
-hlasPad('Zavírání hledání', zpravy);
+hlasPad('Zavírání panelu filtrů', zpravy);
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
@@ -39,72 +53,65 @@ function pravda(popis, vyslo, proc) {
 const prohlizec = await chromium.launch({
   executablePath: process.env.PW_CHROMIUM || undefined, args: ['--no-sandbox'],
 });
-const ctx = await prohlizec.newContext({ bypassCSP: true, 
+const ctx = await prohlizec.newContext({ bypassCSP: true,
   viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
   serviceWorkers: 'block', locale: 'cs-CZ',
 });
 const p = await ctx.newPage();
-const rozbalene = () => p.evaluate(() => document.body.classList.contains('hledani-rozbalene'));
-const otevri = async () => { await p.click('#map-search'); await p.waitForTimeout(250); };
+const otevrene = () => p.evaluate(() =>
+  [...document.querySelectorAll('details.mf')].filter((d) => d.open).map((d) => d.id));
+async function klepni(sel) {
+  const el = await p.$(sel);
+  if (!el) return false;
+  const r = await el.boundingBox();
+  if (!r) return false;
+  await p.touchscreen.tap(r.x + Math.min(12, r.width / 2), r.y + Math.min(12, r.height / 2));
+  await p.waitForTimeout(320);
+  return true;
+}
 
 try {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   /* POHLED SE ŽÁDÁ JMÉNEM, AŤ JE VÝCHOZÍ KTERÝKOLI. Úvodní stránka má na
      telefonu dva pohledy nad sebou a vidět je jen jeden; výchozí se za dva
-     dny obrátil dvakrát (17. 10. na mapu, 18. 10. zpátky na seznam). Co tahle
-     zkouška měří, žije ve VÝPISU — tohle přepnutí je proto pojistka, ne
-     reakce na jednu konkrétní podobu webu. */
+     dny obrátil dvakrát. Co tahle zkouška měří, žije nad VÝPISEM — tohle
+     přepnutí je proto pojistka, ne reakce na jednu konkrétní podobu webu. */
   await naSeznam(p);
   await p.waitForSelector('#opp-list .opp-item', { timeout: 30000 });
   await p.waitForTimeout(1200);
 
-  pravda('po načtení je hledání zavřené', (await rozbalene()) === false,
-    'třída hledani-rozbalene je na <body> hned po načtení');
-  await otevri();
-  pravda('a klepnutí do pole ho rozbalí', (await rozbalene()) === true,
-    'klepnutí do pole hledání nerozbalilo');
+  pravda('je co měřit: řádek filtrů je ve stránce',
+    (await p.$$('details.mf')).length >= 4, 'otvírače skupin nejsou');
+  pravda('po načtení není otevřený žádný panel', (await otevrene()).length === 0,
+    'otevřeno: ' + (await otevrene()).join(', '));
+
+  pravda('klepnutí na otvírač panel otevře',
+    (await klepni('#mf-cena summary')) && (await otevrene()).join() === 'mf-cena',
+    'otevřeno: ' + (await otevrene()).join(', '));
 
   await p.keyboard.press('Escape');
   await p.waitForTimeout(250);
-  pravda('Escape ho zavře', (await rozbalene()) === false, 'po Escapu zůstalo rozbalené');
+  pravda('Escape ho zavře', (await otevrene()).length === 0,
+    'po Escapu zůstalo otevřeno: ' + (await otevrene()).join(', '));
 
-  /* KLEPNUTÍ DOVNITŘ NEZAVÍRÁ. Kdyby ano, nešel by vybrat ani druh
-     nabídky, ani obec z našeptávače — klepnutí by zavřelo panel dřív,
-     než by dopadlo. */
-  await otevri();
-  /* Klepe se na NÁVĚŠTÍ filtrů, ne na první tlačítko v panelu. Do
-     29. 10. tam první stály odznaky druhu („Vše", „Prodej"…); ty se
-     přestěhovaly dovnitř panelu a prvním tlačítkem se stalo „Pozemky
-     v okolí", které otevře výběr místa přes celou obrazovku — ten pak
-     zachytával všechna další klepnutí a zkouška spadla na timeoutu.
-     Návěští filtrů je ovladač uvnitř panelu stejně jako ony a nic
-     přes obrazovku neotevře. */
-  const vnitrek = await p.$('#ms-filters .msf-summary');
-  if (vnitrek) {
-    const r = await vnitrek.boundingBox();
-    if (r) { await p.touchscreen.tap(r.x + Math.min(8, r.width / 2), r.y + Math.min(8, r.height / 2)); }
-    await p.waitForTimeout(350);
-  }
-  pravda('klepnutí uvnitř panelu ho nezavře', (await rozbalene()) === true,
-    'klepnutí na ovladač uvnitř panelu hledání zavřelo');
+  /* KLEPNUTÍ DOVNITŘ NEZAVÍRÁ. Kdyby ano, nešlo by zadat cenu ani
+     zapnout druh — klepnutí by panel zavřelo dřív, než by dopadlo. */
+  await klepni('#mf-cena summary');
+  await klepni('#mf-cena .mf-panel .mc-cap');
+  pravda('klepnutí uvnitř panelu ho nezavře', (await otevrene()).join() === 'mf-cena',
+    'otevřeno: ' + (await otevrene()).join(', '));
+
+  /* JINÝ OTVÍRAČ ZAVŘE TEN PRVNÍ. Dva absolutně umístěné panely přes
+     sebe by znamenaly, že nepoznáte, který ovladač ke které skupině je. */
+  await klepni('#mf-druh summary');
+  pravda('klepnutí na jiný otvírač zavře ten první',
+    (await otevrene()).join() === 'mf-druh', 'otevřeno: ' + (await otevrene()).join(', '));
 
   /* KLEPNUTÍ MIMO ZAVÍRÁ. Klepe se do hlavičky stránky — je to místo,
      které nic nefiltruje a vždycky existuje. */
-  const hlavicka = await p.$('header .logo, header a, #header');
-  if (hlavicka) {
-    const r = await hlavicka.boundingBox();
-    if (r) await p.touchscreen.tap(r.x + r.width / 2, r.y + r.height / 2);
-  }
-  await p.waitForTimeout(350);
-  pravda('klepnutí mimo panel ho zavře', (await rozbalene()) === false,
-    'po klepnutí mimo zůstalo hledání rozbalené');
-
-  await otevri();
-  await p.fill('#map-search', 'les');
-  await p.keyboard.press('Enter');
-  await p.waitForTimeout(500);
-  pravda('Enter v poli ho zavře (už jsem zadal, co jsem chtěl)',
-    (await rozbalene()) === false, 'po Enteru zůstalo hledání rozbalené');
+  await klepni('header .logo, header a, #header');
+  pravda('klepnutí mimo panel ho zavře', (await otevrene()).length === 0,
+    'po klepnutí mimo zůstalo otevřeno: ' + (await otevrene()).join(', '));
 } catch (e) {
   chyb++;
   zpravy.push('  ✕ zkouška spadla: ' + (e && e.message ? e.message : e));
@@ -112,11 +119,11 @@ try {
 await ctx.close();
 await prohlizec.close();
 
-console.log('\nRozbalené hledání se zase zavře');
+console.log('\nOtevřený panel filtrů se zase zavře');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) {
-  console.log('::error::Zavírání hledání: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
+  console.log('::error::Zavírání panelu filtrů: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
 process.exit(0);

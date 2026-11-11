@@ -203,6 +203,10 @@ to{opacity:1;transform:none}
 
 
 
+
+
+
+
 @keyframes cddIn{from{opacity:0;transform:translateY(-4px)}
 to{opacity:1;transform:none}
 }
@@ -274,7 +278,7 @@ footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-
 .to-top span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .to-top svg{width:var(--ik-s);height:var(--ik-s);stroke-width:var(--ik-s-tah)}
 }
-@media (max-width:560px){.to-top{bottom:12px;right:112px;left:auto;width:48px;height:48px;margin-left:0}
+@media (max-width:560px){.to-top{bottom:12px;left:12px;right:auto;width:48px;height:48px;margin-left:0}
 }
 
 @keyframes locOvIn{from{opacity:0}
@@ -287,7 +291,6 @@ to{opacity:1;transform:none}
 @media (min-width:1041px){
 }
 @media (max-width:1040px){
-
 }
 @media (max-width:1040px){header .wrap{justify-content:flex-start}
 :root{--vyska-hlavicky:73px}
@@ -746,4 +749,4 @@ to{opacity:1;transform:none}
 
 
 
-.btn-primary,.nav-add,.lp-btn,.pf-add,.auth-submit,.auth-tab.active,.hl-btn,.mcf-hotovo,.filter-chip.active,.mvt-btn.active,.mcv-btn.on,.mc-prep.on,.map-nastroj[aria-pressed="true"],.map-nastroj[aria-expanded="true"],.loc-btn.primary,.msr-hotovo,.opp-feat,.boost-price,.kt-mail .kt-ico,:root.pk-prihlasen .hdr-ucet,.skip-link,.vm-vetsi,.vm-ok,.reset-btn,.copy-btn,.rv-uvod-ok,.vyv-ok,.st-btn-1,.zp-btn,.mc-toggles .mc-prep.on,.mcv-btn.mcv-nula.on,.mc-info[aria-expanded="true"] span,.map-podklad button.on,.mv-v.on,.ms-vysledky .msv-ulozene.on,.vm-km input:checked + span,.as-num,.uc-tab-pocet,.msch,.pp-titulka,.msf-badge{background-image:var(--preliv-znacka)}
+.btn-primary,.nav-add,.lp-btn,.pf-add,.auth-submit,.auth-tab.active,.hl-btn,.mcf-hotovo,.filter-chip.active,.mvt-btn.active,.mcv-btn.on,.mc-prep.on,.map-nastroj[aria-pressed="true"],.map-nastroj[aria-expanded="true"],.loc-btn.primary,.opp-feat,.boost-price,.kt-mail .kt-ico,:root.pk-prihlasen .hdr-ucet,.skip-link,.vm-vetsi,.vm-ok,.reset-btn,.copy-btn,.rv-uvod-ok,.vyv-ok,.st-btn-1,.zp-btn,.mc-toggles .mc-prep.on,.mcv-btn.mcv-nula.on,.mc-info[aria-expanded="true"] span,.map-podklad button.on,.mv-v.on,.ms-vysledky .msv-ulozene.on,.vm-km input:checked + span,.as-num,.uc-tab-pocet,.msch,.pp-titulka,.msf-badge{background-image:var(--preliv-znacka)}

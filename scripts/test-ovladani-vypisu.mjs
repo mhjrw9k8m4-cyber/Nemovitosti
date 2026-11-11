@@ -262,27 +262,28 @@ try {
     pravda(`${sirka} px: v poli hledání je křížek a unese prst (44 px)`,
       !!poHledani.krizek && poHledani.krizek.w >= 44 && poHledani.krizek.h >= 44,
       JSON.stringify(poHledani.krizek));
-    /* A UKLIDIT PO SOBĚ. Klepnutí do pole hledání na telefonu rozbalí
-       panel (body.hledani-rozbalene), což je o 118 px vyšší stránka —
-       a následující kontrola „řazení se při otevření nehne" to pak
-       měřila jako skok o 118 px, protože panel zavřelo až to klepnutí
-       na řazení. Vrací se proto všechno do stavu, ve kterém to tenhle
-       blok našel: prázdné pole, zavřený panel, zaměření pryč. */
+    /* A UKLIDIT PO SOBĚ. Do 10. 11. klepnutí do pole hledání na
+       telefonu rozbalilo panel filtrů, což byla o 118 px vyšší
+       stránka — a následující kontrola „řazení se při otevření
+       nehne" to pak měřila jako skok o 118 px. Rozbalování je pryč
+       (schovávalo filtry, viz scripts/test-filtry-radek.mjs), takže
+       se po sobě uklízí jen to, co zbylo: prázdné pole, žádný
+       otevřený panel skupiny, zaměření pryč. */
     await p.fill('#map-search', '');
     await p.evaluate(() => {
       const i = document.getElementById('map-search');
       if (i && i.blur) i.blur();
-      document.body.classList.remove('hledani-rozbalene');
+      document.querySelectorAll('details.mf').forEach((d) => { d.open = false; });
       window.scrollTo(0, 0);
     });
     await p.waitForTimeout(1200);
     const poUklidu = await p.evaluate(() => ({
-      rozbaleno: document.body.classList.contains('hledani-rozbalene'),
+      otevrenePanely: [...document.querySelectorAll('details.mf')].filter((d) => d.open).length,
       podobne: !!document.getElementById('mc-podobne'),
       hodnota: (document.getElementById('map-search') || {}).value,
     }));
     pravda(`${sirka} px: a po vymazání je stránka zpátky v původním stavu`,
-      poUklidu.rozbaleno === false && poUklidu.podobne === false && !poUklidu.hodnota,
+      poUklidu.otevrenePanely === 0 && poUklidu.podobne === false && !poUklidu.hodnota,
       JSON.stringify(poUklidu));
 
     /* OKRAJ OD HRANY OBRAZOVKY. Vyfoceno 27. 10.: pruh s hledáním a
@@ -336,12 +337,26 @@ try {
     pravda(`${sirka} px: a všechny značky mají tutéž míru`, miry.length === 1,
       'míry: ' + miry.join(', '));
 
-    /* 2. HLAVNÍ AKCE SE POZNÁ BEZ ČTENÍ. */
-    pravda(`${sirka} px: „Procházet po jednom" má jinou plochu než sousedé`,
-      !!z.plochy.rychly && z.plochy.rychly !== z.plochy.vyvoz && z.plochy.rychly !== z.plochy.ulozene,
+    /* 2. JEDNA SESTAVA, JEDNA PLOCHA.
+       OBRÁCENÉ PRAVIDLO PROTI PŮVODNÍMU, A JE TO ZMĚNA ROZHODNUTÍ, NE
+       ÚSTUP. Do 11. 11. se tu žádalo, aby „Procházet po jednom" mělo
+       JINOU plochu než sousedé — byla to tehdy „hlavní akce výpisu"
+       a nesla sytou zeleň. Jenže od té doby stojí 140 px nad ní
+       opravdová hlavní akce nástroje, tlačítko „Zobrazit N
+       nemovitostí" v liště filtrů, a taky sytě zelená: na telefonu
+       tak byly na jedné obrazovce dvě plné zelené plochy pod sebou
+       (naměřeno 11. 11. na 390 px: y 349 a y 489), což znamená, že
+       hlavní není ani jedna.
+       Role se přitom liší: „Zobrazit N" POUŽIJE FILTRY a pošle
+       člověka na výsledky, „Procházet po jednom" jen přepne ZPŮSOB
+       ČTENÍ hotového výpisu — stejně jako „Uložené" a „Stáhnout
+       výběr". Měří se proto, že všechna tři tlačítka té sestavy mají
+       TUTÉŽ plochu; zeleň zůstává jediné hlavní akci. */
+    pravda(`${sirka} px: ovladače výpisu mají jednu plochu`,
+      !!z.plochy.rychly && z.plochy.rychly === z.plochy.vyvoz && z.plochy.rychly === z.plochy.ulozene,
       `rychlý ${z.plochy.rychly}, vývoz ${z.plochy.vyvoz}, uložené ${z.plochy.ulozene}`);
-    /* Plná plocha, ne průhledná — průhledné pozadí by se „lišilo" taky,
-       a přitom by nebylo vidět vůbec nic. */
+    /* Plná plocha, ne průhledná — průhledné pozadí by se „shodovalo"
+       taky, a přitom by nebylo vidět vůbec nic. */
     const plny = /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(z.plochy.rychly || '');
     pravda(`${sirka} px: a ta plocha je plná barva, ne průhledno`, plny, 'plocha: ' + z.plochy.rychly);
 
@@ -487,6 +502,9 @@ try {
        panelem: řazení stálo dvakrát (v panelu na 1 497 px, atrapa na
        1 833 px) a jedno klepnutí hýbalo třemi věcmi — rozbalilo
        hledání, otevřelo blok filtrů a skočilo scrollem o 493 px.
+       (Rozbalování hledání je od 10. 11. pryč celé; „blok filtrů"
+       jsou teď panely jednotlivých skupin, žádný z nich se otevírat
+       nemá.)
        Ovladač je od té doby jediný a skutečný, takže se žádá OPAK:
          1. v panelu filtrů řazení NENÍ (jediný #map-sort na stránce),
          2. klepnutí otevře seznam voleb,
@@ -517,8 +535,7 @@ try {
       const pan = pid ? document.getElementById(pid) : null;
       const r = pan ? pan.getBoundingClientRect() : null;
       return {
-        rozbaleno: document.body.classList.contains('hledani-rozbalene'),
-        filtrOtevren: !!(document.getElementById('ms-filters') || {}).open,
+        filtrOtevren: [...document.querySelectorAll('details.mf')].some((d) => d.open),
         otevreno: !!pan && getComputedStyle(pan).display !== 'none',
         voleb: pan ? pan.querySelectorAll('.cdd-opt').length : 0,
         y: Math.round(window.scrollY),
@@ -534,14 +551,13 @@ try {
       raz.y === razPred.y && raz.t !== null && Math.abs(raz.t - razPred.t) <= 1,
       `scrollY ${razPred.y} na ${raz.y}, ovladač ${razPred.t} na ${raz.t} px`);
     pravda(`${sirka} px: a panel filtrů zůstane zavřený`,
-      !raz.filtrOtevren && !raz.rozbaleno,
-      `filtr ${raz.filtrOtevren ? 'otevřen' : 'zavřený'}, hledani-rozbalene: ${raz.rozbaleno ? 'ANO' : 'ne'}`);
+      !raz.filtrOtevren,
+      `některý panel skupiny je ${raz.filtrOtevren ? 'otevřený' : 'zavřený'}`);
     pravda(`${sirka} px: a ten seznam je celý vidět v okně`, raz.vOkne, raz.kde);
     /* Zavřít, ať následující měření nekoukají do rozbaleného seznamu. */
     await p.evaluate(() => {
       document.body.click();
-      const h = document.getElementById('msr-hotovo'); if (h) h.click();
-      document.body.classList.remove('hledani-rozbalene');
+      document.querySelectorAll('details.mf').forEach((d) => { d.open = false; });
       window.scrollTo(0, 0);
     });
     await p.waitForTimeout(500);

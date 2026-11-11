@@ -4029,8 +4029,7 @@
     if (akceZrusit) akceZrusit.hidden = !jeNecoZapnute();
   }
   if (akceHotovo) akceHotovo.addEventListener('click', function () {
-    var panel = document.getElementById('ms-filters');
-    if (panel) panel.open = false;
+    zavriPanely(null);
 
     var tab = document.querySelector('.mvt-btn[data-mv="seznam"]');
     if (tab && !tab.classList.contains('active')) tab.click();
@@ -4038,26 +4037,47 @@
   });
   if (akceZrusit) akceZrusit.addEventListener('click', function () {
     resetFilters();
-    var panel = document.getElementById('ms-filters');
-    if (panel) panel.open = false;
+    zavriPanely(null);
     scrollNaVypis();
   });
 
+  var NEZAVIRA_PANEL = '.rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
+  function zavriPanely(krome) {
+    var p = document.querySelectorAll('details.mf');
+    for (var i = 0; i < p.length; i++) if (p[i] !== krome && p[i].open) p[i].open = false;
+  }
   (function zavirani() {
-    var panel = document.getElementById('ms-filters');
-    if (!panel || !window.matchMedia) return;
-    var siroko = window.matchMedia('(min-width:1041px)');
-    function vrstva() { return panel.open && siroko.matches; }
+    var panely = document.querySelectorAll('details.mf');
+    if (!panely.length) return;
+    for (var i = 0; i < panely.length; i++) {
+
+      (function (d) {
+        var sum = d.querySelector('summary');
+        if (sum) sum.addEventListener('click', function () { if (!d.open) zavriPanely(d); });
+      }(panely[i]));
+    }
+    function otevreny() {
+      var p = document.querySelectorAll('details.mf');
+      for (var j = 0; j < p.length; j++) if (p[j].open) return p[j];
+      return null;
+    }
     document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape' || !vrstva()) return;
-      panel.open = false;
-      var sum = panel.querySelector('summary');
+      if (e.key !== 'Escape' && e.key !== 'Esc') return;
+      var d = otevreny();
+      if (!d) return;
+
+      var kde = document.activeElement;
+      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
+      d.open = false;
+      var sum = d.querySelector('summary');
       if (sum) sum.focus();
     });
-    document.addEventListener('pointerdown', function (e) {
-      if (!vrstva() || panel.contains(e.target)) return;
-      panel.open = false;
-    });
+    document.addEventListener('click', function (e) {
+      var cil = e.target;
+      if (!cil || !cil.closest) return;
+      if (cil.closest('details.mf') || cil.closest(NEZAVIRA_PANEL)) return;
+      zavriPanely(null);
+    }, true);
   })();
 
   function nejvicOmezuje() {
@@ -4191,90 +4211,42 @@
   var stranka = 0;
   var posledniOtiskFiltru = null;
 
-  (function rozbaleniHledani() {
-    var pole = document.getElementById('map-search');
-    var blok = document.getElementById('ms-rozsirene');
-    if (!pole || !blok) return;
-    function prepni(na) {
-      document.body.classList.toggle('hledani-rozbalene', na);
-      pole.setAttribute('aria-expanded', na ? 'true' : 'false');
-
-      var fb = document.getElementById('ms-filtr');
-      if (fb) fb.setAttribute('aria-expanded', na ? 'true' : 'false');
-    }
-    ['click', 'focus'].forEach(function (typ) {
-      pole.addEventListener(typ, function () { prepni(true); });
-    });
-
-    var lupa = document.querySelector('.map-controls-panel .ms-lupa');
-    if (lupa) lupa.addEventListener('click', function () { prepni(true); try { pole.focus(); } catch (e) {} });
-
-    var filtrBtn = document.getElementById('ms-filtr');
-    if (filtrBtn) filtrBtn.addEventListener('click', function () {
-      var otevrit = !document.body.classList.contains('hledani-rozbalene');
-      prepni(otevrit);
-      if (!otevrit) return;
-
-      var panel = document.getElementById('ms-filters');
-      if (panel) {
-        panel.open = true;
-
-        requestAnimationFrame(function () {
-          try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
-        });
-      }
-    });
-    var hotovo = document.getElementById('msr-hotovo');
-    if (hotovo) hotovo.addEventListener('click', function () {
-      prepni(false);
-
-      try { hotovo.blur(); } catch (e) {}
-    });
-
-    function zavri() {
-      if (!document.body.classList.contains('hledani-rozbalene')) return;
-      prepni(false);
-      try { pole.blur(); } catch (e) {}
-    }
-
-    var NEZAVIRA = '.map-controls-panel, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
-    document.addEventListener('click', function (e) {
-      var cil = e.target;
-      if (cil && cil.closest && cil.closest(NEZAVIRA)) return;
-      zavri();
-    }, true);
-    document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape' && e.key !== 'Esc') return;
-
-      var kde = document.activeElement;
-      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
-      zavri();
-    });
-    pole.addEventListener('keydown', function (e) {
-      if (e.key !== 'Enter') return;
-
-      setTimeout(zavri, 0);
-    });
-  }());
-
   var msfBadge = document.getElementById('msf-badge');
 
+  function zapnutaOmezeni() {
+    return omezeni().filter(function (o) { return o.popis; });
+  }
   function pocetFiltru() {
     var casti = (dotazFiltr && dotazFiltr.casti) || [];
-    return casti.length + (mistoFiltr ? 1 : 0) +
-      omezeni().filter(function (o) { return o.popis; }).length;
+    return casti.length + (mistoFiltr ? 1 : 0) + zapnutaOmezeni().length;
   }
 
-  var msFiltrN = document.getElementById('ms-filtr-n');
+  var SKUPINY_FILTRU = [
+    ['mf-druh', ['druh nabídky']],
+    ['mf-typ', ['typ nemovitosti']],
+    ['mf-pozemek', ['druh pozemku']],
+    ['mf-cena', ['cena', 'výměra', 'cena za metr']],
+    ['ms-filters', ['vybavení z inzerátu', '„jen celé pozemky"',
+      '„pod obvyklou cenou"', '„zlevněné"', 'blížící se termín']]
+  ];
   function updateFilterBadge() {
-    var n = pocetFiltru();
+    var akt = zapnutaOmezeni();
+    var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    var n = casti.length + (mistoFiltr ? 1 : 0) + akt.length;
     if (msfBadge) {
       if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
       else { msfBadge.hidden = true; }
     }
-    if (msFiltrN) {
-      if (n > 0) { msFiltrN.textContent = n; msFiltrN.hidden = false; }
-      else { msFiltrN.hidden = true; }
+    var jmena = akt.map(function (o) { return o.nazev; });
+    for (var i = 0; i < SKUPINY_FILTRU.length; i++) {
+      var id = SKUPINY_FILTRU[i][0], patri = SKUPINY_FILTRU[i][1];
+      var el = document.getElementById(id);
+      var odznak = el && el.querySelector('.mf-n');
+      if (!odznak) continue;
+      var kolik = 0;
+      for (var j = 0; j < jmena.length; j++) if (patri.indexOf(jmena[j]) >= 0) kolik++;
+      if (kolik > 0) { odznak.textContent = kolik; odznak.hidden = false; }
+      else { odznak.hidden = true; }
     }
   }
 
@@ -4580,8 +4552,10 @@
       chips = jednaBarva(chips);
       if (jeSkryty(d)) li.classList.add('je-skryty');
       li.innerHTML =
+
         '<div class="opp-media">' +
           mapThumb(d) +
+        '</div>' +
           '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
 
           '<span class="os-t">' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
@@ -4589,7 +4563,6 @@
 
           '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vratit"/></svg>' : '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>') + '</span>' +
           '<span class="os-t">' + (jeSkryty(d) ? 'Vrátit' : 'Skrýt') + '</span></button>' +
-        '</div>' +
 
         '<div class="opp-body">' +
 
@@ -4760,12 +4733,6 @@
     var obalRazeni = sortEl && ((sortEl.closest && sortEl.closest('.cdd')) || sortEl);
     if (obalRazeni) obalRazeni.hidden = (matched === 0);
 
-    var hotovoBtn = document.getElementById('msr-hotovo');
-    if (hotovoBtn) {
-      hotovoBtn.textContent = matched > 0
-        ? ('Zobrazit ' + fmt(matched) + ' ' + plPozemek(matched))
-        : 'Zavřít filtry';
-    }
     ohlasVysledky(matched);
 
     var akceEl = document.getElementById('mc-akce') || countEl;

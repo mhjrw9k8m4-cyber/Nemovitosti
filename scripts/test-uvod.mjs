@@ -23,6 +23,7 @@
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { otevriSkupinu } from './rozbal-hledani.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
@@ -252,6 +253,11 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
      dvakrát. Zaškrtnutí druhého druhu musí výběr ROZŠÍŘIT. */
   const pocet = () => p.evaluate(() => (document.getElementById('map-count') || {}).textContent || '');
   const cislo = (t) => { const m = /(\d[\d\s ]*)/.exec(t.replace(/ /g, ' ')); return m ? +m[1].replace(/\s/g, '') : -1; };
+  /* Dlaždice druhů jsou od 10. 11. v panelu skupiny „Druh pozemku";
+     zavřený panel nemá žádný obdélník, takže by klepnutí minulo.
+     Otevírá se JEN ta skupina: pět otevřených panelů si lehne přes
+     sebe a klepnutí by trefilo ten vrchní — viz rozbal-hledani.mjs. */
+  await otevriSkupinu(p, '#mc-druhy .mcv-btn');
   await p.click('#mc-druhy .mcv-btn:nth-child(1)');
   await p.waitForTimeout(500);
   const jeden = cislo(await pocet());
@@ -267,6 +273,10 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
      lhalo, jakmile se zapne cokoli dalšího. */
   const pocPred = await p.evaluate(() =>
     [...document.querySelectorAll('#mc-druhy .mcv-btn .mcv-n')].map((n) => n.textContent.trim()).join('|'));
+  /* „Blížící se termín" bydlí ve skupině „Další filtry" — jiný panel
+     než dlaždice druhů, takže se přepne na něj. Otevřený je vždy jeden,
+     stejně jako to vidí člověk. */
+  await otevriSkupinu(p, '#map-urgent');
   await p.click('#map-urgent');
   await p.waitForTimeout(600);
   const pocPo = await p.evaluate(() =>
@@ -296,11 +306,20 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
      Políčka od–do v té skupině nehledej: js/main.js je stěhuje do
      celoobrazovkového výběru a v panelu po nich zůstanou souhrnné
      řádky — změřeno, uvnitř skupiny jsou popisky „Cena" a „Výměra"
-     a rozbalovátko #map-perm2. */
+     a rozbalovátko #map-perm2.
+     OD 10. 11. NEJSOU FILTRY V JEDNOM PANELU, ale v pěti skupinách
+     v řádku otvíračů (#mc-rada). Pravidlo zůstává doslova totéž —
+     všechny tři hodnoty v JEDNÉ skupině a sítě až v pozdější —, jen se
+     pořadí čte na otvíračích místo na dětech jednoho panelu. Dřívější
+     dotaz (`.map-controls`) by dnes našel panel „Další filtry",
+     kde hodnoty nejsou, a hlásil „ve skupině: (nic)". */
   const skupina = await p.evaluate(() => {
-    const mc = document.querySelector('.map-controls');
-    const g = mc && mc.querySelector('.mc-hodnoty');
-    const deti = mc ? [...mc.children] : [];
+    const g = document.querySelector('.mc-hodnoty');
+    const vyb = document.querySelector('[class*="mc-vybaveni"]');
+    const rada = document.getElementById('mc-rada');
+    const otvirace = rada ? [...rada.querySelectorAll('details.mf')] : [];
+    const skup = g && g.closest ? g.closest('details.mf') : null;
+    const skupVyb = vyb && vyb.closest ? vyb.closest('details.mf') : null;
     return {
       je: !!g,
       /* POPISEK JE .mc-cap, NE .mcs-k. Třída .mcs-k na úvodní stránce
@@ -313,9 +332,9 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       /* Skupina hodnot je zabalená v bloku s návěštím (.mc-hodnoty-blok),
          takže .mc-hodnoty NENÍ přímé dítě panelu — indexOf by vrátil -1.
          Hledá se tedy to dítě, které skupinu obsahuje. */
-      iSkupina: g ? deti.findIndex((x) => x === g || x.contains(g)) : -1,
-      iVybaveni: deti.findIndex((x) => /mc-vybaveni/.test((x.className || '').toString())),
-      poradi: deti.map((x) => ((x.className || '').toString().split(' ')[0]) || x.tagName.toLowerCase()),
+      iSkupina: skup ? otvirace.indexOf(skup) : -1,
+      iVybaveni: skupVyb ? otvirace.indexOf(skupVyb) : -1,
+      poradi: otvirace.map((d) => d.id || '(bez id)'),
     };
   });
   const maCenu = skupina.popisky.some((t) => /cena/i.test(t));
@@ -328,12 +347,23 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     `pořadí: ${skupina.poradi.join(' → ')}`);
 
   /* TLAČÍTKO S POČTEM SE PŘILEPÍ DOLE. Panel je delší než obrazovka;
-     bez toho se člověk o počtu dozvěděl, až když dorolal na konec. */
+     bez toho se člověk o počtu dozvěděl, až když dorolal na konec.
+     DVĚ PŘILEPENÍ, OBĚ V POŘÁDKU: zavřené filtry nechávají lištu
+     v toku stránky, kde se drží `sticky`. Jakmile je ale některá
+     skupina otevřená, leží její panel (absolutní, z-index 45) přesně
+     na liště — naměřeno 11. 11. na 390 px, že na středu „Zrušit
+     filtry" bylo tělo panelu —, a lišta se proto přepne na `fixed` ke
+     spodní hraně obrazovky. Měří se tedy to, co se tvrdí: lišta je
+     přilepená, ne že je přilepená jedním konkrétním způsobem. */
   const lepive = await p.evaluate(() => getComputedStyle(document.querySelector('.mcf-akce')).position);
-  pravda('tlačítko s počtem jede s panelem dolů', lepive === 'sticky', `position: ${lepive}`);
+  pravda('tlačítko s počtem je přilepené, neodjede nahoru',
+    lepive === 'sticky' || lepive === 'fixed', `position: ${lepive}`);
 
   /* DLOUHÉ VYSVĚTLENÍ U SÍTÍ JE POD „i". Je důležité (mlčení inzerátu
      neznamená, že síť chybí), ale zabíralo víc místa než štítky. */
+  /* Kolečko „i" je v panelu skupiny druhů; zavřený panel má nulovou
+     šířku a kontrola by se tiše přeskočila (`info.vidno`). */
+  await otevriSkupinu(p, '#mcv-info');
   const info = await p.evaluate(() => {
     const b2 = document.getElementById('mcv-info'), t = document.getElementById('mcv-pozn');
     return { je: !!b2, skryto: t ? !!t.hidden : null,

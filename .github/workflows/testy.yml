@@ -1190,9 +1190,9 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-karta-odkaz.mjs
 
-      - name: Filtry jsou na telefonu vidět a nestojí ani pixel navíc
+      - name: Filtry jsou vidět bez klepnutí a žádná skupina se neroluje
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
-        run: node scripts/test-filtry-telefon.mjs
+        run: node scripts/test-filtry-radek.mjs
 
       - name: Inzerát od člověka přežije pomalou databázi
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
@@ -1654,7 +1654,7 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-videno.mjs
 
-      - name: Rozbalené hledání se zase zavře
+      - name: Otevřený panel filtrů se zase zavře
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hledani-zavirani.mjs
 

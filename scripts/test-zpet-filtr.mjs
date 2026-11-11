@@ -94,7 +94,10 @@ const druhStart = await vybrany();
 pravda(`výpis se vykreslil a něco ukazuje (${pocetStart})`, /\d/.test(pocetStart), 'počet: ' + pocetStart);
 
 /* ---- 1. ZAPNUTÍ FILTRU PŘIDÁ PRÁVĚ JEDNU --------------------------- */
-await p.locator('#ms-filtr').click();
+/* Druh nabídky má od 10. 11. svůj otvírač (tlačítko „Filtry"
+   i rozbalování hledání jsou pryč — schovávalo to filtry, viz
+   scripts/test-filtry-radek.mjs). */
+await p.locator('#mf-druh summary').click();
 await p.waitForTimeout(500);
 const chip = p.locator('#map-filters [data-type]').nth(1);
 const jmenoChipu = ((await chip.textContent().catch(() => '')) || '').replace(/\s+/g, ' ').trim();
@@ -166,7 +169,7 @@ pravda('a v adrese po filtru nic nezbylo', !/[?&#]t=/.test(hashPoZpet), 'hash: '
   await p.waitForTimeout(900);
   const pocetA = await pocetZ();
   await p.evaluate(() => history.replaceState(history.state, '', location.pathname + location.search));
-  await p.locator('#ms-filtr').click();
+  await p.locator('#mf-druh summary').click();
   await p.waitForTimeout(400);
   const chip2 = p.locator('#map-filters [data-type]').nth(1);
   await chip2.click();

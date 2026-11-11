@@ -124,12 +124,15 @@ pravda(`prohledal se repozitář (${souboru} souborů, ${tokeny.slova.size} slov
   souboru > 2000 && tokeny.slova.size > 20000, `${souboru} souborů, ${tokeny.slova.size} slov`);
 /* KANÁREK: třída, kterou NIKDE nepíše HTML, jen skript. Když ji
    kontrola nevidí, nenačetla skripty — a pak by jako mrtvé označila
-   skoro všechno. Do 31. 10. to byla `hl-zhasnuta` (hlavička zhasínala
-   při rolování); ta třída zmizela i s tím chováním, takže kanárek
-   ukazoval na nic. Teď je to `hledani-rozbalene`, kterou nasazuje
-   js/main.js při rozbalení filtrů. */
-pravda('a vidí i třídy, které přidává JavaScript (hledani-rozbalene)',
-  tokeny.slova.has('hledani-rozbalene'), 'skripty se nenačetly — kontrola by hlásila mrtvé všechno');
+   skoro všechno. A JE TO UŽ TŘETÍ: do 31. 10. to byla `hl-zhasnuta`
+   (hlavička zhasínala při rolování), do 10. 11. `hledani-rozbalene`
+   (rozbalování filtrů na telefonu) — obě zmizely i s tím chováním
+   a kanárek vždycky chvíli ukazoval na nic. Proto je teď kanárkem
+   `mcv-nula`, kterou js/main.js dává štítku bez jediné nabídky:
+   nestojí na jednom zařízení ani na jednom rozvržení, ale na tom, že
+   se počty vůbec počítají. */
+pravda('a vidí i třídy, které přidává JavaScript (mcv-nula)',
+  tokeny.slova.has('mcv-nula'), 'skripty se nenačetly — kontrola by hlásila mrtvé všechno');
 pravda('i třídy cizí knihovny (leaflet-container z vendor/)',
   tokeny.slova.has('leaflet-container'), 'vendor/ se nenačetl');
 

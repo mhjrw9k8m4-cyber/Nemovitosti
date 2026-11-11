@@ -81,12 +81,9 @@ await domUtichlo(p, 400);
    schoval. (Ověřeno: se zapnutým ukotvením vyjde posun 0 i před opravou.) */
 await p.addStyleTag({ content: '*{overflow-anchor:none !important;}' });
 
-// rozbalit „Druh, cena, výměra a další"
-await p.evaluate(() => {
-  const s = [...document.querySelectorAll('summary, .msf-summary, button')]
-    .find((e) => /Druh, cena/.test(e.textContent || ''));
-  if (s) s.click();
-});
+/* Panely skupin otevírá rozbalHledani() výš (od 10. 11. je jich pět,
+   ne jeden „Druh, cena, výměra a další"). Tady se jen počká, až se
+   dopočítají počty u štítků. */
 await domUtichlo(p, 900);
 
 /* CO SE MĚŘÍ: ovladač, na který se kleplo, musí po překreslení zůstat
@@ -95,7 +92,12 @@ await domUtichlo(p, 900);
    dražeb nikdo neuvádí vodu") a panel pod nimi se tím posune právem.
    Co posun právem není, je tohle: člověk klepne a odskočí mu to, čeho se
    drží. */
-const KDE = '.map-controls .mcv-btn, .map-controls .mc-prep, #map-filters .filter-chip';
+/* OVLADAČE JSOU V PANELECH SKUPIN, ne v jednom bloku. Vzor
+   `.map-controls …` by od 10. 11. našel jen zbytkovou skupinu
+   („Další filtry"), takže by štítky druhů i kategorií tiše vypadly
+   z měření — a kontrola „je co měřit" by na to spadla, což je přesně
+   to, co má dělat. */
+const KDE = '.mf-panel .mcv-btn, .mf-panel .mc-prep, #map-filters .filter-chip';
 
 /** Najde ovladač podle popisku a vrátí jeho polohu v okně. */
 const polohaOvladace = (text) => p.evaluate(([sel, t]) => {

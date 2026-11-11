@@ -3,7 +3,7 @@
  * Spuštění: node scripts/test-vrstvy.mjs   (nepotřebuje prohlížeč)
  *
  * Ve stylopisu bylo 29 různých hodnot z-indexu: -1, 0, 1, 2, 3, 4, 5,
- * 20, 21, 40, 41, 45, 90, 91, 100, 450, 500, 590, 600, 900, 1100, 1200,
+ * 20, 21, 40, 41, 45, 46, 90, 91, 100, 450, 500, 590, 600, 900, 1100, 1200,
  * 1300, 2500, 3000, 4000, 5000. Čísla sama nejsou chyba — chyba je, že
  * nikde nestálo, co je nad čím a proč, takže kdo přidával vrstvu,
  * napsal číslo o kus větší než to, co mu právě překrývalo panel.
@@ -35,6 +35,7 @@ export const VRSTVY = [
   [40, 'našeptávač na mapě'],
   [41, 'oprava překlepu nad ním'],
   [45, 'výsledky hledání na mapě'],
+  [46, 'lišta se zobrazením počtu a zrušením filtrů, když je otevřená skupina filtrů: musí být NAD jejím panelem (45), jinak na ní panel leží a nedá se na ni klepnout'],
   [90, 'stín pod vysunutou nabídkou'],
   [91, 'vysunutá nabídka'],
   [100, 'odkaz „přeskočit na obsah"'],

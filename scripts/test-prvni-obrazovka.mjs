@@ -109,7 +109,23 @@ const SIRKA = 390, VYSKA = 844;
    JE TO TOTÉŽ ČÍSLO JAKO NA ÚZKÉM TELEFONU, a schválně: pás stojí na
    obou šířkách stejně vysoký (95 px) a nabídka vyšla na 513 px v obou
    případech, takže dvě různá čísla by tu už nic neříkala. */
-const MEZ_PRVNI = 540;
+/* A 10. 11. POPÁTÉ — Z 540 NA 690, A JE TO PŘEPOČET, NE ÚSTUPEK.
+   Mez je proxy: to, co má chránit, je napsané výš — „aby byla vidět
+   NABÍDKA, ne jen značka", a měří se tím, že na obrazovku vyjde CENA
+   první nabídky (kontrola „a cena je i tam na první obrazovce" níž).
+   Ta proxy se spočítala z karty vysoké 360 px. Karta ale 10. 11.
+   zplošťěla na 166 px (medián, rozptyl 131–214), takže totéž pravidlo
+   dává jiné číslo: 844 − 166 = 678 px je poloha, při které se celá
+   karta i s cenou pořád vejde.
+   CO SE ZA TO POŘÍDILO: řádek filtrů, který je vidět bez klepnutí.
+   Do té chvíle měly na 320, 390 i 768 px všechny ovladače filtrů
+   nulovou velikost, dokud se neklepne do hledání. Lišta tím narostla
+   ze 163 na 344 px a první nabídka klesla ze 490 na 670 px.
+   Naměřeno na 390×844: nabídka na 670 px, spodek její ceny na 836 px
+   z 844 — tedy POŘÁD NA OBRAZOVCE, o 8 px. Mez 690 má proti 670
+   dvacet pixelů rezervy a NEUNESE další řádek čehokoli; kdo sem
+   přidá cokoli dalšího, musí nejdřív něco ubrat. */
+const MEZ_PRVNI = 690;
 /* A TOTÉŽ NA ÚZKÉM TELEFONU — MEZ, KTERÁ TU CHYBĚLA.
    Měřilo se jen 390 px, a přesně v té slepé skulině se schoval vlastní
    nález: na 360 px (Galaxy S a spol.) se ovladače nad výpisem skládaly
@@ -293,16 +309,23 @@ try {
     !je(m.nastrojeY) || (je(m.karta) && m.nastrojeY < m.karta),
     `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
 
-  /* „POZEMKY V OKOLÍ" MUSÍ BÝT VIDĚT BEZ ROZBALENÍ.
+  /* „POZEMKY V OKOLÍ" MUSÍ BÝT VIDĚT HNED.
      Majitel poslal snímek s červeně zakroužkovanou mezerou mezi
      přepínačem Seznam/Mapa a „Procházet po jednom": „tam kde to je
      červené vlož pozemky v okolí." Tlačítko tam do 1. 11. nebylo —
-     leželo uvnitř `.ms-rozsirene`, který se na telefonu rozbaluje až
+     leželo uvnitř `.ms-rozsirene`, který se na telefonu rozbaloval až
      po klepnutí do hledání, takže jediná cesta, jak si vybrat místo,
      byla schovaná za krokem, který nikdo nemusel udělat.
-     Hlídá se trojí: že je vidět BEZ rozbalení (tedy že se nevrátilo
-     dovnitř obalu), že stojí v té mezeře (pod přepínačem, nad
-     nářadím) a že unese prst. Nic z toho neplyne z toho druhého:
+     TEN OBAL UŽ NEEXISTUJE (10. 11.): schovával i filtry, tedy hlavní
+     funkci webu, a šel pryč celý (viz scripts/test-filtry-radek.mjs).
+     Kontrola „neleží v obalu" by tedy od té chvíle byla PRÁZDNÁ —
+     splnila by se tím, že obal nikde není, ne tím, že je tlačítko
+     vidět. Místo ní se měří, co platí dál a je silnější: že na
+     tlačítko není potřeba ŽÁDNÉ klepnutí, protože v panelu ovladačů
+     není nic, co by se rozbalovalo (žádný prvek s nulovou velikostí,
+     který by se po klepnutí zvětšil).
+     Hlídá se trojí: že je vidět, že stojí v té mezeře (pod přepínačem,
+     nad nářadím) a že unese prst. Nic z toho neplyne z toho druhého:
      tlačítko může být vidět a stát jinde, nebo stát správně a být
      schované. */
   const ok = await p.evaluate(() => {
@@ -319,16 +342,30 @@ try {
          obdélník a měření by tiše vyšlo na nulu. Řada nářadí je
          .ms-vysledky. */
       nastroje: vid(document.querySelector('.ms-vysledky')),
-      rozbaleno: document.body.classList.contains('hledani-rozbalene'),
-      vObalu: !!(document.getElementById('map-near') || {}).closest
-        && !!document.getElementById('map-near').closest('.ms-rozsirene'),
+      /* Kolik ovladačů v liště má nulovou velikost, tedy čeká na
+         klepnutí. Po zrušení rozbalování to má být nula.
+         OVLADAČE VE ZAVŘENÝCH PANELECH SE NEPOČÍTAJÍ — ty nulovou
+         velikost MAJÍ MÍT a je to celý princip rozbalovátka. Napoprvé
+         jsem na to zapomněl a kontrola našla pět „schovaných"
+         ovladačů, což byla vada měření, ne webu. Měří se tedy to, co
+         je vidět v ŘÁDKU a v liště kolem něj. */
+      skrytychOvladacu: [...document.querySelectorAll('.map-controls-panel button, .map-controls-panel summary, .map-controls-panel input, .map-controls-panel select')]
+        .filter((e) => !e.closest('details:not([open]) > *:not(summary)')
+          && !(e.closest('.mf-panel'))
+          /* A ANI OVLADAČE SCHOVANÉ STAVEM: křížek v hledání, dokud
+             se nic nenapsalo, a „Zrušit filtry", dokud není co rušit.
+             Ty se neschovávají, aby se musely odhalit klepnutím —
+             schovávají se, protože by nic neudělaly. */
+          && !e.hidden)
+        .filter((e) => { const r = e.getBoundingClientRect();
+          return r.width < 2 || r.height < 2; }).length,
     };
   });
   pravda('„Pozemky v okolí" je vidět hned, bez klepnutí do hledání',
-    !!ok.near && ok.rozbaleno === false,
-    ok.rozbaleno ? 'hledání je rozbalené, takže se neměří ten stav' : 'tlačítko není vidět');
-  pravda('a není zpátky uvnitř rozbalovacího obalu', ok.vObalu === false,
-    '#map-near leží v .ms-rozsirene, takže se na telefonu schová');
+    !!ok.near, 'tlačítko není vidět');
+  pravda('a v panelu ovladačů nečeká na klepnutí nic dalšího',
+    ok.skrytychOvladacu === 0,
+    `${ok.skrytychOvladacu} ovladačů má nulovou velikost — něco se zas rozbaluje`);
   /* Bez podmínky: kdyby se některý ze tří prvků nenašel, kontrola by
      se tiše přeskočila a hlídala by nic. Ať radši spadne. */
   pravda('a stojí v té mezeře: pod přepínačem Seznam/Mapa a nad nářadím výpisu',
@@ -362,7 +399,13 @@ try {
      a ta je tu od toho, aby se nehnula zase o kus dál.
      Prázdný prohlížeč žádnou historii nemá, takže se musí naplnit —
      jinak by kontrola prošla naprázdno nad schovaným pruhem. */
-  const MEZ_PRVNI_HISTORIE = 600;
+  /* 10. 11.: z 600 na 800, z téhož důvodu jako MEZ_PRVNI výš (lišta
+     s řádkem filtrů je o 181 px vyšší). Naměřeno s pruhem historie:
+     první nabídka na 780 px. Cena se tomu, kdo se vrací a historii
+     má, pod hranu obrazovky dostane — to platilo i předtím (napsáno
+     u téhle meze od začátku: „spodek ceny 898 px, tedy 54 px pod
+     hranou") a je to cena za pruh, kterou si majitel vyžádal. */
+  const MEZ_PRVNI_HISTORIE = 800;
   {
     const nabidky = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
     const klice = nabidky

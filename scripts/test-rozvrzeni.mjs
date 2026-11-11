@@ -838,12 +838,21 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
         return Math.round(Math.sqrt(dx * dx + dy * dy));
       };
       const d = odstup(rs);
-      /* ZÁMĚRNÁ SABOTÁŽ: tatáž karta s křížkem tam, kde stál před
-         opravou (pravý okraj fotky, svisle na střed). Bez toho by se
-         nepoznalo, jestli kontrola něco hlídá, nebo jestli jen prošla.
-         Styl se hned vrací. */
+      /* ZÁMĚRNÁ SABOTÁŽ: tatáž karta s křížkem tam, kde ležel předtím,
+         než se opravil. Bez toho by se nepoznalo, jestli kontrola něco
+         hlídá, nebo jestli jen prošla. Styl se hned vrací.
+         MÍSTO SABOTÁŽE SE 10. 11. ZMĚNILO, a kdyby se nezměnilo, byla
+         by to vycpávka: tlačítko bylo do té doby dítětem NÁHLEDU
+         a `right:0` znamenalo pravý okraj fotky. Teď je dítětem karty,
+         takže totéž `right:0` padne na pravý okraj KARTY — tedy
+         nejdál od středu náhledu, co jde, a sabotáž by vycházela lépe
+         než skutečnost (naměřeno 256 proti 212 px). Sabotuje se proto
+         tím, co byla skutečná vada: levý horní roh náhledu, kde
+         křížek na ploché kartě ležel 4 px od jeho středu. */
       const puvodni = sk.getAttribute('style') || '';
-      sk.style.cssText = puvodni + ';top:44px;right:0;left:auto;bottom:auto;';
+      const rmS = md.getBoundingClientRect();
+      sk.style.cssText = puvodni + ';position:fixed;left:' + (rmS.left + 8) + 'px;top:'
+        + (rmS.top + 8) + 'px;right:auto;bottom:auto;';
       const dSabot = odstup(sk.getBoundingClientRect());
       if (puvodni) sk.setAttribute('style', puvodni); else sk.removeAttribute('style');
       out.odstupy.push(d);
@@ -1851,9 +1860,15 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
              má náhled celou šířku karty a plný popisek se vejde všude,
              takže zkrácená podoba zanikla (js/main.js, odznakDruhu). */
           const rb = bg.getBoundingClientRect(), rm = md.getBoundingClientRect();
-          // Co všechno v náhledu leží nad snímkem a může odznak překreslit.
+          /* Co všechno na kartě leží nad snímkem a může odznak
+             překreslit. HLEDÁ SE NA KARTĚ, NE V NÁHLEDU: od 10. 11.
+             jsou „uložit" a „skrýt" dětmi karty (náhled má na ploché
+             kartě 112×70 px a tři překryvné prvky se na něm bily),
+             takže dotaz do náhledu by našel nula ovladačů — a kontrola
+             pod tím by prošla naprázdno nad odznakem, který se
+             s tlačítkem klidně překrývá. */
           const ovladani = [];
-          md.querySelectorAll('.opp-fav, .opp-skryt, .opp-count').forEach((e) => {
+          li.querySelectorAll('.opp-fav, .opp-skryt, .opp-count').forEach((e) => {
             const st = getComputedStyle(e);
             if (st.display === 'none' || st.visibility === 'hidden') return;
             const re = e.getBoundingClientRect();

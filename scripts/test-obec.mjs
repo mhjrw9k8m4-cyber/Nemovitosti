@@ -20,6 +20,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { otevriSkupinu } from './rozbal-hledani.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -99,6 +100,12 @@ pravda('stránka načetla podstrčená data', pocet > 0, 've výpisu není ani j
 // --- 2) Štítek filtru pro obecní záměr se objevil ---------------------
 // Web štítky prázdných kategorií schovává (ať nevzniká mrtvé tlačítko).
 // Jakmile data přijdou, musí se štítek sám vrátit — to se nikdy nestalo.
+/* OD 10. 11. BYDLÍ ŠTÍTKY VE SKUPINĚ FILTRŮ. Zavřený panel se nekreslí
+   (css/styles.css: `.mf:not([open]) > .mf-panel{display:none}`), takže
+   `offsetParent` je null a kontrola níž by hlásila „štítek existuje, ale
+   není vidět" i na webu, který je v pořádku. Skupina se proto otevře —
+   jen ta jedna, viz scripts/rozbal-hledani.mjs. */
+await otevriSkupinu(p, '.filter-chip[data-type="obec"]');
 const chip = await p.evaluate(() => {
   const b = document.querySelector('.filter-chip[data-type="obec"]');
   if (!b) return null;

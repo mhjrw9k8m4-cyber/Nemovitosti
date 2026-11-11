@@ -19,7 +19,7 @@
 //   6. seznam návrhů se vešel nad vyjetou klávesnici,
 //   7. překlep našeptávač nezavře — ukáže opravu i názvy k ní.
 import { chromium } from 'playwright-core';
-import { rozbalHledani } from './rozbal-hledani.mjs';
+import { rozbalHledani, otevriSkupinu, zavriSkupiny } from './rozbal-hledani.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -408,21 +408,23 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
  * výpis a tlačítko v patě panelu průběžně hlásí, kolik toho zbylo. */
 {
   const { ctx: ctx2, p: p2 } = await otevri(TELEFON, 'index.html');
-  await rozbalHledani(p2);
-  // Panel s filtry je na telefonu sbalený — rozbalíme ho, jako by na něj
-  // člověk klepl. Bez toho Playwright třicet vteřin čeká na neviditelné
-  // tlačítko a test spadne výjimkou místo čitelné hlášky.
-  await p2.evaluate(() => {
-    const d = document.getElementById('ms-filters');
-    if (d) d.open = true;
-  });
-  await p2.waitForTimeout(400);
+  /* Panel s filtry je sbalený — otevře se ten, ve kterém políčka ceny
+     a výměry opravdu bydlí. Od 10. 11. to není `#ms-filters` („Další
+     filtry"), ale skupina „Cena a výměra"; bez toho Playwright třicet
+     vteřin čeká na neviditelné políčko a test spadne výjimkou místo
+     čitelné hlášky. Otevírá se JEN ta jedna skupina, protože otevřené
+     panely leží přes sebe — viz rozbal-hledani.mjs. */
+  await otevriSkupinu(p2, '#map-cena-od', 400);
 
   const vPanelu = await p2.evaluate(() => {
     const pole = ['map-cena-od', 'map-cena', 'map-area', 'map-area-do']
       .map((id) => document.getElementById(id));
     if (pole.some((e) => !e)) return null;
-    const panel = document.querySelector('.map-controls');
+    /* PANEL SE BERE OD POLÍČKA, NE PODLE JMÉNA TŘÍDY. Do 10. 11. byly
+       filtry v jednom obalu `.map-controls`; dnes je tahle třída už jen
+       na panelu „Další filtry", kde políčka ceny nejsou — dotaz podle
+       jména by proto hlásil, že políčka v panelu nejsou. */
+    const panel = pole[0].closest('.mf-panel');
     return {
       vsechnaVPanelu: pole.every((e) => panel && panel.contains(e)),
       videt: pole.every((e) => e.getClientRects().length > 0),
@@ -452,12 +454,18 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   /* Klepnutí do políčka nesmí nic otevřít ani zavřít — jen zaostřit.
      Přesně na tohle si majitel stěžoval: „proč mě to hází na tuhle
      stránku, proč mě to nenechá v menu". */
+  /* Políčka ceny jsou v panelu skupiny „Cena a výměra"; klepnutí do
+     pole hledání výš panely zavírá (je to klepnutí mimo ně), tak se
+     otevřou znovu — a jen ta jedna skupina, protože otevřené panely
+     leží přes sebe a klepnutí by trefilo ten vrchní. */
+  await otevriSkupinu(p2, '#map-cena-od');
   await p2.locator('#map-cena-od').click();
   await p2.waitForTimeout(400);
   const poKlepnuti = await p2.evaluate(() => ({
     zaostreno: document.activeElement && document.activeElement.id,
     obrazovka: !!document.querySelector('.rz-ov:not([hidden])'),
-    panelOtevreny: !!(document.getElementById('ms-filters') || {}).open,
+    /* Panel, ve kterém políčko bydlí — od 10. 11. „Cena a výměra". */
+    panelOtevreny: !!(document.getElementById('mf-cena') || {}).open,
   }));
   pravda('klepnutí do políčka ho jen zaostří', poKlepnuti.zaostreno === 'map-cena-od',
     `zaostřeno „${poKlepnuti.zaostreno}"`);
@@ -555,7 +563,10 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
    pět a stačilo povolit cenu. */
 {
   const { ctx: c4, p: p4 } = await otevri({ viewport: { width: 1280, height: 900 } });
-  await rozbalHledani(p4);
+  /* TENHLE BLOK PANELY NEPOTŘEBUJE: píše se do hledání a klepá do
+     hlášky ve VÝPISU. Otevřený panel přes výpis leží (viz
+     zavriSkupiny v rozbal-hledani.mjs), takže ať jsou zavřené. */
+  await zavriSkupiny(p4);
   async function prazdno(q) {
     await p4.fill('#map-search', q);
     await p4.waitForTimeout(900);
@@ -791,15 +802,27 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
    pojmenovaný a hlídaný. */
 {
   const { ctx, p } = await otevri(TELEFON);
-  await rozbalHledani(p);
-  await p.evaluate(() => { document.getElementById('ms-filters').open = true; });
-  await p.waitForTimeout(700);
+  /* Řady od–do jsou ve skupině „Cena a výměra" (do 10. 11. to byl
+     jediný panel `#ms-filters`). Otevře se jen ona. */
+  await otevriSkupinu(p, '#map-cena-od', 700);
 
   const v = await p.evaluate(() => {
-    const rady = [...document.querySelectorAll('.map-controls .mc-rozsah')];
+    /* Řady od–do bydlí v panelu skupiny „Cena a výměra" (#mf-cena);
+       `.map-controls` je dnes jen panel „Další filtry". */
+    const rady = [...document.querySelectorAll('#mf-cena .mc-rozsah')];
     const vidno = (e) => !!e && e.getClientRects().length > 0;
-    const t = document.querySelector('.msf-text');
-    const ch = document.querySelector('.msf-chev');
+    /* POPISEK OTVÍRAČE SKUPINY. Do 10. 11. nesla filtry jedna lišta
+       (`.msf-text` + `.msf-chev`); teď má každá skupina svůj otvírač
+       a nápis je ve dvou podobách — dlouhé jméno (.mf-jm) na monitoru,
+       krátké (.mf-jm-k) do 1040 px, aby se řádek vešel na dva řádky
+       místo čtyř. Měří se ten, který je VIDĚT.
+       Šipka u nápisu na telefonu schválně není (ušetřila na 390 px
+       dva řádky otvíračů), takže se místo ní měří ikona skupiny —
+       ta je na každé šířce. */
+    const vidnoE = (e) => !!e && e.getClientRects().length > 0;
+    const t = [...document.querySelectorAll('#mf-cena .mf-jm, #mf-cena .mf-jm-k')]
+      .filter(vidnoE)[0] || null;
+    const ch = document.querySelector('#mf-cena .mf-ic');
     const barva = (e) => e ? getComputedStyle(e).color : null;
     /* PRŮSVITNOU VRSTVU JE TŘEBA SLOŽIT, NE BRÁT JAKO NEPRŮHLEDNOU.
        Procházení nahoru se zastavovalo na PRVNÍM pozadí, které není
@@ -862,8 +885,8 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
 
   /* Popisek lišty filtrů: musí být vidět a musí být čitelný proti pozadí.
      Bílý text na bílém panelu je přesně to, co uživatel nafotil. */
-  pravda('lišta filtrů má popisek', v.popisekVidno && v.popisek.length > 3, v.popisek);
-  pravda('a šipku u ní taky', v.sipkaVidno);
+  pravda('otvírač skupiny má popisek', v.popisekVidno && v.popisek.length > 3, v.popisek);
+  pravda('a ikonu u něj taky', v.sipkaVidno, 'ikona skupiny není vidět');
   {
     const svet = (x) => {
       const [r, g, b] = x.match(/\d+/g).map(Number).map((u) => {
@@ -979,7 +1002,16 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(500);
   const predKlepnutim = await stav();
-  pravda('před klepnutím je výpis pod okrajem okna', predKlepnutim.vypisTop > predKlepnutim.okno,
+  /* MEZ JE POLOVINA OKNA, NE CELÉ OKNO. Kontrola níž tvrdí, že
+     klepnutí vytáhne výpis do HORNÍ POLOVINY okna; tahle před ní jen
+     ověřuje, že tam výpis ještě není — jinak by neměřila nic. Celé okno
+     byla mez z doby jednoho dlouhého panelu filtrů (výpis začínal
+     1 907 px hluboko). Od 10. 11. je nad výpisem řádek otvíračů, a to
+     je 802 px z 844 (naměřeno 11. 11. na 390 px se zapnutým filtrem):
+     výpis je tedy pořád pod polovinou okna — vidět je z něj 42 px —,
+     ale do okna už zasahuje. Měřit se má to, co se tvrdí. */
+  pravda('před klepnutím je výpis pod polovinou okna',
+    predKlepnutim.vypisTop > predKlepnutim.okno / 2,
     `výpis je na ${predKlepnutim.vypisTop} px z ${predKlepnutim.okno} — kontrola posunu by nic neměřila`);
   const kliklo = await p.evaluate(() => {
     const b = document.getElementById('mcf-hotovo');
@@ -1165,11 +1197,20 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     const rada = document.querySelector('#mc-druhy');
     const uvnitr = rada ? Math.round(parseFloat(getComputedStyle(rada).gap) || 0) : 0;
     const sirka = Math.round(ov.getBoundingClientRect().width);
-    const lev = ov.getBoundingClientRect().left;
+    /* MRTVÉ MÍSTO SE MĚŘÍ V OBALU, KDE PRVEK OPRAVDU BYDLÍ. Do 10. 11.
+       byly filtry i řádek akcí dětmi jednoho panelu `.map-controls`,
+       takže se obojí dalo poměřit jeho šířkou. Dnes má cena a výměra
+       svůj panel (skupina „Cena a výměra") a řádek akcí stojí pod celým
+       řádkem otvíračů — dotaz uvnitř `.map-controls` by je nenašel
+       a vracel `null`, čímž by kontrola měřila prázdno. */
     const prazdnoVpravo = (sel) => {
-      const e = ov.querySelector(sel);
+      const e = document.querySelector(sel);
       if (!e) return null;
-      return Math.round(sirka - (e.getBoundingClientRect().right - lev));
+      const obal = e.closest('.mf-panel') || e.closest('.map-controls-panel');
+      if (!obal) return null;
+      const ro = obal.getBoundingClientRect();
+      const pravyOkraj = ro.right - parseFloat(getComputedStyle(obal).paddingRight);
+      return Math.round(pravyOkraj - e.getBoundingClientRect().right);
     };
     const cap = ov.querySelector('.mc-cap');
     /* Skupina je pojmenovaná i tehdy, když název nesou její prvky samy:
@@ -1195,7 +1236,13 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   pravda('panel filtrů se dá změřit', !!v, '.map-controls se nenašlo');
   if (v) {
     /* Pojistky, aby kontroly níž nemohly projít naprázdno. */
-    pravda(`panel má víc skupin pod sebou (${v.mezery.length + 1})`, v.mezery.length >= 3,
+    /* KOLIK SKUPIN JE POTŘEBA. Rytmus se dá poměřit už u dvou skupin
+       (jedna mezera mezi nimi). Dřív se tu žádaly čtyři, protože v tom
+       jediném panelu byly všechny filtry naráz; od 10. 11. je každá
+       pojmenovaná skupina ve svém panelu a v „Dalších filtrech" zbyly
+       dvě podskupiny — co uvádí inzerát a příležitosti. Pořád je to
+       MÍSTO, kde dvě skupiny stojí pod sebou, a právě tam vada vznikla. */
+    pravda(`panel má víc skupin pod sebou (${v.mezery.length + 1})`, v.mezery.length >= 1,
       'skupin je málo — rytmus se nedá měřit');
     pravda(`pilulky uvnitř řady mají mezeru (${v.uvnitr} px)`, v.uvnitr > 0,
       'gap řady je 0 — poměr níž by se nedal spočítat');

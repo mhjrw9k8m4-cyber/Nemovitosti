@@ -25,7 +25,7 @@
 // Obojí je typ chyby, který nikde nespadne a žádný jiný test nechytí:
 // web funguje, jen mlčí.
 import { chromium } from 'playwright-core';
-import { rozbalHledani } from './rozbal-hledani.mjs';
+import { rozbalHledani, otevriSkupinu } from './rozbal-hledani.mjs';
 import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -115,8 +115,10 @@ async function telefon(poloha) {
 
 /** Otevře celoobrazovkový výběr místa a počká, až je mapa opravdu na světě. */
 async function otevriVybirac(p, spoustec) {
-  // Na telefonu je spouštěč ve sbaleném hledání — viz rozbal-hledani.mjs.
-  await rozbalHledani(p);
+  /* Spouštěč bydlí v některé skupině filtrů — otevře se jen ta.
+     Všech pět otevřených panelů leží přes sebe a klepnutí by trefilo
+     ten vrchní; viz rozbal-hledani.mjs. */
+  await otevriSkupinu(p, spoustec);
   // Chybějící tlačítko má skončit poctivým ✕ u kontroly, ne pádem testu.
   await p.locator(spoustec).scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
   await p.locator(spoustec).click({ timeout: 4000 }).catch(() => {});

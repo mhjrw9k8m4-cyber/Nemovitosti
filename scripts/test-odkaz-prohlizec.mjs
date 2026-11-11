@@ -15,7 +15,7 @@ import { hlasPad } from './zkouska-pad.mjs';
 /* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky — viz
    scripts/zkouska-pripraveno.mjs (vykresleniPo). */
 import { vykresleniPo, pripravenoKdyz } from './zkouska-pripraveno.mjs';
-import { otevriPanel } from './rozbal-hledani.mjs';
+import { otevriSkupinu } from './rozbal-hledani.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 
 let chyb = 0; const zpravy = [];
@@ -73,7 +73,11 @@ const hashPredFiltry = await p.evaluate(() => location.hash);
    vysvětlené scripts/rozbal-hledani.mjs. Bez něj klepnutí do čipu tiše
    neudělá nic, do adresy se druh nedostane a kontrola „a stojí v ní
    druh nabídky" padne; přesně tak to spadlo v CI (běh 810). */
-await otevriPanel(p);
+/* A OTEVŘE SE JEN TA SKUPINA, KDE ČIP JE: pět otevřených panelů leží
+   přes sebe a klepnutí by trefilo ten vrchní. Chyba se tu navíc tiše
+   zahazuje (`.catch`), takže by se vada neukázala jako pád, ale jako
+   chybějící druh v adrese. */
+await otevriSkupinu(p, '[data-type="exekuce"]');
 await vykresleniPo(p, () => p.click('[data-type="exekuce"]').catch(() => {}));
 // Cena do: je to číselné pole, ne rozbalovátko.
 await vykresleniPo(p, () => p.evaluate(() => {
