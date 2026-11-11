@@ -427,7 +427,9 @@
     var MEZ = 20;
     function zrcadli() {
       var q = (pole.value || '').trim();
-      text.textContent = q ? (q.length > MEZ ? q.slice(0, MEZ - 1) + '…' : q) : 'Hledat';
+      var kratce = q ? (q.length > MEZ ? q.slice(0, MEZ - 1) + '…' : q) : 'Hledat';
+      text.textContent = kratce;
+      btn.setAttribute('aria-label', q ? 'Hledat: ' + q : 'Hledat');
     }
 
     pole.addEventListener('input', zrcadli);

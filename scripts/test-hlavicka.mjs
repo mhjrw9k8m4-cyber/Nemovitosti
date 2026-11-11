@@ -326,6 +326,63 @@ for (const [jm, opt, stranka] of [['telefon', TELEFON, 'index.html'], ['úzký t
   await ctx.close();
 }
 
+/* --- 3b2) NIC V LIŠTĚ NESMÍ VYČUHOVAT ZE STRÁNKY ---------------------
+ *
+ * Naměřeno 11. 11.: tlačítko hledání v liště (#hdr-hledat), které tam
+ * je právě proto, aby hlavní funkce webu zůstala po ruce i u výpisu,
+ * končilo na 390 px o 83 px a na 320 px o 68 px ZA pravým okrajem
+ * okna — bez vodorovného posuvu stránky, takže se na telefonu nedalo
+ * klepnout. Řádek lišty měl pět prvků o součtu 413 px (burger 44,
+ * značka 177, profil 97, hledání 95), k tomu 36 px mezer a 40 px
+ * okrajů; nic z toho se nesmršťuje, a tak vytekl poslední.
+ *
+ * Není to první případ: u téhož tlačítka stojí komentář o druhém
+ * odkazu na profil, který „na 390 px vyčuhoval o 49 px a na 320 px
+ * o 17". Tohle je tedy hlídač na celou tu třídu, ne na jeden prvek.
+ *
+ * MĚŘÍ SE AŽ PO ODROLOVÁNÍ. Tlačítko hledání je nahoře schválně
+ * schované (ukazuje se, až když pole hledání není vidět), takže
+ * kontrola na nedotčené stránce by prošla o prázdnu. Proto se nejdřív
+ * odroluje a teprve pak měří — a je k tomu předpoklad, že v liště
+ * opravdu nějaké tlačítko přibylo. */
+for (const [jm, opt] of [['telefon', TELEFON], ['úzký telefon', { ...TELEFON, viewport: { width: 320, height: 720 } }],
+                         ['monitor', MONITOR]]) {
+  const { ctx, p } = await otevri(opt, 'index.html');
+  await p.evaluate(() => window.scrollTo({ top: 1500 }));
+  await p.waitForTimeout(500);
+  const v = await p.evaluate(() => {
+    const okno = document.documentElement.clientWidth;
+    const rada = document.querySelector('header .wrap');
+    const vidno = (el) => { const s = getComputedStyle(el); const r = el.getBoundingClientRect();
+      return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0; };
+    const ven = [];
+    for (const el of (rada ? rada.children : [])) {
+      if (!vidno(el)) continue;
+      const r = el.getBoundingClientRect();
+      /* Odsunuté menu (nav) stojí schválně mimo obrazovku vlevo —
+         to není vyteklý ovladač, to je zásuvka, která se vysouvá. */
+      if (el.id === 'nav') continue;
+      if (r.right > okno + 0.5 || r.left < -0.5) {
+        ven.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '')
+          + ' [' + Math.round(r.left) + '…' + Math.round(r.right) + '] v okně ' + okno);
+      }
+    }
+    const hledat = document.getElementById('hdr-hledat');
+    return { ven: ven, maHledani: !!(hledat && vidno(hledat)),
+      sirkaHledani: hledat ? Math.round(hledat.getBoundingClientRect().width) : null };
+  });
+  pravda(`${jm}: u odrolovaného výpisu je v liště tlačítko hledání (jinak není co měřit)`,
+    v.maHledani, 'tlačítko #hdr-hledat se neukázalo — kontrola níž by prošla o prázdnu');
+  pravda(`${jm}: žádný ovladač v liště nevyčuhuje ze stránky`, v.ven.length === 0,
+    v.ven.join(' | '));
+  /* A ať se z něj při zužování nestane proužek: prstem se na něj klepá. */
+  if (v.maHledani && opt.isMobile) {
+    pravda(`${jm}: a tlačítko hledání má pořád celou chytací plochu (${v.sirkaHledani} px)`,
+      v.sirkaHledani >= 44, 'šířka ' + v.sirkaHledani + ' px je pod 44 px');
+  }
+  await ctx.close();
+}
+
 /* --- 3c) Jméno značky je nápis, ne popisek ---------------------------
  *
  * Majitel řekl, že nápis v liště má „mít duši a být velký". Bylo to

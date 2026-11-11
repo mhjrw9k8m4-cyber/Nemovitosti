@@ -103,6 +103,8 @@ body{padding-top:var(--vyska-hlavicky,85px)}
 header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.04em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:12px;text-decoration:none;transition:var(--prechod)}
 .logo-jm{font:inherit;letter-spacing:inherit}
+@media (max-width:480px){.logo-jm{display:none}
+}
 .logo-mark{width:56px;height:56px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=20") center/contain no-repeat;box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,0.18);transition:var(--prechod)}
 .logo:hover .logo-mark{transform:translateY(-1px);box-shadow:var(--e2),inset 0 1px 0 rgba(255,255,255,0.18)}
 .logo:active .logo-mark{transform:translateY(1px);box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,0.18)}
@@ -116,6 +118,7 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 #nav a:not(.btn-primary)>.ik{display:none}
 }
 .hdr-ucet{display:none}
+
 
 @media (max-width:1040px){.hdr-ucet{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 8px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-karta);color:var(--text);text-decoration:none;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap;transition:var(--prechod)}
 .hdr-ucet .ik{flex:none;width:var(--ik-s);height:var(--ik-s);stroke-width:var(--ik-s-tah)}

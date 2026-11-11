@@ -770,12 +770,17 @@
     var MEZ = 20;
     function zrcadli() {
       var q = (pole.value || '').trim();
-      text.textContent = q ? (q.length > MEZ ? q.slice(0, MEZ - 1) + '…' : q) : 'Hledat';
+      var kratce = q ? (q.length > MEZ ? q.slice(0, MEZ - 1) + '…' : q) : 'Hledat';
+      text.textContent = kratce;
+      btn.setAttribute('aria-label', q ? 'Hledat: ' + q : 'Hledat');
     }
-    /* Přístupné jméno tlačítka je jeho vlastní text, žádné aria-label:
-       tím nemůže vzniknout rozpor mezi tím, co je vidět, a tím, co
-       přečte odečítač (WCAG 2.5.3, kvůli kterému se dnes přepisovala
-       jména tlačítek na kartě). */
+    /* JMÉNO SKLÁDÁ TÁŽ FUNKCE JAKO VIDITELNÝ TEXT, takže se ty dva
+       nemohou rozejít — a to byl původní důvod, proč tu aria-label
+       nebyl. Na úzkém okně (do 480 px) je ale text schovaný, protože
+       se řádek lišty jinak nevejde (měřeno: tlačítko končilo 83 px za
+       okrajem), a tam je aria-label JEDINÝ zdroj jména. Píše se proto
+       vždycky a ze stejného řetězce; WCAG 2.5.3 tím neporušujeme:
+       kde text vidět JE, jméno s ním začíná. */
     pole.addEventListener('input', zrcadli);
     zrcadli();
 

@@ -1873,6 +1873,15 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    kterému jde nastavit velikost nezávisle na odkazu, a vkládá ho
    sestavení (scripts/hlavicka.mjs). */
 .logo-jm{font:inherit; letter-spacing:inherit;}
+/* SLOVO „PARCELKA" NA ÚZKÉM OKNĚ ODCHÁZÍ, ZNAČKA ZŮSTÁVÁ. Součet
+   prvků v liště (viz měření u .hdr-hledat) přetéká na 390 px o 83 px
+   a jen z tlačítka hledání se ušetří 51; zbytek musí dát značka.
+   Odchází SLOVO, ne značka: kreslený mark je 56×56 px, pořád vede
+   domů a je to on, co si člověk pamatuje. Na 481 px a výš je slovo
+   zpátky. */
+@media (max-width:480px){
+  .logo-jm{display:none;}
+}
 
 /* JMÉNO ZNAČKY SE SÁZÍ TĚSNĚJI NEŽ TEXT, a je to to jediné místo na
    webu, kde se tak sází. Logo není věta: čte se jako jeden obrazec,
@@ -2014,6 +2023,23 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
 .hdr-hledat:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
 .hdr-hledat:active{transform:translateY(1px);}
 .hdr-hledat[hidden]{display:none;}
+/* NA TELEFONU JEN IKONA — A JE TO SPOČÍTANÉ, NE ODHADNUTÉ.
+   Naměřeno 11. 11. v prohlížeči: řádek lišty má na 390 px pět prvků
+   o součtu 413 px (burger 44, značka 177, profil 97, hledání 95)
+   a k tomu 36 px mezer a 40 px okrajů, tedy 489 px do okna širokého
+   390. Nic z nich se nesmršťuje, a tak vytekl POSLEDNÍ prvek: tlačítko
+   hledání končilo 83 px za pravým okrajem (na 320 px o 68 px), bez
+   vodorovného posuvu stránky — na telefonu se na hlavní funkci webu
+   nedalo klepnout. Komentář u toho tlačítka přitom tvrdil, že „na
+   telefonu tím vyjde hledání k pravému kraji, tedy pod palec"; to se
+   nikdy neměřilo.
+   Tlačítko je proto na úzkém okně čtvercové (44 px, tedy pořád celá
+   chytací plocha) a dotaz v něm zrcadlí jen přístupné jméno. */
+@media (max-width:480px){
+  .hdr-hledat{width:44px; padding:0; gap:0;}
+  .hdr-hledat #hdr-hledat-t{position:absolute; width:1px; height:1px; overflow:hidden;
+    clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
+}
 /* Na monitoru táž výška a týž řez, na jakém se 11. 11. shodla celá
    sestava ovladačů nad výpisem (36 px, 14/600) — prstem se tam
    neovládá, takže 44 px není potřeba. */
