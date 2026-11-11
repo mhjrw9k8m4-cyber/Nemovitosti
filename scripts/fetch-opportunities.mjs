@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { createRequire } from 'node:module';
-import { bezEmodzi, otiskInzerenta, mimoSadu } from './text-inzeratu.mjs';
+import { bezEmodzi, bezCizichCislic, otiskInzerenta, mimoSadu } from './text-inzeratu.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist, zZaznamu, obecZNazvuAukce, bezZnacek } from './cteni-zdroje.mjs';
 import { PREDPISY, ZAPOJENE_PREDPISY, jeNemovitost } from './predpisy-zdroju.mjs';
@@ -5119,7 +5119,10 @@ async function fetchNabidkyStatu() {
      jde jen šest znaků otisku, ne celý popis. */
   for (const o of fresh) {
     if (!o._popis) continue;
-    const t = bezEmodzi(o._popis);
+    /* I popis projde narovnáním cizích číslic — je to týž text, který
+       se pak dostane do popisu stránky pro vyhledávače, a hlídač písem
+       čte VŠECHEN text na stránkách, ne jen pole nabídky. */
+    const t = bezCizichCislic(bezEmodzi(o._popis));
     if (t) popisy[klicNabidky(o)] = t;
     const otisk = otiskInzerenta(t);
     if (otisk) o.inz = otisk;
@@ -5301,6 +5304,26 @@ async function fetchNabidkyStatu() {
       + (katUkazky.length ? ' — ' + katUkazky.join(', ') : ''));
     console.log('Podle kategorie:', JSON.stringify(pocty));
   }
+
+  /* ÚKLID TEXTŮ NA JEDNOM MÍSTĚ, TĚSNĚ PŘED ZÁPISEM. Místo se do
+     záznamu zapisuje na šesti různých větvích podle zdroje, takže
+     čistit ho u každé zvlášť znamená, že sedmá se zapomene. Tady
+     projdou všechny záznamy ze všech zdrojů jedním průchodem.
+     Dnes se tím narovnávají římské číslice použité jako znak (viz
+     bezCizichCislic v scripts/text-inzeratu.mjs) — adresy jako
+     „Havířská Ⅰ" by se jinak vykreslily systémovým písmem uprostřed
+     názvu. Adresy a jména zdroje se nečistí: url musí zůstat přesná
+     a jméno zdroje je naše vlastní, ne cizí text. */
+  const TEXTOVA_POLE = ['place', 'ulice', 'parcel', 'druh', 'extra', 'title', 'nazev', 'okres'];
+  let narovnano = 0;
+  for (const o of fresh) {
+    for (const pole of TEXTOVA_POLE) {
+      if (typeof o[pole] !== 'string') continue;
+      const cisty = bezCizichCislic(o[pole]);
+      if (cisty !== o[pole]) { o[pole] = cisty; narovnano++; }
+    }
+  }
+  if (narovnano) console.log('Narovnané cizí číslice v textech:', narovnano);
 
   const payload = {
     updated: new Date().toISOString().slice(0, 10),

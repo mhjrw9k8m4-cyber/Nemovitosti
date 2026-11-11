@@ -22,6 +22,45 @@
  */
 const EMODZI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{2712}\u{2716}-\u{27BF}\u{FE0F}]/gu;
 
+/* ŘÍMSKÉ ČÍSLICE JAKO ZNAK, NE JAKO PÍSMENA.
+ * ====================================================================
+ * Unicode má pro římské číslice vlastní znaky (U+2160 „Ⅰ", U+2161 „Ⅱ",
+ * …) a inzerenti je občas použijí místo písmen. NALEZENO 11. 11.
+ * v datech z Bezrealitek: ulice „Havířská Ⅰ" — jedno „Ⅰ" z celých
+ * 4 001 nabídek. V podřezané sadě písma takový znak není (viz
+ * MIMO_SADU níž), takže by se vykreslil systémovým písmem UPROSTŘED
+ * názvu ulice; shodilo to scripts/test-pisma.mjs.
+ *
+ * PROČ SE PŘEPISUJE A NEMAŽE. Smazat „Ⅰ" znamená udělat z „Havířská Ⅰ"
+ * ulici „Havířská", tedy jinou adresu. Přepis na písmena je přitom
+ * přesně to, co ten znak znamená, a navíc pomůže geokodéru, který
+ * římskou číslici jako znak nezná.
+ *
+ * PROČ NE CELÉ NFKC. Nabízelo se pustit na texty normalizaci NFKC,
+ * která tohle vyřeší taky. Jenže ta zároveň mění nezlomitelnou mezeru
+ * na obyčejnou — a nezlomitelné mezery jsou v celém webu výsledkem
+ * české sazby (§191), takže by se jedním příkazem rozbily. Proto jen
+ * tahle jedna přihrádka Unicode, nic víc.
+ *
+ * ROZŠIŘUJE SE SNADNO: kdyby se objevil další znak mimo sadu, který
+ * něco znamená (zlomky ½, ⅓ z téže přihrádky), přidá se sem řádek.
+ * Hlídačem je test-pisma.mjs, který čte VŠECHEN text na stránkách.
+ */
+const CIZI_CISLICE = {
+  'Ⅰ': 'I', 'Ⅱ': 'II', 'Ⅲ': 'III', 'Ⅳ': 'IV', 'Ⅴ': 'V',
+  'Ⅵ': 'VI', 'Ⅶ': 'VII', 'Ⅷ': 'VIII', 'Ⅸ': 'IX', 'Ⅹ': 'X',
+  'Ⅺ': 'XI', 'Ⅻ': 'XII', 'Ⅼ': 'L', 'Ⅽ': 'C', 'Ⅾ': 'D', 'Ⅿ': 'M',
+  'ⅰ': 'i', 'ⅱ': 'ii', 'ⅲ': 'iii', 'ⅳ': 'iv', 'ⅴ': 'v',
+  'ⅵ': 'vi', 'ⅶ': 'vii', 'ⅷ': 'viii', 'ⅸ': 'ix', 'ⅹ': 'x',
+  'ⅺ': 'xi', 'ⅻ': 'xii', 'ⅼ': 'l', 'ⅽ': 'c', 'ⅾ': 'd', 'ⅿ': 'm',
+  '½': '1/2', '⅓': '1/3', '⅔': '2/3', '¼': '1/4', '¾': '3/4',
+};
+
+export function bezCizichCislic(text) {
+  return String(text == null ? '' : text)
+    .replace(/[⅐-ⅿ¼-¾]/g, (z) => (CIZI_CISLICE[z] != null ? CIZI_CISLICE[z] : ''));
+}
+
 export function bezEmodzi(text) {
   return String(text == null ? '' : text)
     .replace(EMODZI, '')
