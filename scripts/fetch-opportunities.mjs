@@ -345,6 +345,59 @@ const POPISY = join(__dirname, '..', 'data', 'popisy.json');
 let OKRESY_MAP = {};
 try { OKRESY_MAP = JSON.parse(readFileSync(OKRESY, 'utf8')).okresy || {}; } catch { /* ok */ }
 
+/* OKRES Z ADRESY INZERÁTU — ROZSOUDÍ HOMONYMA.
+ * ====================================================================
+ * Jména obcí se v Česku opakují, a geokodér o tom nerozhoduje podle
+ * inzerátu, ale podle toho, co zná první. NAMĚŘENO 11. 11. na ostrých
+ * datech: ze 126 nabídek, jejichž adresa nese SAMOTNÉ jméno okresního
+ * města, mělo 6 na webu jiný okres, než ta adresa říká:
+ *
+ *   Záblatí      adresa Prachatice           web Žďár nad Sázavou
+ *   Kamenice     adresa Jihlava              web Praha-východ
+ *   Kluky        adresa Písek                web Mladá Boleslav
+ *   Lesná        adresa Tachov               web Znojmo
+ *   Josefův Důl  adresa Jablonec nad Nisou   web Mladá Boleslav
+ *   Kozlovice    adresa Frýdek-Místek        web Plzeň-jih
+ *
+ * Každá taková nabídka má špendlík, okresní stránku i srovnání ceny
+ * z cizího kraje — a inzerent přitom v adrese to město napsal.
+ *
+ * ČTE SE KONZERVATIVNĚ: bere se jen to, co stojí ZA slovem o druhu
+ * nabídky a co se CELÉ rovná jménu okresního města. Napoprvé jsem
+ * hledal jméno okresu kdekoli v adrese a vyšlo 67 nálezů — z toho
+ * většina falešných: „moravsky-pisek" není Písek (Moravský Písek je
+ * v okrese Hodonín) a „jesenik-nad-odrou" není Jeseník (Jeseník nad
+ * Odrou je v okrese Nový Jičín). Celé jméno za druhem nabídky tyhle
+ * pasti vyloučí.
+ *
+ * Vrací jméno okresu, nebo null, když adresa nic takového nenese —
+ * což je většina inzerátů (obec, která okresním městem není). Tahle
+ * pomůcka tedy nic nehádá: mlčí, nebo má v ruce jméno z adresy. */
+const slugAdresy = (s) => bezDiakritiky(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const OKRES_DLE_SLUGU = new Map(Object.keys(OKRESY_MAP).map((n) => [slugAdresy(n), n]));
+const DRUH_V_ADRESE = 'pozemku|domu|bytu|chaty|chalupy|garaze|zahrady|louky|lesa';
+export function okresZAdresyInzeratu(url) {
+  const m = slugAdresy(url).match(new RegExp('-(?:' + DRUH_V_ADRESE + ')-([a-z0-9-]+)$'));
+  if (!m) return null;
+  const zbytek = m[1];
+  const cele = OKRES_DLE_SLUGU.get(zbytek);
+  if (cele) return cele;
+  /* A JEŠTĚ JMÉNO NA KONCI, ALE JEN VÍCESLOVNÉ. U inzerátů s ulicí je
+     město až za ní („…-prodej-bytu-kubelikova-marianske-lazne"), takže
+     celý zbytek se jménu okresního města nerovná. Brát jakékoli jméno
+     na konci ale nejde: „moravsky-pisek" končí na „pisek" a to je past,
+     kvůli které tahle pomůcka vznikla. Víceslovné jméno
+     („jablonec-nad-nisou", „frydek-mistek", „hradec-kralove") past
+     nepustí: být koncem jiné obce by znamenalo, že se ta obec jmenuje
+     „něco Jablonec nad Nisou", a tak se žádná nejmenuje.
+     Jednoslovná jména tedy platí jen jako CELÝ zbytek adresy. */
+  for (const [slug, jmeno] of OKRES_DLE_SLUGU) {
+    if (slug.indexOf('-') === -1) continue;
+    if (zbytek === slug || zbytek.endsWith('-' + slug)) return jmeno;
+  }
+  return null;
+}
+
 // Cache geokódování podle názvu katastrálního území (ať Nominatim neptáme opakovaně)
 let GEO_CACHE = {};
 try { GEO_CACHE = JSON.parse(readFileSync(GEOCACHE, 'utf8')); } catch { /* ok */ }
@@ -3857,6 +3910,10 @@ async function fetchBezrealitky() {
      strop frontu vůbec někdy dožene. */
   const zeSlovniku = new Map();
   let geoDotazu = 0, bezOkresu = 0;
+  /* Kolik nabídek rozsoudila adresa inzerátu: `rozsouzeno` = geokodér
+     ukazoval do jiného okresu, `dohledano` = geokodér neodpověděl
+     vůbec, takže by nabídka spadla pod „bez okresu". */
+  let rozsouzenoAdresou = 0, dohledanoZAdresy = 0;
   let bezJmena = 0, geoNeznal = 0, nadStrop = 0, zMezipametiJmen = 0;
   const cekajiciJmena = new Set();
   /* VZOREK ODKAZŮ, KTERÝM GEOKODÉR NEROZUMÍ — INSTRUMENTACE, NE OPRAVA.
@@ -3902,10 +3959,17 @@ async function fetchBezrealitky() {
     const usek = posledniUsek(a.geo);
     pricti(usekVse, usek);
     if (!place) { bezOkresu++; bezJmena++; continue; }
-    const klic = place.toLowerCase();
+    /* OKRES Z ADRESY INZERÁTU VYHRÁVÁ NAD GEOKODÉREM — a je i součástí
+       klíče slovníku. Bez toho si dvě různé „Kamenice" (u Jihlavy a
+       v Praze-východ) přepisovaly jeden záznam: která se vyřešila
+       první, ta platila pro všechny. Viz okresZAdresyInzeratu výš. */
+    const okresZUrl = okresZAdresyInzeratu(a.url);
+    const klic = place.toLowerCase() + (okresZUrl ? '@' + okresZUrl : '');
     if (!zeSlovniku.has(klic)) {
-      const zn = mistaObci.get(klic);
-      if (zn) zeSlovniku.set(klic, zn);
+      const zn = mistaObci.get(place.toLowerCase());
+      /* Záznam z dřívějších dat se vezme jen tehdy, když adrese
+         inzerátu NEODPORUJE — jinak by se chyba přenášela dál. */
+      if (zn && (!okresZUrl || zn.okres === okresZUrl)) zeSlovniku.set(klic, zn);
       /* STROP SE TÝKÁ DOTAZŮ VEN, NE JMEN.
          ------------------------------------------------------------
          Do 10. 11. se počítadlo zvedalo před KAŽDÝM voláním
@@ -3927,8 +3991,29 @@ async function fetchBezrealitky() {
         const coord = await geocodeObec(place);
         const okres = (Array.isArray(coord) && maHranice())
           ? okresPodleHranice(coord[0], coord[1]) : null;
-        zeSlovniku.set(klic, okres ? { okres, lat: coord[0], lng: coord[1] } : null);
-        if (!okres) zeSlovniku.set(klic, null);
+        if (okresZUrl && okres !== okresZUrl) {
+          /* Geokodér ukázal jinam, než co stojí v adrese inzerátu.
+             Rozhoduje adresa: inzerent to město napsal. Poloha se
+             nebere od geokodéru (ukázal do jiného okresu), ale ze
+             středu okresu — stejně jako u zamítnutých homonym níž.
+             Je to hrubší bod, ale ve SPRÁVNÉM okrese; špendlík o 20 km
+             vedle v témž okrese je menší vada než nabídka ve Znojmě,
+             která se prodává u Tachova. */
+          const stred = OKRESY_MAP[okresZUrl];
+          if (stred) {
+            /* S ROZPTYLEM, ne na jeden bod — stejným receptem jako
+               geocode() výš. Bez toho leží celý okres na jednom
+               špendlíku; naměřeno při první verzi téhle opravy, kdy
+               tři nabídky v Hradci Králové dostaly přesně tutéž
+               polohu a shodil to test-data („dvě různé obce
+               nesdílejí přesně tentýž bod"). */
+            const j = jitterVCesku(stred[0], stred[1], place + okresZUrl, 0.06);
+            zeSlovniku.set(klic, { okres: okresZUrl, lat: j.lat, lng: j.lng });
+            if (okres) rozsouzenoAdresou++; else dohledanoZAdresy++;
+          } else zeSlovniku.set(klic, okres ? { okres, lat: coord[0], lng: coord[1] } : null);
+        } else {
+          zeSlovniku.set(klic, okres ? { okres, lat: coord[0], lng: coord[1] } : null);
+        }
       } else { zeSlovniku.set(klic, null); cekajiciJmena.add(klic); }
     }
     const zn = zeSlovniku.get(klic);
@@ -4073,6 +4158,8 @@ async function fetchBezrealitky() {
     + ` = bez jména obce ${bezJmena} + geokodér neznal ${geoNeznal}`
     + ` + nad stropem dotazů ${nadStrop} (${cekajiciJmena.size} různých jmen čeká),`
     + ` obec z adresy inzerátu ${opravenychUlic}×, geokodér ${geoDotazu}× ze stropu ${BR_STROP_GEO}`
+    + `, okres rozsoudila adresa ${rozsouzenoAdresou}× (geokodér ukazoval jinam)`
+    + ` a dohledala ${dohledanoZAdresy}× (geokodér neodpověděl)`
     + `, z mezipaměti jmen ${zMezipametiJmen} bez dotazu ven).`
     + ` Cena z mezipaměti u ${zMezipameti}, stahováno ${stazeno} detailů`
     + (odlozene.length ? `, odloženo na další běh ${odlozene.length} (strop ${BR_STROP_DETAILU}),`

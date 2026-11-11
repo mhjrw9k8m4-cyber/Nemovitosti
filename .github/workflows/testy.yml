@@ -882,9 +882,11 @@ jobs:
           # install` s ním a ŽÁDNÁ zkouška se nespustila. Není to vada webu
           # ani zkoušky, takže se zkouší třikrát (odstup 30 a 60 s). Když
           # síť nenaskočí ani potom, krok padne a v logu stojí proč.
+          # Příkaz zůstává na JEDNOM řádku: hlídač práv v CI (test-ci-prava)
+          # čte instalaci balíčků po řádcích a zalomení zpětným lomítkem
+          # mu ten řádek rozpůlí — hlásil pak „balíček \ bez verze".
           for pokus in 1 2 3; do
-            npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 \
-              && npx playwright install --with-deps chromium && break
+            if npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 && npx playwright install --with-deps chromium; then break; fi
             if [ "$pokus" = 3 ]; then
               echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
               exit 1
@@ -1132,9 +1134,11 @@ jobs:
           # install` s ním a ŽÁDNÁ zkouška se nespustila. Není to vada webu
           # ani zkoušky, takže se zkouší třikrát (odstup 30 a 60 s). Když
           # síť nenaskočí ani potom, krok padne a v logu stojí proč.
+          # Příkaz zůstává na JEDNOM řádku: hlídač práv v CI (test-ci-prava)
+          # čte instalaci balíčků po řádcích a zalomení zpětným lomítkem
+          # mu ten řádek rozpůlí — hlásil pak „balíček \ bez verze".
           for pokus in 1 2 3; do
-            npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 \
-              && npx playwright install --with-deps chromium && break
+            if npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 && npx playwright install --with-deps chromium; then break; fi
             if [ "$pokus" = 3 ]; then
               echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
               exit 1
@@ -1483,9 +1487,11 @@ jobs:
           # install` s ním a ŽÁDNÁ zkouška se nespustila. Není to vada webu
           # ani zkoušky, takže se zkouší třikrát (odstup 30 a 60 s). Když
           # síť nenaskočí ani potom, krok padne a v logu stojí proč.
+          # Příkaz zůstává na JEDNOM řádku: hlídač práv v CI (test-ci-prava)
+          # čte instalaci balíčků po řádcích a zalomení zpětným lomítkem
+          # mu ten řádek rozpůlí — hlásil pak „balíček \ bez verze".
           for pokus in 1 2 3; do
-            npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 \
-              && npx playwright install --with-deps chromium && break
+            if npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 && npx playwright install --with-deps chromium; then break; fi
             if [ "$pokus" = 3 ]; then
               echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
               exit 1

@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { kmVenZOkresu } from './okres-podle-gps.mjs';
-import { polohaSediSOkresem, prorezMezipamet } from './fetch-opportunities.mjs';
+import { polohaSediSOkresem, prorezMezipamet, okresZAdresyInzeratu } from './fetch-opportunities.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -110,6 +110,64 @@ pravda('a rozhoduje se i tam, kde kruh kolem středu okresu mlčel (jinak by opr
     'text okres z GPS přebíjel — komentář v kódu přitom říká „z GPS (spolehlivé), jinak z textu"');
   pravda('a sbírat dat se začne jen při přímém spuštění (jinak by tuhle zkoušku nešlo napsat)',
     /if \(import\.meta\.url === `file:\/\/\$\{process\.argv\[1\]\}`\)/.test(z));
+}
+
+/* ---- OKRES Z ADRESY INZERÁTU ROZSOUDÍ HOMONYMA ----
+   Jména obcí se opakují a geokodér nerozhoduje podle inzerátu, ale podle
+   toho, co zná. NAMĚŘENO 11. 11. na ostrých datech: ze 218 nabídek,
+   u kterých jde okres z adresy inzerátu přečíst, mělo 21 na webu JINÝ
+   okres — Záblatí z Prachatic viselo ve Žďáru nad Sázavou, Kluky z Písku
+   v Mladé Boleslavi, byt v Prokopa Holého z Hradce Králové v Olomouci.
+   Každá taková nabídka má cizí špendlík, cizí okresní stránku i srovnání
+   ceny z cizího kraje.
+   Čte se konzervativně — jen jméno okresního města CELÉ za slovem
+   o druhu nabídky, nebo víceslovné jméno na konci. Proto tu stojí
+   i pasti: „moravsky-pisek" není Písek (Moravský Písek je v okrese
+   Hodonín) a „jesenik-nad-odrou" není Jeseník. */
+{
+  const vzorky = [
+    ['https://www.bezrealitky.cz/x/1-nabidka-prodej-pozemku-prachatice', 'Prachatice'],
+    ['https://www.bezrealitky.cz/x/2-nabidka-prodej-domu-tachov', 'Tachov'],
+    ['https://www.bezrealitky.cz/x/3-nabidka-prodej-bytu-prokopa-holeho-hradec-kralove', 'Hradec Králové'],
+    ['https://www.bezrealitky.cz/x/4-nabidka-prodej-pozemku-moravsky-pisek', null],
+    ['https://www.bezrealitky.cz/x/5-nabidka-prodej-pozemku-jesenik-nad-odrou', null],
+    ['https://www.bezrealitky.cz/x/6-nabidka-prodej-bytu-praha-5', null],
+    ['', null],
+  ];
+  const spatne = vzorky.filter(([u, c]) => okresZAdresyInzeratu(u) !== c)
+    .map(([u, c]) => `${u.slice(-42)} → ${JSON.stringify(okresZAdresyInzeratu(u))}, čekáno ${JSON.stringify(c)}`);
+  pravda(`okres se z adresy inzerátu čte správně (${vzorky.length} vzorků včetně pastí)`,
+    spatne.length === 0, spatne.join('\n      '));
+
+  const nabidky = (JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8'))
+    .opportunities || []);
+  let citelnych = 0;
+  const odporuji = [];
+  for (const o of nabidky) {
+    if (!o.url || !o.okres) continue;
+    const z = okresZAdresyInzeratu(o.url);
+    if (!z) continue;
+    citelnych++;
+    if (z !== o.okres) odporuji.push(`${o.place}: adresa říká ${z}, data mají ${o.okres}`);
+  }
+  // PŘEDPOKLAD: bez čitelných adres by kontrola níž prošla o prázdnu
+  pravda(`je co srovnávat — u ${citelnych} nabídek jde okres z adresy přečíst`,
+    citelnych >= 50, 'čitelných adres jen ' + citelnych);
+  pravda('žádná nabídka si s adresou inzerátu neodporuje v okrese',
+    odporuji.length === 0,
+    `odporuje ${odporuji.length}: ` + odporuji.slice(0, 4).join(' | '));
+
+  /* A JEŠTĚ TVAR ZDROJE, protože kontrola nad daty by po odebrání
+     pravidla zůstala zelená: data už opravená jsou a vada by se
+     projevila teprve příštím během robota, tedy v noci a bez svědka.
+     Hlídá se tedy obojí — co v datech je, i že pravidlo pořád platí. */
+  const robot = fs.readFileSync(path.join(ROOT, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
+  pravda('klíč slovníku obcí nese i okres z adresy (jinak si dvě „Kamenice" přepíšou jeden záznam)',
+    /const klic = place\.toLowerCase\(\) \+ \(okresZUrl \? '@' \+ okresZUrl : ''\)/.test(robot),
+    'v robotovi se klíč skládá jen z názvu obce');
+  pravda('a když geokodér ukáže do jiného okresu, rozhoduje adresa',
+    /if \(okresZUrl && okres !== okresZUrl\)/.test(robot),
+    'rozsouzení podle adresy inzerátu v robotovi není');
 }
 
 console.log('\nPoloha vs okres — patří k sobě?');

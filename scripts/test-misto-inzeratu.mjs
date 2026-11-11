@@ -268,9 +268,14 @@ je('jiná ulice v adrese nespustí přepis',
      než se ptáme na okres. Jinak by se geokodéru předkládala jména
      ulic — a strop dotazů (BR_STROP_GEO) by se vyčerpal na jména,
      která obec vůbec neznamenají. */
+  /* Záchytné místo se 11. 11. změnilo z `mistaObci.get(klic)` na
+     `mistaObci.get(place.toLowerCase())`: klíč slovníku nese i okres
+     z adresy inzerátu (jinak si dvě různé „Kamenice" přepisovaly jeden
+     záznam), ale ve slovníku dřívějších dat se hledá pořád podle
+     samotného jména. Kontrola měří totéž co dřív — pořadí. */
   je('Bezrealitky opraví obec dřív, než hledají okres',
     zdroj2.indexOf('opravUliceVObci(predbezne)') > 0
-    && zdroj2.indexOf('opravUliceVObci(predbezne)') < zdroj2.indexOf('mistaObci.get(klic)'), true);
+    && zdroj2.indexOf('opravUliceVObci(predbezne)') < zdroj2.indexOf('mistaObci.get(place.toLowerCase())'), true);
 }
 
 console.log('\nMísto nabídky (ulice vs. obec)');
