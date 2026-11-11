@@ -475,6 +475,14 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   const VYJIMKY_LISTA = {
     'div.nav-stin': 'závoj pod otevřeným šuplíkem — objeví se teprve po klepnutí na hamburger, bez doteku ho na žádné šířce vidět není',
     'span.hu-in': 'nápis „Profil" v ovladači účtu — čte ho jen přihlášený, odhlášenému tam stojí „Přihlásit"; že se opravdu kreslí, měří oddíl „stav účtu je napsaný slovem" níž',
+    /* Ovladač hledání v liště se ukáže teprve tehdy, když pole hledání
+       odroluje z obrazovky — u nerolované stránky je tedy schovaný na
+       OBOU šířkách, a to je jeho práce, ne mrtvá váha jako kdysi
+       .header-cta. Že se opravdu kreslí (a že klepnutí přinese pole
+       i kurzor), měří na dvou šířkách scripts/test-hledani-v-liste.mjs;
+       tahle zkouška stránkou neroluje, takže by o tom nemohla vědět. */
+    'button.hdr-hledat#hdr-hledat': 'ovladač hledání v liště — ukáže se, až pole hledání odjede z obrazovky; že se kreslí, měří scripts/test-hledani-v-liste.mjs',
+    'span#hdr-hledat-t': 'nápis v tom ovladači („Hledat", nebo zrcadlený dotaz) — schovaný je s ním, měří ho táž zkouška',
   };
   const skryteNa = async (opt) => {
     const { ctx, p } = await otevri(opt, 'index.html');
