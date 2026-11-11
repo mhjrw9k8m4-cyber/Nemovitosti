@@ -159,6 +159,26 @@ if (popisProVzor) {
     'text v HTML se rozešel s data/popisy.json po úklidu');
 }
 const pz = fs.readFileSync(path.join(ROOT, 'js', 'pozemek.js'), 'utf8');
+/* A KLÍČ POPISU MUSÍ SEDĚT NA NABÍDKU. Robot u popisů tvrdil, že
+   „klíč počítá táž funkce, která pojmenovává jejich soubory, takže se
+   nemohou rozejít" — a 11. 11. se rozešly. Úklid cizích číslic v textech
+   běžel teprve za blokem, který popisy skládá, takže klíč vznikl
+   z NEOČIŠTĚNÉHO místa: data/popisy.json mělo „Havířská Ⅰ|…" (U+2160),
+   kdežto nabídka už „Havířská I|…". Ta nabídka na své stránce popis
+   nedostala a nic to neřeklo — hlídač písem si všiml jen toho znaku.
+   Tohle měří přímo tu vadu: osiřelý klíč = popis, který se k člověku
+   nikdy nedostane. */
+const popisyData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'popisy.json'), 'utf8'));
+const klicePrav = new Set(nabidky.map(klicNabidky));
+const siroty = Object.keys(popisyData).filter((k) => !klicePrav.has(k));
+// PŘEDPOKLAD: bez popisů a nabídek by kontrola níž prošla o prázdnu
+pravda(`je co srovnávat — popisů ${Object.keys(popisyData).length}, nabídek ${nabidky.length}`,
+  Object.keys(popisyData).length > 100 && nabidky.length > 100,
+  'málo dat: popisů ' + Object.keys(popisyData).length + ', nabídek ' + nabidky.length);
+pravda('každý klíč v popisy.json sedí na nabídku (jinak se popis na stránku nedostane)',
+  siroty.length === 0,
+  `osiřelých klíčů ${siroty.length}: ` + siroty.slice(0, 3).map((k) => JSON.stringify(k)).join(', '));
+
 pravda('stránka ten popis opravdu čte z HTML', pz.indexOf("getElementById('pz-popis-text')") !== -1);
 /* Archiv se záměrně nepřegenerovává, takže ukončené stránky si drží
    starý datový ostrůvek — čtení z něj proto musí zůstat. */

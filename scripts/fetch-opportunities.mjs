@@ -5158,6 +5158,24 @@ async function fetchNabidkyStatu() {
      každý kilobajt platí časem na telefonu. Stránky jednotlivých pozemků
      si popis vezmou odtud; klíč počítá táž funkce, která pojmenovává jejich
      soubory, takže se nemohou rozejít. */
+  /* NEJDŘÍV NAROVNAT TEXTY, KTERÉ TVOŘÍ KLÍČ — a teprve pak skládat
+     popisy. Úklid cizích číslic běží i o dvě stě řádků níž, těsně před
+     zápisem (tam chytá pole, která vznikají až za tímhle místem, třeba
+     druh z katastru). Jenže KLÍČ se počítá tady, z `place`, `parcel`
+     a `okres`, takže s neočištěným místem vznikl klíč, který se
+     s klíčem stránky nikdy nepotká.
+     NAMĚŘENO 11. 11.: data/popisy.json mělo klíč „Havířská Ⅰ|…" se
+     znakem U+2160, zatímco data/opportunities.json už očištěné
+     „Havířská I|…". Dva důsledky, oba skutečné: ta nabídka na své
+     stránce popis NEDOSTALA (klíč nesedí) a hlídač písem (test-pisma)
+     hlásil znak mimo podřezanou sadu, protože popisy.json se publikuje.
+     Dvojí průchod je tedy záměr, ne nedopatření; bezCizichCislic je
+     idempotentní, takže druhý průchod už nic nezmění. */
+  for (const o of fresh) {
+    for (const pole of ['place', 'parcel', 'okres', 'cast']) {
+      if (typeof o[pole] === 'string') o[pole] = bezCizichCislic(o[pole]);
+    }
+  }
   const popisy = {};
   /* Ozdoby z cizího textu ven — jedno místo pro celý web, viz
      scripts/text-inzeratu.mjs. Prázdný popis se nezapisuje: po úklidu
