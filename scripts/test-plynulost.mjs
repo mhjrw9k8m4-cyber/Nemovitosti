@@ -92,10 +92,19 @@ function hotovo(spadlo) {
    0,56, tedy nad 0,50; zdravý je dnes na 0,33, tedy 0,17 pod mezí.
    A aby se příští drift poznal dřív, než zčervená, tiskne se rozptyl
    všech pěti poměrů i při zeleném běhu.
-   CO TÍM NENÍ VYŘEŠENÉ: nejdelší úloha je dnes ~800 ms z 2 400 ms
-   a hlásí se jako `user-callback` BEZ zdroje, takže z measurement
-   API není poznat, co ji dělá. Rozdělit ji je vlastní práce
-   a potřebuje vlastní instrumentaci (performance.mark ve startu). */
+   CO TÍM NENÍ VYŘEŠENÉ: nejdelší úloha je dnes ~800 ms z 2 400 ms.
+   Pozorovatel long-animation-frame ji hlásí jako `user-callback` BEZ
+   zdroje, takže z MEASUREMENT API poznat nejde, co ji dělá — ale
+   poznat to jde, a bez jediné značky ve zdroji: vzorkovaným profilem
+   procesoru přes CDP. Je na to scripts/profil-startu.mjs. Naměřeno
+   11. 11. 2026 dvěma běhy (shodné pořadí, absolutní čísla se hýbou):
+   sortVis 243–298 ms, declump 230–250, ceny 224–231,
+   nastrojeDoHlavicky 129–130, kmVzdalenost 119–135, okoliCeny 76–103.
+   Start tedy drží dvě místa: cenový model 419–469 ms (staví se
+   v prohlížeči ze dat, PK_CENY.postav) a výpis s mapou 473–548 ms
+   (sortVis + declump). Rozdělit je je vlastní práce a vlastní
+   rozhodnutí — u cenového modelu hlavně proto, že mapa, výpis
+   i stránka pozemku musejí o témž pozemku tvrdit totéž. */
 const MEZ_POMER = 0.50;
 /* Pod touhle hranicí se nedělí nic, co by stálo za řeč. */
 const DOST_PRACE = 300;
