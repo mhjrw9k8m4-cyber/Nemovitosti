@@ -116,6 +116,7 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 #nav a:not(.btn-primary)>.ik{display:none}
 }
 .hdr-ucet{display:none}
+
 @media (max-width:1040px){.hdr-ucet{flex:none;margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 8px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-karta);color:var(--text);text-decoration:none;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap;transition:var(--prechod)}
 .hdr-ucet .ik{flex:none;width:var(--ik-s);height:var(--ik-s);stroke-width:var(--ik-s-tah)}
 .hdr-ucet:hover{border-color:var(--znacka-svetla);color:var(--znacka)}

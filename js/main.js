@@ -733,6 +733,72 @@
     if (header) header.classList.toggle('shrink', window.pageYOffset > 20);
   }, { passive: true });
 
+  /* ---------- HLEDÁNÍ V LEPIVÉ LIŠTĚ ----------
+     ==================================================================
+     Pole hledání leží v pásu, který s rolováním odjede; lepivá je jen
+     lišta nad ním. ZMĚŘENO 11. 11. v prohlížeči: na 390 px je pole na
+     81 px a první nabídka na 661 px, na 1280 px pole na 150 px a první
+     nabídka na 506 px. Kdo tedy sjede ke kartám — a to udělá každý —
+     nemá na obrazovce hlavní funkci webu. Dosud k ní vedl jen odkaz
+     „Hledat na mapě" schovaný v hamburgeru, a ten míří na #mapa, ne
+     na pole.
+
+     TLAČÍTKO, NE DRUHÉ POLE. Druhé vstupní pole by znamenalo druhý
+     stav téže věci a dvě kopie se rozejdou při první změně — přesně
+     to se na tomhle webu stalo s počtem filtrů (pocetFiltru proti
+     updateFilterBadge). Tohle tlačítko hledání PŘINESE: odroluje pás
+     zpátky a dá do pole kurzor. Dotaz jen ZRCADLÍ, jednosměrně, aby
+     bylo poznat, že se filtruje.
+
+     UKAZUJE SE, JEN KDYŽ POLE NENÍ VIDĚT. Jinak by v liště stály dva
+     ovladače jedné věci. Řídí to IntersectionObserver na pásu, ne
+     posluchač rolování: je to táž otázka („je to na obrazovce?"),
+     prohlížeč ji umí odpovědět sám a nestojí to výpočet při každém
+     pixelu. Bez IntersectionObserveru (starý prohlížeč) tlačítko
+     zůstane schované: nahoru se dá dorolovat vždycky, kdežto tlačítko,
+     které by viselo i u viditelného pole, by lhalo o tom, co dělá. */
+  (function hledaniVListe() {
+    var btn = document.getElementById('hdr-hledat');
+    var text = document.getElementById('hdr-hledat-t');
+    var pole = document.getElementById('map-search');
+    var pas = document.querySelector('.mcp-hledani');
+    if (!btn || !text || !pole || !pas) return;
+
+    /* Dotaz se v tlačítku krátí, ať lišta nepřeteče. Dvacet znaků je
+       měřeno: „Nové Město na Moravě" má 20 a vejde se, delší jméno
+       obce v Česku skoro není. Krátí se na celé slovo plus výpustka. */
+    var MEZ = 20;
+    function zrcadli() {
+      var q = (pole.value || '').trim();
+      text.textContent = q ? (q.length > MEZ ? q.slice(0, MEZ - 1) + '…' : q) : 'Hledat';
+    }
+    /* Přístupné jméno tlačítka je jeho vlastní text, žádné aria-label:
+       tím nemůže vzniknout rozpor mezi tím, co je vidět, a tím, co
+       přečte odečítač (WCAG 2.5.3, kvůli kterému se dnes přepisovala
+       jména tlačítek na kartě). */
+    pole.addEventListener('input', zrcadli);
+    zrcadli();
+
+    btn.addEventListener('click', function () {
+      try { pas.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { pas.scrollIntoView(); }
+      /* Kurzor do pole až po odrolování: prohlížeč při focus() roluje
+         sám a dvě rolování naráz skončí nahodile. Vybraný text navíc
+         znamená, že další psaní starý dotaz přepíše — kdo klepl na
+         tlačítko s dotazem, chce ho nejčastěji změnit. */
+      setTimeout(function () {
+        try { pole.focus({ preventScroll: true }); } catch (e) { pole.focus(); }
+        if (pole.value) { try { pole.select(); } catch (e) {} }
+      }, 320);
+    });
+
+    if ('IntersectionObserver' in window) {
+      var hio = new IntersectionObserver(function (zapisy) {
+        zapisy.forEach(function (z) { btn.hidden = z.isIntersecting; });
+      }, { threshold: 0 });
+      hio.observe(pas);
+    }
+  }());
+
   /* ---------- Scroll reveal ---------- */
   var reveals = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window) {

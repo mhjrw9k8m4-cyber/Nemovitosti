@@ -1968,6 +1968,45 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
   #nav a:not(.btn-primary) > .ik{display:none;}
 }
 .hdr-ucet{display:none;}
+
+/* HLEDÁNÍ V LIŠTĚ JE SOUROZENEC PROFILU, NE NOVÝ TVAR.
+   ===================================================================
+   Přebírá od .hdr-ucet všechno: --line-ui, bílá plocha, --r-ovladani,
+   600, mezera 8 px u ikony. Jediný rozdíl je vodorovné odsazení 12 px
+   místo 8, protože nese slovo i dotaz, ne jen slovo. Kdyby se tahle
+   dvojice rozešla, stály by v jedné liště dva ovladače dvěma řečmi —
+   a právě to se na webu třikrát stalo (viz „tři různé ovladače v jedné
+   sestavě" u .mc-nastroj).
+
+   TAHLE PRAVIDLA MUSÍ BÝT V OBECNÉM ROZSAHU, NE V TELEFONNÍM BLOKU.
+   Napsal jsem je nejdřív vedle .hdr-ucet, které celé leží uvnitř
+   `@media (max-width:1040px)` — a změřil, co z toho vyšlo: na 1280 px
+   bylo tlačítko 47 × 67 px, tedy bez rámu, bez odsazení a s ikonou
+   nad textem, protože na monitor dopadla jen výška a velikost písma.
+   Je to táž vada, jakou včera našel posudek u schovávání knoflíku
+   „Nahoru" (pravidlo ve špatném mediabloku), proto ten odstavec.
+   Profil se na monitoru schovává do menu, hledání ne: pole hledání
+   odjede i tam (měřeno: pole na 150 px, první nabídka na 506 px).
+
+   Pořadí v liště: hledání, pak profil. Hledání je hlavní funkce webu,
+   profil je zázemí; obojí drží u pravého kraje `margin-left:auto`,
+   první auto si vezme volné místo. */
+.hdr-hledat{flex:none; margin-left:auto; display:inline-flex; align-items:center;
+  justify-content:center; gap:8px; min-height:44px; padding:0 12px;
+  border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+  background:var(--plocha-karta); color:var(--text); font-family:inherit;
+  font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer;
+  transition:var(--prechod);}
+.hdr-hledat .ik{flex:none; width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
+.hdr-hledat:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
+.hdr-hledat:active{transform:translateY(1px);}
+.hdr-hledat[hidden]{display:none;}
+/* Na monitoru táž výška a týž řez, na jakém se 11. 11. shodla celá
+   sestava ovladačů nad výpisem (36 px, 14/600) — prstem se tam
+   neovládá, takže 44 px není potřeba. */
+@media (min-width:1041px){
+  .hdr-hledat{min-height:36px; font-size:14px;}
+}
 @media (max-width:1040px){
   /* U PRAVÉHO KRAJE, NE HNED ZA JMÉNEM. Hlavička je na telefonu flex
      zarovnaný doleva (header .wrap{justify-content:flex-start}), takže

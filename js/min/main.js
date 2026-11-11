@@ -417,6 +417,39 @@
     if (header) header.classList.toggle('shrink', window.pageYOffset > 20);
   }, { passive: true });
 
+  (function hledaniVListe() {
+    var btn = document.getElementById('hdr-hledat');
+    var text = document.getElementById('hdr-hledat-t');
+    var pole = document.getElementById('map-search');
+    var pas = document.querySelector('.mcp-hledani');
+    if (!btn || !text || !pole || !pas) return;
+
+    var MEZ = 20;
+    function zrcadli() {
+      var q = (pole.value || '').trim();
+      text.textContent = q ? (q.length > MEZ ? q.slice(0, MEZ - 1) + '…' : q) : 'Hledat';
+    }
+
+    pole.addEventListener('input', zrcadli);
+    zrcadli();
+
+    btn.addEventListener('click', function () {
+      try { pas.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { pas.scrollIntoView(); }
+
+      setTimeout(function () {
+        try { pole.focus({ preventScroll: true }); } catch (e) { pole.focus(); }
+        if (pole.value) { try { pole.select(); } catch (e) {} }
+      }, 320);
+    });
+
+    if ('IntersectionObserver' in window) {
+      var hio = new IntersectionObserver(function (zapisy) {
+        zapisy.forEach(function (z) { btn.hidden = z.isIntersecting; });
+      }, { threshold: 0 });
+      hio.observe(pas);
+    }
+  }());
+
   var reveals = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {

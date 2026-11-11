@@ -1202,6 +1202,15 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-filtry-radek.mjs
 
+      # Druhá polovina hlavní funkce: filtry jsou v řádku vidět (zkouška
+      # výš), ale pole hledání s rolováním odjíždělo. Měřeno: na 390 px
+      # je pole na 81 px a první nabídka na 661 px. Ovladač v liště
+      # hledání přinese; hlídá se, že je schovaný, dokud je pole vidět,
+      # že je pak celý vidět a že klepnutí dá do pole i kurzor.
+      - name: Hledání je po ruce i dole ve výpisu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-hledani-v-liste.mjs
+
       - name: Inzerát od člověka přežije pomalou databázi
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-inzeraty-zaloha.mjs
