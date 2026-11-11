@@ -28472,16 +28472,6 @@
    "dr": "dům",
    "t": "sale"
   },
-  "Hodonín|—|Hodonín|48.855|17.120#9rmlo": {
-   "od": "2026-11-10",
-   "videno": "2026-11-11",
-   "c": 5290000,
-   "v": 68,
-   "m": "Hodonín",
-   "o": "Hodonín",
-   "dr": "byt",
-   "t": "sale"
-  },
   "Ostrava|—|Ostrava-město|49.839|18.296#3l39r": {
    "od": "2026-11-07",
    "videno": "2026-11-11",
@@ -39911,6 +39901,16 @@
    "o": "Kroměříž",
    "dr": "orná půda",
    "t": "exekuce"
+  },
+  "U Červených domků|—|Hodonín|48.864|17.112#9rmlo": {
+   "od": "2026-11-10",
+   "videno": "2026-11-11",
+   "c": 5290000,
+   "v": 68,
+   "m": "Hodonín",
+   "o": "Hodonín",
+   "dr": "byt",
+   "t": "sale"
   }
  }
 }
