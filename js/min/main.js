@@ -688,7 +688,7 @@
       mvBtns.forEach(function (b) {
         var on = b.getAttribute('data-mv') === mv;
         b.classList.toggle('active', on);
-        b.setAttribute('aria-selected', String(on));
+        b.setAttribute('aria-pressed', String(on));
       });
 
       srovnejJezdce();
@@ -4282,6 +4282,19 @@
     ['ms-filters', ['vybavení z inzerátu', '„jen celé pozemky"',
       '„pod obvyklou cenou"', '„zlevněné"', 'blížící se termín']]
   ];
+
+  function slovoFiltru(n) {
+    if (n === 1) return 'zapnutý filtr';
+    if (n >= 2 && n <= 4) return 'zapnuté filtry';
+    return 'zapnutých filtrů';
+  }
+
+  function pilulkaStav(b, zapnuta) {
+    if (!b) return;
+    b.classList.toggle('active', !!zapnuta);
+    b.setAttribute('aria-pressed', zapnuta ? 'true' : 'false');
+  }
+
   function updateFilterBadge() {
     var akt = zapnutaOmezeni();
 
@@ -4290,6 +4303,9 @@
       if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
       else { msfBadge.hidden = true; }
     }
+
+    var souhrnSlovo = document.getElementById('msf-badge-slovo');
+    if (souhrnSlovo) souhrnSlovo.textContent = n > 0 ? ' ' + slovoFiltru(n) : '';
     var jmena = akt.map(function (o) { return o.nazev; });
     for (var i = 0; i < SKUPINY_FILTRU.length; i++) {
       var id = SKUPINY_FILTRU[i][0], patri = SKUPINY_FILTRU[i][1];
@@ -4298,8 +4314,10 @@
       if (!odznak) continue;
       var kolik = 0;
       for (var j = 0; j < jmena.length; j++) if (patri.indexOf(jmena[j]) >= 0) kolik++;
+      var slovo = el.querySelector('[data-mf-slovo]');
       if (kolik > 0) { odznak.textContent = kolik; odznak.hidden = false; }
       else { odznak.hidden = true; }
+      if (slovo) slovo.textContent = kolik > 0 ? ' ' + slovoFiltru(kolik) : '';
     }
   }
 
@@ -4377,8 +4395,19 @@
     if (!a || a === document.body || a === document.documentElement) return null;
     var karta = a.closest ? a.closest('.opp-item') : null;
     var karty = karta ? [].slice.call(listEl.querySelectorAll('.opp-item')) : null;
+
+    var datAttr = '', datVal = '';
+    if (a.getAttribute) {
+      var klice = ['data-druh', 'data-kat'];
+      for (var ki = 0; ki < klice.length; ki++) {
+        var v = a.getAttribute(klice[ki]);
+        if (v) { datAttr = klice[ki]; datVal = v; break; }
+      }
+    }
     return {
       id: a.id || '',
+      datAttr: datAttr,
+      datVal: datVal,
       trida: (typeof a.className === 'string' && a.className) ? a.className.trim().split(/\s+/)[0] : '',
       pk: karta ? karta.getAttribute('data-pk') : '',
       poradi: karty ? karty.indexOf(karta) : -1,
@@ -4398,6 +4427,13 @@
     }
 
     if (z.id && dej(document.getElementById(z.id))) return;
+
+    if (z.datAttr && z.datVal) {
+      var kand = document.querySelectorAll('[' + z.datAttr + ']');
+      for (var kdi = 0; kdi < kand.length; kdi++) {
+        if (kand[kdi].getAttribute(z.datAttr) === z.datVal && dej(kand[kdi])) return;
+      }
+    }
     if (z.pk) {
       var karty = [].slice.call(listEl.querySelectorAll('.opp-item'));
       var ta = null;
@@ -5012,7 +5048,7 @@
     if (cenaEl) cenaEl.dispatchEvent(new Event('pk-reset'));
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
-      b.classList.toggle('active', b.getAttribute('data-type') === 'all');
+      pilulkaStav(b, b.getAttribute('data-type') === 'all');
     });
     refreshFavBtn();
     renderList();
@@ -5835,8 +5871,8 @@
   filtersEl.addEventListener('click', function (e) {
     var btn = e.target.closest('.filter-chip');
     if (!btn) return;
-    filtersEl.querySelectorAll('.filter-chip').forEach(function (b) { b.classList.remove('active'); });
-    btn.classList.add('active');
+    filtersEl.querySelectorAll('.filter-chip').forEach(function (b) { pilulkaStav(b, false); });
+    pilulkaStav(btn, true);
     activeType = btn.getAttribute('data-type');
     renderList();
   });
@@ -6222,7 +6258,7 @@
 
     if (filtersEl) {
       filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
-        b.classList.toggle('active', b.getAttribute('data-type') === activeType);
+        pilulkaStav(b, b.getAttribute('data-type') === activeType);
       });
     }
   }
@@ -6321,7 +6357,7 @@
     if (f.razeni && f.razeni !== 'near') sortMode = f.razeni;
 
     if (filtersEl) filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
-      b.classList.toggle('active', b.getAttribute('data-type') === activeType);
+      pilulkaStav(b, b.getAttribute('data-type') === activeType);
     });
 
     if (f.cenaOd) minPrice = f.cenaOd;

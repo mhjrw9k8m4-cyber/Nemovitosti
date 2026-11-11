@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-VTPGLHehrCqUcOu1AOwt7Ducs2I1Snlq68GOmjj0eBY=' 'sha256-/+mif7NT+9f/fOeDTiyb2lk/Xb7APg1Syo4c7sZKmM8=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-sCgndvP1iwNrtkb9X7w6AT550YkOLMH5nzrvXwvVokI=' 'sha256-FG3jyRg19eofkaQ+ZixVsDTZx2z2ErYhtHFiGaDTy/0=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -296,9 +296,18 @@
           <div class="mcp-hledani">
           <div class="map-search"><svg class="ik ms-lupa" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lupa"/></svg><input type="text" id="map-search" placeholder="Obec, druh, cena…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba les do 30 km od Brna do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><button type="button" class="ms-x" id="map-search-x" hidden aria-label="Vymazat hledání"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></button><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
   
-            <div class="mv-toggle" role="tablist" aria-label="Přepnout seznam a mapu">
-              <button type="button" class="mvt-btn active" data-mv="seznam" role="tab" aria-selected="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-seznam"/></svg><span>Seznam</span> <span class="mvt-n" id="mvt-count"></span></button>
-              <button type="button" class="mvt-btn" data-mv="mapa" role="tab" aria-selected="false"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg><span>Mapa</span></button>
+            <!-- SKUPINA TLAČÍTEK, NE ZÁLOŽKY. Do 11. 11. tu stálo
+                 role="tablist" a role="tab" s aria-selected — jenže záložka
+                 slibuje panel, který se jí přepíná (aria-controls na
+                 role="tabpanel"), a ten tady není ani jeden: přepíná se
+                 POHLED na tutéž stránku, a oba pohledy jsou v jednom
+                 obsahu. Odečítač proto hlásil „karta 1 z 2", člověk mačkal
+                 šipky, které nic nedělají, a hledal panel (WCAG 4.1.2).
+                 Skutečné záložky web má — na hlidani.html (.hl-tab)
+                 s panely a aria-selected; tam zůstávají. -->
+            <div class="mv-toggle" role="group" aria-label="Zobrazení výsledků">
+              <button type="button" class="mvt-btn active" data-mv="seznam" aria-pressed="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-seznam"/></svg><span>Seznam</span> <span class="mvt-n" id="mvt-count"></span></button>
+              <button type="button" class="mvt-btn" data-mv="mapa" aria-pressed="false"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg><span>Mapa</span></button>
             </div>
             <!-- TLAČÍTKO „FILTRY" TU BYLO OD 6. DO 10. 11. A UŽ NENÍ.
                  Vzniklo jako cesta k filtrům, které na telefonu nebyly
@@ -403,7 +412,7 @@
             <summary class="mf-btn">
               <svg class="ik mf-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vrstvy"/></svg>
               <span class="mf-jm">Druh nabídky</span><span class="mf-jm-k">Nabídka</span>
-              <span class="msf-badge mf-n" hidden></span>
+              <span class="msf-badge mf-n" hidden></span><span class="visually-hidden" data-mf-slovo></span>
               <svg class="ik mf-chev" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>
             </summary>
             <div class="mf-panel">
@@ -425,12 +434,12 @@
               <div class="mc-field">
                 <span class="mc-cap">Druh nabídky</span>
                 <div class="mcv-rada" id="map-filters" role="group" aria-label="Co hledáte — druh nabídky">
-                  <button class="filter-chip active" data-type="all"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vrstvy"/></svg>Vše</button>
-                  <button class="filter-chip" data-type="sale"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cena"/></svg>Prodej</button>
-                  <button class="filter-chip" data-type="drazba"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-kladivko"/></svg>Dražba</button>
-                  <button class="filter-chip" data-type="exekuce"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vystraha"/></svg>Exekuce</button>
-                  <button class="filter-chip" data-type="obec"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-budova"/></svg>Obec</button>
-                  <button class="filter-chip" data-type="majitel"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg>Přímo od majitele</button>
+                  <button class="filter-chip active" aria-pressed="true" data-type="all"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vrstvy"/></svg>Vše</button>
+                  <button class="filter-chip" aria-pressed="false" data-type="sale"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cena"/></svg>Prodej</button>
+                  <button class="filter-chip" aria-pressed="false" data-type="drazba"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-kladivko"/></svg>Dražba</button>
+                  <button class="filter-chip" aria-pressed="false" data-type="exekuce"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vystraha"/></svg>Exekuce</button>
+                  <button class="filter-chip" aria-pressed="false" data-type="obec"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-budova"/></svg>Obec</button>
+                  <button class="filter-chip" aria-pressed="false" data-type="majitel"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg>Přímo od majitele</button>
                 </div>
               </div>
               <!-- TYP NEMOVITOSTI. Od 5. 11. 2026 nejsou na webu jen
@@ -452,7 +461,7 @@
             <summary class="mf-btn">
               <svg class="ik mf-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-budova"/></svg>
               <span class="mf-jm">Typ nemovitosti</span><span class="mf-jm-k">Typ</span>
-              <span class="msf-badge mf-n" hidden></span>
+              <span class="msf-badge mf-n" hidden></span><span class="visually-hidden" data-mf-slovo></span>
               <svg class="ik mf-chev" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>
             </summary>
             <div class="mf-panel">
@@ -476,7 +485,7 @@
             <summary class="mf-btn">
               <svg class="ik mf-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mapa"/></svg>
               <span class="mf-jm">Druh pozemku</span><span class="mf-jm-k">Pozemek</span>
-              <span class="msf-badge mf-n" hidden></span>
+              <span class="msf-badge mf-n" hidden></span><span class="visually-hidden" data-mf-slovo></span>
               <svg class="ik mf-chev" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>
             </summary>
             <div class="mf-panel">
@@ -499,7 +508,7 @@
             <summary class="mf-btn">
               <svg class="ik mf-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cena"/></svg>
               <span class="mf-jm">Cena a výměra</span><span class="mf-jm-k">Cena</span>
-              <span class="msf-badge mf-n" hidden></span>
+              <span class="msf-badge mf-n" hidden></span><span class="visually-hidden" data-mf-slovo></span>
               <svg class="ik mf-chev" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>
             </summary>
             <div class="mf-panel">
@@ -546,7 +555,7 @@
             <summary class="mf-btn">
               <svg class="ik mf-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-filtr"/></svg>
               <span class="mf-jm">Další filtry</span><span class="mf-jm-k">Další</span>
-              <span class="msf-badge mf-n" hidden></span>
+              <span class="msf-badge mf-n" hidden></span><span class="visually-hidden" data-mf-slovo></span>
               <svg class="ik mf-chev" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>
             </summary>
             <div class="mf-panel map-controls">
@@ -623,7 +632,7 @@
                a je to týž počet, z jakého se kreslí odznaky nad
                výpisem — js/main.js, pocetFiltru(). -->
           <div class="mcf-akce" id="mcf-akce">
-            <span class="msf-badge" id="msf-badge" hidden></span>
+            <span class="msf-badge" id="msf-badge" hidden></span><span class="visually-hidden" id="msf-badge-slovo"></span>
             <button type="button" class="mcf-zrusit" id="mcf-zrusit" hidden>Zrušit filtry</button>
             <button type="button" class="mcf-hotovo" id="mcf-hotovo">
               <svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lupa"/></svg>
@@ -1326,7 +1335,7 @@
 <meta name="pk-odlozeny" data-klic="ulozene-ucet" data-src="js/min/ulozene-ucet.js?v=35e316ad">
 <meta name="pk-odlozeny" data-klic="poznamky" data-src="js/min/poznamky.js?v=96f9b539">
 <meta name="pk-odlozeny" data-klic="nove-pozemky" data-src="js/min/nove-pozemky.js?v=e8561a03">
-<script src="js/min/main.js?v=a4f913c3" defer></script>
+<script src="js/min/main.js?v=b0d16076" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

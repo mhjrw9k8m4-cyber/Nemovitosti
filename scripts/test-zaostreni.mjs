@@ -552,6 +552,52 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
           'zaměření skončilo na ' + stav.kdo + ' — klávesnicí se člověk octne na začátku dokumentu');
       }
     }
+    /* 4e) DLAŽDICE FILTRU, KTERÁ SE PŘEKRESLÍ, SI ZAMĚŘENÍ UDRŽÍ.
+       Panely „Druh pozemku" a „Typ nemovitosti" se při každém
+       překreslení výpisu staví znovu (innerHTML), takže zaškrtnutá
+       dlaždice přestane existovat. Naměřeno 11. 11. na 390×844: po
+       klepnutí na „Jiný pozemek" skončilo zaměření na <body>, a to
+       u osmi dlaždic z osmi. Kdo zaškrtává tři druhy, protabuje řádek
+       otvíračů třikrát.
+       Na rozdíl od karty se dlaždice nepozná podle id — žádné nemá —
+       ale podle svého klíče `data-druh`. Měří se OBOJE: že se filtr
+       opravdu zapnul (dlaždice je `aria-pressed="true"`) i že na ní
+       zaměření zůstalo; samotné „není na body" by prošlo i tehdy,
+       kdyby klepnutí nic nezapnulo. */
+    await cistaStranka();
+    const dlazdice = await p.evaluate(() => {
+      const d = document.getElementById('mf-pozemek');
+      if (d) d.open = true;
+      const t = document.querySelector('#mf-pozemek .mcv-btn');
+      if (!t) return null;
+      t.focus();
+      if (document.activeElement !== t) return { nezamerilo: true };
+      return { klic: t.getAttribute('data-druh') || '', pred: t.getAttribute('aria-pressed') };
+    });
+    pravda('filtry: dlaždici druhu pozemku jde zaměřit klávesnicí',
+      !!dlazdice && !dlazdice.nezamerilo && !!dlazdice.klic,
+      dlazdice ? JSON.stringify(dlazdice) : 'v panelu „Druh pozemku" není ani jedna dlaždice');
+    if (dlazdice && !dlazdice.nezamerilo && dlazdice.klic) {
+      await p.evaluate(() => { document.querySelector('#mf-pozemek .mcv-btn').click(); });
+      await p.waitForFunction((k) => {
+        const t = document.querySelector('[data-druh="' + CSS.escape(k) + '"]');
+        return !!t && t.getAttribute('aria-pressed') === 'true';
+      }, dlazdice.klic, { timeout: 8000 }).catch(() => {});
+      const po = await p.evaluate((k) => {
+        const a = document.activeElement;
+        const t = [].slice.call(document.querySelectorAll('[data-druh]'))
+          .filter((x) => x.getAttribute('data-druh') === k)[0] || null;
+        return {
+          zapnuto: !!t && t.getAttribute('aria-pressed') === 'true',
+          naTeze: !!t && a === t,
+          kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '.' + ((typeof a.className === 'string' ? a.className : '').split(' ')[0] || ''))) : 'nic'
+        };
+      }, dlazdice.klic);
+      pravda(`filtry: klepnutí na dlaždici „${dlazdice.klic}" ji opravdu zapnulo`, po.zapnuto,
+        JSON.stringify(po) + ' — kontrola o zaměření by jinak měřila nezměněný stav');
+      pravda(`filtry: a zaměření zůstalo na téže dlaždici (${po.kdo})`, po.naTeze,
+        'zaměření skončilo na ' + po.kdo + ' — po každé zaškrtnuté volbě se řádek otvíračů protabuje znovu');
+    }
     pravda('výpis: nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.join(' | '));
   }
   await ctx.close();

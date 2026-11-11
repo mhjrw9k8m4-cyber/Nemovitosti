@@ -173,6 +173,82 @@ pravda(`a záložky na Hlídání se opravdu postavily (${poStrankach['hlidani.h
   (poStrankach['hlidani.html'] || 0) >= 10,
   'přihlášení nezabralo — bez něj se místo záložek vykreslí výzva k přihlášení a test nic neměří');
 
+/* ============================================================
+   STAV A JMÉNO OVLADAČŮ FILTRŮ NA ÚVODNÍ STRÁNCE
+   ============================================================
+   Tři nálezy posudku přístupnosti, všechny potvrzené měřením
+   11. 11. na 390×844:
+     · pilulky „Druh nabídky" nesly vybranou volbu JEN třídou .active
+       (aria-pressed i role prázdné) — odečítač ani člověk, který
+       nerozlišuje barvy, vybranou volbu nepozná (WCAG 1.4.1, 4.1.2);
+     · přepínač Seznam/Mapa hlásil role="tab" v role="tablist", ale
+       žádný tabpanel neexistuje a aria-controls nikde — odečítač
+       hlásil „karta 1 z 2" a šipky nic nedělaly (WCAG 4.1.2);
+     · odznaky počtů u otvíračů i souhrn u akcí nesly holou číslici,
+       takže „Cena 2" neřekne, jestli jsou to dva filtry, dvě volby
+       nebo dvě nabídky (WCAG 1.3.1, 2.4.6).
+   Měří se na odhlášeném stavu, protože tyhle ovladače na přihlášení
+   nezávisí. */
+{
+  const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  await p.waitForSelector('#opp-list .opp-item', { timeout: 20000 }).catch(() => {});
+  /* Panel se otevírá kvůli odznaku: počet se u otvírače ukáže teprve
+     tehdy, když je ve skupině něco zapnuté. */
+  const stav = await p.evaluate(() => {
+    const d = document.getElementById('mf-druh');
+    if (d) d.open = true;
+    const pilulky = [].slice.call(document.querySelectorAll('.filter-chip'));
+    const nejakaJina = pilulky.filter((c) => !/^Vše/.test((c.textContent || '').trim()))[0];
+    if (nejakaJina) nejakaJina.click();
+    return {
+      pilulek: pilulky.length,
+      bezStavu: pilulky.filter((c) => c.getAttribute('aria-pressed') === null).length,
+      zapnutych: pilulky.filter((c) => c.getAttribute('aria-pressed') === 'true').length,
+      jakoZalozka: [].slice.call(document.querySelectorAll('.mvt-btn'))
+        .filter((b) => b.getAttribute('role') === 'tab' || !b.getAttribute('aria-pressed')).length,
+      tablist: !!document.querySelector('.mv-toggle[role="tablist"]'),
+      tabpanelu: document.querySelectorAll('[role="tabpanel"]').length
+    };
+  });
+  pravda(`na úvodní stránce se našly pilulky druhu nabídky (${stav.pilulek})`, stav.pilulek > 0,
+    'bez nich by kontroly níž mlčely o ničem');
+  pravda('každá pilulka druhu nabídky hlásí svůj stav', stav.bezStavu === 0,
+    `${stav.bezStavu} z ${stav.pilulek} nemá aria-pressed — vybraná volba je poznat jen podle barvy`);
+  pravda('a vybraná je právě jedna', stav.zapnutych === 1,
+    `zapnutých je ${stav.zapnutych} — je to výběr jedné možnosti z řady`);
+  pravda('přepínač Seznam/Mapa je skupina tlačítek se stavem, ne záložky',
+    stav.jakoZalozka === 0 && !stav.tablist,
+    'pořád se hlásí jako záložky (role=tab/tablist), jenže tabpanelů je '
+      + stav.tabpanelu + ' — odečítač pak slibuje panel, který není');
+  /* Odznak se čte přes přístupný text otvírače: číslo plus skryté
+     slovo. Kontroluje se jen tam, kde je odznak opravdu vidět. */
+  const odznaky = await p.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('details.mf').forEach((d) => {
+      const n = d.querySelector('.mf-n');
+      if (!n || n.hidden) return;
+      const slovo = d.querySelector('[data-mf-slovo]');
+      out.push({ cislo: (n.textContent || '').trim(),
+        slovo: slovo ? (slovo.textContent || '').trim() : null });
+    });
+    const b = document.getElementById('msf-badge');
+    const bs = document.getElementById('msf-badge-slovo');
+    return { skupiny: out, souhrn: b && !b.hidden
+      ? { cislo: (b.textContent || '').trim(), slovo: bs ? (bs.textContent || '').trim() : null } : null };
+  });
+  pravda(`po zapnutí filtru svítí aspoň jeden odznak počtu (${odznaky.skupiny.length})`,
+    odznaky.skupiny.length > 0 || !!odznaky.souhrn,
+    'žádný se neukázal — kontrola níž by mlčela o ničem');
+  const beze = odznaky.skupiny.filter((x) => !x.slovo)
+    .concat(odznaky.souhrn && !odznaky.souhrn.slovo ? [odznaky.souhrn] : []);
+  pravda('žádný odznak počtu se nečte jako holé číslo', beze.length === 0,
+    `bez slova: ${JSON.stringify(beze)} — „Cena 2" neřekne, čeho se dvojka týká`);
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('=== aria-cile ===');
 console.log(zpravy.join('\n'));
