@@ -876,8 +876,22 @@ jobs:
           # verzi je od teď změna v repozitáři, kterou je vidět.
           # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
           # ne životním skriptem balíčku.
-          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
-          npx playwright install --with-deps chromium
+          # SÍŤ RUNNERU UMÍ VYPADNOUT, A JEDEN POKUS NESTAČÍ. Běh 1147 padl
+          # ve všech třech směnách naráz na `Temporary failure resolving
+          # 'archive.ubuntu.com'` — apt skončil kódem 100, `playwright
+          # install` s ním a ŽÁDNÁ zkouška se nespustila. Není to vada webu
+          # ani zkoušky, takže se zkouší třikrát (odstup 30 a 60 s). Když
+          # síť nenaskočí ani potom, krok padne a v logu stojí proč.
+          for pokus in 1 2 3; do
+            npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 \
+              && npx playwright install --with-deps chromium && break
+            if [ "$pokus" = 3 ]; then
+              echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
+              exit 1
+            fi
+            echo "Pokus $pokus selhal — nejčastěji síť runneru. Zkouším znovu."
+            sleep $((pokus * 30))
+          done
           # Verze zůstává v logu: hádat se o příčině červené CI se nemá
           # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
@@ -1112,8 +1126,22 @@ jobs:
           # verzi je od teď změna v repozitáři, kterou je vidět.
           # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
           # ne životním skriptem balíčku.
-          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
-          npx playwright install --with-deps chromium
+          # SÍŤ RUNNERU UMÍ VYPADNOUT, A JEDEN POKUS NESTAČÍ. Běh 1147 padl
+          # ve všech třech směnách naráz na `Temporary failure resolving
+          # 'archive.ubuntu.com'` — apt skončil kódem 100, `playwright
+          # install` s ním a ŽÁDNÁ zkouška se nespustila. Není to vada webu
+          # ani zkoušky, takže se zkouší třikrát (odstup 30 a 60 s). Když
+          # síť nenaskočí ani potom, krok padne a v logu stojí proč.
+          for pokus in 1 2 3; do
+            npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 \
+              && npx playwright install --with-deps chromium && break
+            if [ "$pokus" = 3 ]; then
+              echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
+              exit 1
+            fi
+            echo "Pokus $pokus selhal — nejčastěji síť runneru. Zkouším znovu."
+            sleep $((pokus * 30))
+          done
           # Verze zůstává v logu: hádat se o příčině červené CI se nemá
           # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
@@ -1449,8 +1477,22 @@ jobs:
           # verzi je od teď změna v repozitáři, kterou je vidět.
           # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
           # ne životním skriptem balíčku.
-          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
-          npx playwright install --with-deps chromium
+          # SÍŤ RUNNERU UMÍ VYPADNOUT, A JEDEN POKUS NESTAČÍ. Běh 1147 padl
+          # ve všech třech směnách naráz na `Temporary failure resolving
+          # 'archive.ubuntu.com'` — apt skončil kódem 100, `playwright
+          # install` s ním a ŽÁDNÁ zkouška se nespustila. Není to vada webu
+          # ani zkoušky, takže se zkouší třikrát (odstup 30 a 60 s). Když
+          # síť nenaskočí ani potom, krok padne a v logu stojí proč.
+          for pokus in 1 2 3; do
+            npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 \
+              && npx playwright install --with-deps chromium && break
+            if [ "$pokus" = 3 ]; then
+              echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
+              exit 1
+            fi
+            echo "Pokus $pokus selhal — nejčastěji síť runneru. Zkouším znovu."
+            sleep $((pokus * 30))
+          done
           # Verze zůstává v logu: hádat se o příčině červené CI se nemá
           # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
