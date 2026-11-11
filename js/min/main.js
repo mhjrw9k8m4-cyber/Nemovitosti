@@ -4067,11 +4067,27 @@
       if (!d) return;
 
       var kde = document.activeElement;
-      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
+      if (kde && kde.closest && !kde.closest('.map-controls-panel')) {
+
+        var okno = document.querySelector('.vm-ov:not([hidden]), .modal.open, [role="dialog"]:not([hidden])');
+        if (kde !== document.body || okno) return;
+      }
       d.open = false;
       var sum = d.querySelector('summary');
       if (sum) sum.focus();
     });
+
+    (function zavriPriOdchodu() {
+      var obal = document.querySelector('.map-controls-panel');
+      if (!obal) return;
+      obal.addEventListener('focusout', function (e) {
+        var kam = e.relatedTarget;
+
+        if (!kam || obal.contains(kam)) return;
+        if (kam.closest && kam.closest(NEZAVIRA_PANEL)) return;
+        zavriPanely(null);
+      });
+    })();
     document.addEventListener('click', function (e) {
       var cil = e.target;
       if (!cil || !cil.closest) return;
@@ -4231,8 +4247,8 @@
   ];
   function updateFilterBadge() {
     var akt = zapnutaOmezeni();
-    var casti = (dotazFiltr && dotazFiltr.casti) || [];
-    var n = casti.length + (mistoFiltr ? 1 : 0) + akt.length;
+
+    var n = pocetFiltru();
     if (msfBadge) {
       if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
       else { msfBadge.hidden = true; }
@@ -4556,10 +4572,11 @@
         '<div class="opp-media">' +
           mapThumb(d) +
         '</div>' +
-          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
+
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Uloženo — odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
 
           '<span class="os-t">' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
-          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' +
+          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Skrýt — tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Skrýt — tenhle mě nezajímá') + '">' +
 
           '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vratit"/></svg>' : '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>') + '</span>' +
           '<span class="os-t">' + (jeSkryty(d) ? 'Vrátit' : 'Skrýt') + '</span></button>' +
@@ -4620,7 +4637,7 @@
         toggleFav(d);
         var on = isFav(d);
         favBtn.classList.toggle('on', on);
-        favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
+        favBtn.setAttribute('aria-label', on ? 'Uloženo — odebrat z uložených' : 'Uložit pozemek');
 
         var slovo = favBtn.querySelector('.os-t');
         if (slovo) slovo.textContent = on ? 'Uloženo' : 'Uložit';

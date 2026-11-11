@@ -2993,6 +2993,15 @@ h1 em{ color:var(--znacka-svetla);
   padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
   border-top:1px solid var(--line); background:var(--plocha-karta);
   box-shadow:var(--e3);}
+/* A KDYŽ SE FILTRUJE, PLOVOUCÍ „NAHORU" JE PRYČ — NA KAŽDÉ ŠÍŘCE.
+   Lišta výš se při otevřené skupině filtrů přilepí ke spodní hraně
+   obrazovky a knoflík by jí seděl na tlačítku; při filtrování navíc
+   nikdo výpis nečte. Pravidlo stálo od 11. 11. omylem uvnitř
+   mediabloku do 560 px, kdežto přilepení lišty platí všude: mezi 561
+   a 1040 px tak knoflík (kolečko 46 px u pravého dolního rohu) ležel
+   na pravém konci tlačítka „Zobrazit N", které tam má `width:100%`.
+   Klepnutí by odrolovalo nahoru místo potvrzení filtru. */
+body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events:none;}
 /* A AŤ POD TOU LIŠTOU NEZŮSTANE POSLEDNÍ OVLADAČ. Přilepená lišta
    leží na spodním kusu panelu (naměřeno na 390 px: lišta od 697 px,
    panel do 766 px, tedy 69 px přesahu; na 1 280 px je lišta vysoká
@@ -3001,10 +3010,16 @@ h1 em{ color:var(--znacka-svetla);
    Čísla jsou s rezervou: na úzkém displeji jdou obě tlačítka pod sebe
    (dvakrát 46 px a odstupy), na monitoru stojí v jednom řádku. */
 @media (max-width:1040px){
-  .map-controls-panel:has(details.mf[open]) .mf-panel{padding-bottom:calc(128px + 32px);}
+  .map-controls-panel:has(details.mf[open]) .mf-panel{padding-bottom:calc(128px + 32px);
+    /* A TOTÉŽ PRO ROLOVÁNÍ, KTERÉ DĚLÁ PROHLÍŽEČ SÁM. Při Tabu si
+       prohlížeč přiroluje zaměřený prvek k nejbližší hraně rolovacího
+       okna — a tou je dolní hrana panelu, která leží pod přilepenou
+       lištou. Rezerva výš platí jen pro rolování prstem až na konec;
+       `scroll-padding-bottom` ji dá i tomu automatickému. */
+    scroll-padding-bottom:calc(128px + 32px);}
 }
 @media (min-width:1041px){
-  .map-controls-panel:has(details.mf[open]) .mf-panel{padding-bottom:96px;}
+  .map-controls-panel:has(details.mf[open]) .mf-panel{padding-bottom:96px; scroll-padding-bottom:96px;}
 }
 .mcf-hotovo{flex:1; min-height:46px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
   /* ODSAZENÍ, KTERÉ TU NEBYLO ŽÁDNÉ. Na telefonu má tlačítko šířku
@@ -5113,12 +5128,6 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      tu už neuvádí: na ploché kartě je odkazem celá karta, takže na
      každé poloze odpoví „nadpis" a nic tím neřekne.) */
   .to-top{bottom:12px; left:12px; right:auto; width:48px; height:48px; margin-left:0;}
-  /* A KDYŽ SE FILTRUJE, KNOFLÍK JE PRYČ. Lišta „Zobrazit N / Zrušit
-     filtry" se při otevřené skupině filtrů přilepí ke spodní hraně
-     obrazovky (viz .mcf-akce výš) a knoflík by jí seděl na levé části,
-     tedy na „Zrušit filtry" — týž druh překryvu, kvůli kterému se
-     stěhuje. Při filtrování navíc nikdo výpis nečte. */
-  body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events:none;}
 }
 
 /* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */

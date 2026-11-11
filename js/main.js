@@ -6720,11 +6720,39 @@
          další okna a Escape patří jim — jinak by člověku zmizelo
          i to, kam se má po zavření okna vrátit (test-naseptavac). */
       var kde = document.activeElement;
-      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
+      if (kde && kde.closest && !kde.closest('.map-controls-panel')) {
+        /* ZAMĚŘENÍ NA <body> NEPATŘÍ NIKOMU, a tím pádem Escape patří
+           panelu. Stávalo se to po klepnutí do prázdného místa panelu
+           a po Tabu ven z něj: panel zůstal otevřený, jeho lišta dál
+           ležela přes spodek obrazovky a Escape se o ni odmítal
+           postarat, protože podmínka výš hleděla jen na to, že
+           zaměření není uvnitř. Okno nad panelem má přednost dál. */
+        var okno = document.querySelector('.vm-ov:not([hidden]), .modal.open, [role="dialog"]:not([hidden])');
+        if (kde !== document.body || okno) return;
+      }
       d.open = false;
       var sum = d.querySelector('summary');
       if (sum) sum.focus();
     });
+    /* A KDYŽ ZAMĚŘENÍ ODEJDE Z PANELU KLÁVESNICÍ, PANEL SE ZAVŘE.
+       Myší se zavírá klepnutím vedle, klávesnicí se do 11. 11.
+       nezavíral vůbec: kdo vytabuloval z poslední položky, nechal za
+       sebou otevřený panel, jehož lišta je `position:fixed` u spodní
+       hrany — a ta pak ležela přes zaměřenou kartu ve výpisu
+       (WCAG 2.4.11, zakryté zaměření). Okna nad panelem a hlavní menu
+       jsou z toho vyjmutá týmž seznamem jako u klepání. */
+    (function zavriPriOdchodu() {
+      var obal = document.querySelector('.map-controls-panel');
+      if (!obal) return;
+      obal.addEventListener('focusout', function (e) {
+        var kam = e.relatedTarget;
+        /* Bez `relatedTarget` zaměření opustilo celé okno (přepnutí
+           karty prohlížeče) — tam se nic zavírat nemá. */
+        if (!kam || obal.contains(kam)) return;
+        if (kam.closest && kam.closest(NEZAVIRA_PANEL)) return;
+        zavriPanely(null);
+      });
+    })();
     document.addEventListener('click', function (e) {
       var cil = e.target;
       if (!cil || !cil.closest) return;
@@ -7004,8 +7032,13 @@
   ];
   function updateFilterBadge() {
     var akt = zapnutaOmezeni();
-    var casti = (dotazFiltr && dotazFiltr.casti) || [];
-    var n = casti.length + (mistoFiltr ? 1 : 0) + akt.length;
+    /* POČET SE POČÍTÁ NA JEDNOM MÍSTĚ, ne tady podruhé. Od 10. 11. tu
+       stál týž vzorec opsaný ručně (text + místo + omezení), zatímco
+       `pocetFiltru()` o pár řádků výš dělala totéž a nikdo ji nevolal.
+       Dvě kopie jednoho vzorce se rozejdou při první změně — a odznak
+       u akcí by pak hlásil jiné číslo než odznaky nad výpisem, které
+       z téhož počtu vycházejí. */
+    var n = pocetFiltru();
     if (msfBadge) {
       if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
       else { msfBadge.hidden = true; }
@@ -7703,12 +7736,19 @@
         '<div class="opp-media">' +
           mapThumb(d) +
         '</div>' +
-          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
+          /* JMÉNO ZAČÍNÁ TÍM, CO JE NA TLAČÍTKU VIDĚT (WCAG 2.5.3).
+             Do 11. 11. tu stálo „Odebrat z uložených", zatímco na
+             tlačítku svítilo „Uloženo" — a to v něm není ani jako
+             podslovo. Kdo web ovládá hlasem, řekl „klepni Uloženo"
+             a nestalo se nic; kdo poslouchá odečítač, slyšel jiné
+             slovo, než vidí soused vedle. Totéž platilo u křížku
+             („Skrýt" proti „Tenhle mě nezajímá") o kus níž. */
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Uloženo — odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
           /* Záložka má taky slovo, ze stejného důvodu jako křížek vedle:
              ikona sama o sobě neřekne, jestli ukládá, sdílí nebo hlásí.
              Dvojice „Skrýt / Uložit" se na snímku přečte bez učení. */
           '<span class="os-t">' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
-          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' +
+          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Skrýt — tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Skrýt — tenhle mě nezajímá') + '">' +
           /* ZNAK JE VE <span>, A NENÍ TO OZDOBA. Kroužek pod ním kreslí
              ::before jako absolutně umístěný prvek; pravidlo
              „.opp-skryt > *{position:relative}" ho má přebít, jenže holý
@@ -7884,7 +7924,7 @@
         toggleFav(d);
         var on = isFav(d);
         favBtn.classList.toggle('on', on);
-        favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
+        favBtn.setAttribute('aria-label', on ? 'Uloženo — odebrat z uložených' : 'Uložit pozemek');
         /* A SLOVO NA TLAČÍTKU TAKY. Při vykreslení karty se píše „Uložit"
            nebo „Uloženo" podle stavu, jenže klepnutí měnilo jen třídu
            a popisek pro odečítač — viditelný text zůstal starý. Karta se

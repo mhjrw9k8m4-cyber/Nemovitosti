@@ -84,7 +84,17 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
 
   /* 1 + 2: co je vidět, aniž se na cokoli klepne */
   const pred = await p.evaluate(() => {
-    const otv = [...document.querySelectorAll('details.mf')].map((d) => {
+    /* SKUPINA, KTERÁ NEMÁ CO NABÍDNOUT, SE SCHOVÁ — A HLÍDAČ JI NESMÍ
+       MĚŘIT. Stylopis má pravidlo `.mf:has(> .mf-panel > [hidden]:only-child)
+       {display:none}`: kdyby data přinesla jedinou kategorii nebo jediný
+       druh pozemku, otvírač té skupiny zmizí, protože vybírat není
+       z čeho. V DOM ale zůstane, takže by ho kontroly níž našly jako
+       ovladač 0×0 bez jména, klepnutí by minulo a CI by zčervenalo
+       kvůli chování, které je SPRÁVNÉ. Měří se proto jen to, co se
+       opravdu kreslí; že skupin zbylo dost, hlídá mez o kus níž. */
+    const otv = [...document.querySelectorAll('details.mf')]
+      .filter((d) => d.getClientRects().length)
+      .map((d) => {
       const s = d.querySelector('summary');
       const r = s.getBoundingClientRect();
       return { id: d.id, w: Math.round(r.width), h: Math.round(r.height),
