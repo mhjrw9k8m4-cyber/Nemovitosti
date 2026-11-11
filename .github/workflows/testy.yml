@@ -697,6 +697,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ukonceno.mjs
 
+      - name: Strojový popis stránky mluví o té stránce
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-strojovy-popis.mjs
+
       - name: Safari a iOS (co by v nich nefungovalo — prohlížeč tu není)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-safari.mjs
