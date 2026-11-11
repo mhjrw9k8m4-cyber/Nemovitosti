@@ -59,8 +59,15 @@
        přesná hodnota — zajímá ho, že toho je hodně. */
     ODZNAK.textContent = n > 99 ? '99+' : String(n);
     /* Pro čtečku to musí být věta, ne holé číslo u slova „Zprávy". */
-    ODZNAK.setAttribute('aria-label', n === 1 ? '1 nepřečtená zpráva'
-      : (n >= 2 && n <= 4 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv'));
+    ODZNAK.setAttribute('aria-label', vetaNeprectenych(n));
+  }
+
+  /** Počet nepřečtených jako česká věta. Je to JEDNO MÍSTO pro celý web:
+   *  stejnou větu potřebuje odznak na záložce (tady) i odznak u vlákna na
+   *  zpravy.html, a dvě kopie by se rozešly v pádu nebo v čísle. */
+  function vetaNeprectenych(n) {
+    return n === 1 ? '1 nepřečtená zpráva'
+      : (n >= 2 && n <= 4 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv');
   }
 
   /** Součet nepřečtených ze seznamu vláken, jak ho vrací my_threads. */
@@ -100,6 +107,7 @@
   }
 
   window.PKUcetTaby = { nepreCtene: nepreCtene, oznam: oznam, sectiVlakna: sectiVlakna,
+    vetaNeprectenych: vetaNeprectenych,
     pocet: function () { return posledni; } };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

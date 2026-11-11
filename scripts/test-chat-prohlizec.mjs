@@ -33,6 +33,12 @@ function je(popis, vyslo, cekano) {
   if (a === b) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}\n      čekáno ${b}, vyšlo ${a}`); }
 }
+/* Pro kontroly, kde se neporovnávají dvě hodnoty, ale platí/neplatí —
+   a kde má chyba říct NAMĚŘENÝ STAV, ne jen „čekáno true". */
+function pravda(popis, vyslo, proc) {
+  if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
+  else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
+}
 
 // Cesta k prohlížeči: v CI ji dodá playwright sám, tady v sandboxu je
 // Chromium předinstalovaný jinde — proto proměnná PW_CHROMIUM.
@@ -92,6 +98,19 @@ await pM.waitForSelector('.zp-thread', { timeout: 10000 });
 je('majitel vidí jedno vlákno', await pM.locator('.zp-thread').count(), 1);
 je('majitel pozná konkrétního zájemce', (await pM.textContent('.zp-trole')).trim(), 'Zájemce 2222');
 je('u vlákna svítí počet nepřečtených', (await pM.textContent('.zp-badge')).trim(), '1');
+/* ODZNAK NEPŘEČTENÝCH BYL HOLÉ ČÍSLO. Naměřeno 11. 11.: celý řádek
+   vlákna se přečetl jako „…je pozemek ještě volný?1" — číslice slepená
+   s poslední zprávou. Věta vedle ní je jen pro odečítač a skládá ji
+   vetaNeprectenych z js/ucet-taby.js, ať se neopisuje. */
+const odznakVlakna = await pM.evaluate(() => {
+  const b = document.querySelector('.zp-badge');
+  const vl = b && b.closest('.zp-thread');
+  return { ariaHidden: b ? b.getAttribute('aria-hidden') : null,
+    veta: vl ? [...vl.querySelectorAll('.visually-hidden')].map((s) => s.textContent.trim()) : null,
+    radek: vl ? vl.textContent.replace(/\s+/g, ' ').trim() : null };
+});
+je('odznak nepřečtených je pro odečítač věta, ne číslice',
+  [odznakVlakna.ariaHidden, (odznakVlakna.veta || []).join('|')], ['true', '1 nepřečtená zpráva']);
 
 /* ---------- 3. majitel odpoví ---------- */
 await pM.click('.zp-thread');
@@ -136,6 +155,54 @@ je('hláška „chvíli počkejte" je přeložená do věty',
   (await pZ.textContent('#zc-err')).trim(), 'Moment — mezi zprávami nechte pár vteřin.');
 je('neodeslaný text zůstal v poli, nemusí se psát znovu', await pZ.inputValue('#zc-ta'), 'RYCHLE');
 je('neodeslaná bublina je označená', await pZ.locator('.zp-b.chyba').count(), 1);
+
+/* ---------- 5b. co z rozhovoru slyší ten, kdo nepoužívá oči (#297) ----
+   Naměřeno 11. 11. sondou v tomhle kontextu, kde rozhovor doopravdy
+   běží: bublina se přečetla jako „Dobrý den, je pozemek ještě volný?17:47"
+   — bez zmínky o tom, kdo mluví (rozdíl nese jen třída .me/.them a barva)
+   a s časem slepeným za otazníkem. #zc-msgs mělo overflow-y:auto, ale
+   žádné jméno ani tabindex, takže klávesnicí se starší zprávy nedaly
+   doroloval. A po odeslání byl activeElement <body>: vypnutí právě
+   zaměřeného tlačítka zaměření zahodí.
+   Jedna věc se MĚŘENÍM NEPOTVRDILA a proto se neopravovala: kontrast
+   čekající bubliny. Při opacity 0,55 vyšel po složení s plochou značky
+   5,31:1, tedy nad mezí AA (4,5) — hlášeno bylo „asi 2,8:1“, což byl
+   odhad bez složení průhlednosti. */
+const slovoMluvciho = await pZ.evaluate(() => {
+  const me = document.querySelector('.zp-b.me'), them = document.querySelector('.zp-b.them');
+  const skryty = (el) => el ? [...el.querySelectorAll('.visually-hidden')].map((s) => s.textContent.trim()) : null;
+  return { me: skryty(me), them: skryty(them),
+    meText: me ? me.textContent.replace(/\s+/g, ' ').trim() : null };
+});
+pravda('bublina řekne, kdo ji napsal (moje)',
+  !!(slovoMluvciho.me || []).includes('Já:'), 'skryté texty: ' + JSON.stringify(slovoMluvciho.me));
+pravda('a u cizí zprávy taky (tady píše majitel)',
+  !!(slovoMluvciho.them || []).includes('Majitel:'), 'skryté texty: ' + JSON.stringify(slovoMluvciho.them));
+pravda('čas u bubliny má vlastní slovo, nelepí se na větu',
+  !!(slovoMluvciho.me || []).includes('odesláno'),
+  'celý text bubliny: „' + slovoMluvciho.meText + '" — bez slova „odesláno" přečte odečítač čas jako pokračování věty');
+
+const oblastZprav = await pZ.evaluate(() => {
+  const m = document.getElementById('zc-msgs');
+  if (!m) return null;
+  return { jmeno: m.getAttribute('aria-label'), tabindex: m.getAttribute('tabindex'),
+    role: m.getAttribute('role'), live: m.getAttribute('aria-live'),
+    rolovatelna: m.scrollHeight > m.clientHeight };
+});
+pravda('rozhovor má jméno, aby se dal v odečítači najít',
+  !!(oblastZprav && oblastZprav.jmeno), JSON.stringify(oblastZprav));
+je('a zastávka tabulátoru je tam jen tehdy, když se dá rolovat',
+  oblastZprav && oblastZprav.tabindex, oblastZprav && oblastZprav.rolovatelna ? '0' : '-1');
+/* A SCHVÁLNĚ NENÍ ŽIVÝ. Rozhovor se celý přepisuje každých 15 s, takže
+   role="log" nebo aria-live by ho odečítač přečetl znovu a znovu. Novou
+   zprávu hlásí jedna věta ve #zc-ohlas (měřeno v oddílu 4 výš). Kdyby to
+   někdo „opravil" přidáním živé oblasti, tahle kontrola to zastaví. */
+je('rozhovor sám živá oblast není (hlásí se jedna věta vedle)',
+  [oblastZprav && oblastZprav.role, oblastZprav && oblastZprav.live], [null, null]);
+
+je('po odeslání zůstane zaměření v poli, nespadne na stránku',
+  await pZ.evaluate(() => document.activeElement ? (document.activeElement.id || document.activeElement.tagName) : null),
+  'zc-ta');
 
 /* ---------- 6. počítadlo znaků ---------- */
 await pZ.fill('#zc-ta', 'a'.repeat(1900));

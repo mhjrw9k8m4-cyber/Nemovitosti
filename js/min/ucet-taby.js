@@ -33,8 +33,12 @@
 
     ODZNAK.textContent = n > 99 ? '99+' : String(n);
 
-    ODZNAK.setAttribute('aria-label', n === 1 ? '1 nepřečtená zpráva'
-      : (n >= 2 && n <= 4 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv'));
+    ODZNAK.setAttribute('aria-label', vetaNeprectenych(n));
+  }
+
+  function vetaNeprectenych(n) {
+    return n === 1 ? '1 nepřečtená zpráva'
+      : (n >= 2 && n <= 4 ? n + ' nepřečtené zprávy' : n + ' nepřečtených zpráv');
   }
 
   function sectiVlakna(rows) {
@@ -70,6 +74,7 @@
   }
 
   window.PKUcetTaby = { nepreCtene: nepreCtene, oznam: oznam, sectiVlakna: sectiVlakna,
+    vetaNeprectenych: vetaNeprectenych,
     pocet: function () { return posledni; } };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

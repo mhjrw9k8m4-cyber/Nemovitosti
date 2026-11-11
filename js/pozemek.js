@@ -2885,10 +2885,26 @@
           catch (e) { (box || poznEl).scrollIntoView(); }
           /* Zaostření AŽ PO doskoku: na telefonu vyskočí klávesnice
              a stránkou to hne, takže kdyby se zaostřilo hned, přistál
-             by člověk jinde, než kam se rolovalo. */
+             by člověk jinde, než kam se rolovalo.
+             JAK DLOUHO SE SKÁČE, ROZHODUJE STYLOPIS — a tenhle řádek si
+             to u něj ZJISTÍ, místo aby si médium počítal sám: na <html>
+             je scroll-behavior „smooth" a @media (prefers-reduced-motion:
+             reduce) ho v css přepíná na „auto". Kdo má pohyb vypnutý,
+             zaostří se tedy hned, a pravidlo zůstává na jednom místě.
+             VADA, KTEROU TO OPRAVUJE (nalezeno 11. 11.): stála tu
+             proměnná `klidne`, jejíž definice (vlastní kopie dotazu na
+             médium) při úklidu pohybu zmizela — a `klidne` nebylo
+             definováno NIKDE. Klepnutí na „Přidat poznámku" od té chvíle
+             padalo na ReferenceError uprostřed obsluhy, takže se políčko
+             nezaostřilo VŮBEC (nikomu, ne jen tomu s vypnutým pohybem)
+             a box se ani nerozsvítil. Našla to scripts/test-poznamky.mjs
+             na kontrole „políčko je zaostřené HNED". */
+          var plynule = false;
+          try { plynule = getComputedStyle(document.documentElement).scrollBehavior === 'smooth'; }
+          catch (e) { plynule = true; }
           setTimeout(function () {
             try { poznEl.focus({ preventScroll: true }); } catch (e) { poznEl.focus(); }
-          }, klidne ? 0 : 420);
+          }, plynule ? 420 : 0);
           /* Krátké zvýraznění: po doskoku má být poznat, KAM se přišlo.
              Bez toho vypadá doskok doprostřed stránky jako překlep. */
           if (box) {

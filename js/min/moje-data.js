@@ -64,8 +64,9 @@
     var el = document.createElement('p');
     el.className = 'md-hotovo';
     el.setAttribute('role', 'status');
-    el.textContent = t;
     host.insertBefore(el, host.firstChild);
+    var dej = function () { el.textContent = t; };
+    if (window.requestAnimationFrame) window.requestAnimationFrame(dej); else setTimeout(dej, 0);
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 4000);
   }
 

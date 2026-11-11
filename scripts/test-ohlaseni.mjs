@@ -391,6 +391,38 @@ for (const [stranka, pole, heslo, tlacitko, oblast] of [
   pravda('obě stránky staví hlášku přihlášení PRÁZDNOU',
     !/id="hauthmsg"[^>]*>' \+ \(msg/.test(h) && !/id="zauthmsg"[^>]*>' \+ \(msg/.test(z),
     'oblast se do stromu přidává už s textem — to je nový uzel, ne změna (oddíl 92)');
+
+  /* DVĚ MÍSTA, KTERÁ TO PRAVIDLO ZNALA A PŘESTO HO PORUŠOVALA
+     (nalezeno 11. 11.):
+      · js/moje-data.js — hláska() vytvořila <p role="status">, dala mu
+        TEXT a teprve pak ho vložila do stránky. Do stromu tím přišel
+        hotový uzel, ne změna živé oblasti, takže se potvrzení o smazání
+        uložených dat neohlásilo.
+      · muj-inzerat.html — po smazání inzerátu se jen překreslil seznam
+        a neohlásilo se vůbec nic. #mi-status k tomu použít nejde:
+        load() do něj píše „Načítám…" a na konci ho skryje, takže
+        ohlášení má vlastní oblast #mi-ohlas.
+     Čte se zdroj, tedy stejně slabá kontrola jako výš — pozná přepsané
+     místo. Mazání uložených dat ani inzerátu se bez účtu a bez
+     potvrzovacího okna v prohlížeči vyvolat nedá. */
+  const md = readFileSync(path.join(KOREN, 'js', 'moje-data.js'), 'utf8');
+  const mi = readFileSync(path.join(KOREN, 'muj-inzerat.html'), 'utf8');
+  pravda('moje-data.js: hláška se vkládá PRÁZDNÁ a text dostane až potom',
+    /insertBefore\(el, host\.firstChild\);[\s\S]{0,200}requestAnimationFrame/.test(md)
+    && !/el\.textContent = t;\s*host\.insertBefore/.test(md),
+    'text se nastavuje dřív, než je prvek ve stránce — viz oddíl 92');
+  pravda('muj-inzerat.html: smazání inzerátu má vlastní živou oblast',
+    /id="mi-ohlas"[^>]*role="status"/.test(mi) && /Inzerát byl smazán/.test(mi),
+    'chybí #mi-ohlas s role=status nebo věta, kterou se smazání hlásí');
+  pravda('a ta oblast se plní až v dalším snímku',
+    /ohlasEl\.textContent = '';[\s\S]{0,260}requestAnimationFrame/.test(mi),
+    'text se vkládá rovnou — do živé oblasti, kterou nikdo nestihl zaznamenat');
+  /* A tlačítko „Smazat" ať u každého inzerátu řekne, co maže: na účtu
+     je jich tolik, kolik má člověk inzerátů, a všechna se hlásila
+     stejně. */
+  pravda('muj-inzerat.html: tlačítko „Smazat" nese jméno inzerátu',
+    /aria-label="Smazat inzerát: ' \+ esc\(r\.place/.test(mi),
+    'tlačítka se odečítači hlásí všechna jako „Smazat"');
 }
 
 await ctx.close();

@@ -72,12 +72,20 @@
     host.innerHTML = html;
   }
 
+  /* ŽIVÁ OBLAST MUSÍ BÝT V DOKUMENTU DŘÍV NEŽ TEXT. Tady se text
+     nastavoval JEŠTĚ PŘED vložením do stránky, takže odečítač neměl co
+     zaznamenat: oblast se objevila už hotová a hlášení o smazaných
+     datech se neozvalo. Je to tatáž třída vad jako u toastu a u hlášek
+     v rozhovoru (hlídá scripts/test-ohlaseni.mjs) — jen tohle místo
+     zůstalo. Prvek se proto vloží prázdný a text dostane až v dalším
+     snímku. */
   function hlaska(t) {
     var el = document.createElement('p');
     el.className = 'md-hotovo';
     el.setAttribute('role', 'status');
-    el.textContent = t;
     host.insertBefore(el, host.firstChild);
+    var dej = function () { el.textContent = t; };
+    if (window.requestAnimationFrame) window.requestAnimationFrame(dej); else setTimeout(dej, 0);
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 4000);
   }
 

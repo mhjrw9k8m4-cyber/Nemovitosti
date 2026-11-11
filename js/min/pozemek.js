@@ -1560,9 +1560,12 @@
           try { (box || poznEl).scrollIntoView({ block: 'center' }); }
           catch (e) { (box || poznEl).scrollIntoView(); }
 
+          var plynule = false;
+          try { plynule = getComputedStyle(document.documentElement).scrollBehavior === 'smooth'; }
+          catch (e) { plynule = true; }
           setTimeout(function () {
             try { poznEl.focus({ preventScroll: true }); } catch (e) { poznEl.focus(); }
-          }, klidne ? 0 : 420);
+          }, plynule ? 420 : 0);
 
           if (box) {
             box.classList.add('pz-pozn-sviti');

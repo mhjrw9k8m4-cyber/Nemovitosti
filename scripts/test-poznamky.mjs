@@ -254,6 +254,15 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     locale: 'cs-CZ', reducedMotion: 'reduce' });
   const p = await ctx.newPage();
+  /* OBSLUHA, KTERÁ SPADNE, SE MUSÍ POZNAT. 11. 11. padalo klepnutí na
+     „Přidat poznámku" na ReferenceError (proměnná `klidne`, jejíž
+     definice při úklidu pohybu zmizela) — a poznalo se to jen tak, že
+     se políčko nezaostřilo. Výjimka uprostřed obsluhy přitom zahodí
+     i všechno za sebou: nerozsvítil se box a příště to může být něco,
+     co žádná kontrola neměří. Chyby stránky se proto sbírají a hlásí
+     jmenovitě. */
+  const chybyKlik = [];
+  p.on('pageerror', (e) => chybyKlik.push(String(e)));
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForSelector('#pz-pozn-skok', { timeout: 20000 }).catch(() => {});
   await pripravenoPozemek(p);
@@ -278,6 +287,16 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     pravda('a políčko je zaostřené HNED, ne až po dojetí', hned.zaostreno,
       JSON.stringify(hned));
     pravda('a je i na obrazovce', hned.vidno, JSON.stringify(hned));
+    /* DRUHÝ ÚČINEK TÉŽE OBSLUHY: po doskoku se box krátce rozsvítí, ať
+       je poznat, KAM se přišlo. Stojí v obsluze ZA zaostřením, takže
+       padne jako první, kdyby se někde uprostřed objevila výjimka. */
+    pravda('a box se rozsvítí, ať je poznat, kam se přišlo',
+      await p.evaluate(() => {
+        const b = document.querySelector('.pz-pozn-box');
+        return !!b && b.classList.contains('pz-pozn-sviti');
+      }), 'třída .pz-pozn-sviti na .pz-pozn-box není — obsluha nedošla až na konec');
+    pravda('a klepnutí nic nerozbilo (obsluha nespadla)', chybyKlik.length === 0,
+      chybyKlik.join(' | '));
   }
   await ctx.close();
 }

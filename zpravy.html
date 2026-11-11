@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-MVAIWXkZ6y7cNd6zt9YwAzSdbPqojAsY+huz8KIL5QE='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-78UoI9oRfu/rvvjO4BFeKETyIQixfRaP1PBAjYWXEg4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -282,7 +282,7 @@
 </footer>
 
 <script src="js/min/menu.js?v=8274c66b" defer></script>
-<script src="js/min/ucet-taby.js?v=24ab9283" defer></script>
+<script src="js/min/ucet-taby.js?v=2c99fce1" defer></script>
 <script src="js/min/config.js?v=ae0b35df"></script>
 <script src="js/min/auth.js?v=13c37bab"></script>
 <script src="js/min/zpravy-logika.js?v=6364db5b"></script>
@@ -410,7 +410,20 @@
           '<div class="zp-trole">' + esc(role) + '</div>' +
           '<div class="zp-tlast">' + esc((t.last_body || '').slice(0, 60)) + '</div>' +
         '</div>' +
-        (t.unread > 0 ? '<div class="zp-badge">' + t.unread + '</div>' : '') +
+        /* ODZNAK NEPŘEČTENÝCH NESMÍ BÝT HOLÉ ČÍSLO. Naměřeno 11. 11.:
+           celý řádek vlákna se odečítači přečetl jako „…je pozemek ještě
+           volný?1" — číslice slepená s poslední zprávou, bez významu.
+           Číslo proto zůstane pro oči a vedle něj stojí věta jen pro
+           odečítač. Věta se NEPÍŠE ZNOVU: skládá ji vetaNeprectenych
+           z js/ucet-taby.js, kde ji používá i odznak na záložce. Když
+           modul (defer) ještě není, číslo se nechá čitelné tak, jak je —
+           druhá kopie té věty by se časem rozešla v pádu. */
+        (t.unread > 0 ? (function (n) {
+          var veta = (window.PKUcetTaby && window.PKUcetTaby.vetaNeprectenych)
+            ? window.PKUcetTaby.vetaNeprectenych(n) : '';
+          return '<div class="zp-badge"' + (veta ? ' aria-hidden="true"' : '') + '>' + n + '</div>'
+            + (veta ? '<span class="visually-hidden">' + esc(veta) + '</span>' : '');
+        }(t.unread)) : '') +
       '</a>';
     });
     html += '</div>';
@@ -454,7 +467,15 @@
           '<span class="zp-cti" id="zc-title"><b>Konverzace</b><span id="zc-sub"></span></span>' +
           '<a class="zp-view" id="zc-view" href="index.html?lid=' + encodeURIComponent(listing) + '">Zobrazit pozemek</a>' +
         '</div>' +
-        '<div class="zp-msgs" id="zc-msgs"><div class="zp-load">Načítám…</div></div>' +
+        /* ROLOVATELNÁ OBLAST POTŘEBUJE JMÉNO A KLÁVESNICI. Naměřeno
+           11. 11.: #zc-msgs má overflow-y:auto, ale žádný tabindex ani
+           jméno — kdo nepoužívá myš, se starší zprávy neuroluje.
+           role="log" tu SCHVÁLNĚ NENÍ: rozhovor se celý přepisuje každých
+           15 s a odečítač by ho přečetl znovu a znovu. Novou zprávu proto
+           hlásí jedna věta ve #zc-ohlas (viz níž). Tabindex se nastavuje
+           až podle toho, jestli se opravdu je kam rolovat — jinak by
+           vznikla zastávka tabulátoru, která nic nedělá. */
+        '<div class="zp-msgs" id="zc-msgs" aria-label="Zprávy v rozhovoru"><div class="zp-load">Načítám…</div></div>' +
         '<div class="zp-err" id="zc-err" role="status" hidden></div>' +
         /* POČET ZNAKŮ ŽIVÁ OBLAST NENÍ, A JE TO ZÁMĚR. Přepisuje se při
            každém úhozu („zbývá 412 znaků"), takže by odečítač mluvil
@@ -524,13 +545,28 @@
       }
       var h = '';
       rows.forEach(function (m) {
-        h += '<div class="zp-b ' + (m.mine ? 'me' : 'them') + '">' + esc(m.body) + '<span class="zp-time">' + timeTxt(m.created_at) + '</span></div>';
+        /* KDO MLUVÍ, BYLO JEN V TŘÍDĚ CSS. Naměřeno 11. 11.: bublina se
+           odečítači přečetla jako „Dobrý den, je pozemek ještě volný?17:47"
+           — ani slovo o tom, kdo ji napsal, protože rozdíl mezi mojí
+           a cizí zprávou nese jen barva a strana (.me / .them). V rozhovoru
+           dvou lidí je to ta nejdůležitější informace.
+           A ČAS BYL SLEPENÝ S TEXTEM: za otazníkem hned „17:47", takže
+           odečítač přečte „volný? sedmnáct čtyřicet sedm" jako pokračování
+           věty. Dostal proto vlastní slovo. Oba texty jsou jen pro odečítač,
+           na obrazovce se nic nemění. */
+        h += '<div class="zp-b ' + (m.mine ? 'me' : 'them') + '">'
+          + '<span class="visually-hidden">' + (m.mine ? 'Já: ' : (isOwner ? 'Zájemce: ' : 'Majitel: ')) + '</span>'
+          + esc(m.body)
+          + '<span class="zp-time"><span class="visually-hidden">odesláno </span>' + timeTxt(m.created_at) + '</span></div>';
       });
       cekajici.forEach(function (c) {
-        h += '<div class="zp-b me ' + (c.chyba ? 'chyba' : 'ceka') + '">' + esc(c.body) +
+        h += '<div class="zp-b me ' + (c.chyba ? 'chyba' : 'ceka') + '">'
+           + '<span class="visually-hidden">Já: </span>' + esc(c.body) +
              '<span class="zp-time">' + (c.chyba ? 'neodesláno' : 'odesílám…') + '</span></div>';
       });
       msgsEl.innerHTML = h;
+      // Zastávka tabulátoru jen tam, kde se dá rolovat (viz jméno oblasti výš).
+      msgsEl.tabIndex = msgsEl.scrollHeight > msgsEl.clientHeight ? 0 : -1;
       if (sjed) msgsEl.scrollTop = msgsEl.scrollHeight;
     }
 
@@ -579,7 +615,15 @@
       cekajici.push(polozka);
       ta.value = ''; ta.style.height = 'auto'; prepocitejDelku();
       render(zobrazene, true);
+      /* ZAMĚŘENÍ NESMÍ SPADNOUT NA BODY. Vypnutí právě zaměřeného
+         tlačítka zaměření zahodí — naměřeno 11. 11.: po odeslání byl
+         activeElement rovnou <body>, takže kdo ovládá web klávesnicí,
+         přišel o místo a tabulátor začínal od začátku stránky. Vrací se
+         do pole, kde člověk psal a kde bude psát dál. Krade se jen
+         tehdy, když zaměření opravdu bylo na tom tlačítku. */
+      var byloNaTlacitku = document.activeElement === sendBtn;
       sendBtn.disabled = true;
+      if (byloNaTlacitku) ta.focus();
 
       var args = isOwner ? { p_listing: listing, p_buyer: buyer, p_body: body } : { p_listing: listing, p_buyer: null, p_body: body };
       A.rpc('send_message', args, true).then(function (res) {
