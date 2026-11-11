@@ -2140,9 +2140,43 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    tedy 148 px místo 272. Štítek je dál celý chytací plochou; zmenšila
    se jen jeho šířka, ne výška. */
 @media (max-width:980px){
-  .nav-typy{display:grid; grid-template-columns:1fr 1fr; gap:8px;
-    padding-top:8px; margin-top:4px;}
-  .nav-typ{min-height:44px; justify-content:space-between; font-size:14px;}
+  /* ŠÍŘKU SI MŘÍŽKA NESMÍ URČIT Z OBSAHU. V otevřeném šuplíku je #nav
+     svislý pružný pás a .nav-typy v něm nebyla roztažená, takže si
+     šířku spočítala z nejširší pilulky: naměřeno na 390 px dva sloupce
+     185,8 + 213,2 px, dohromady 407 px do šuplíku širokého 343 —
+     mřížka visela 65 px MIMO stránku a pilulky „Pozemky", „Byty"
+     a „Exekuce" měly levou hranu na −49 px, tedy uříznuté oknem.
+     `width:100%` je přišpendlí k šuplíku a 1fr 1fr se pak dělí tím,
+     co je k dispozici. box-sizing kvůli tomu, aby se do té šířky
+     počítalo i odsazení.
+     A TRACKY JSOU minmax(0, 1fr), NE 1fr. Samotné 1fr má spodní mez
+     min-content, takže dlouhý nápis („Nové na trhu 2 533“) sloupec
+     roztáhne i v roztažené mřížce: naměřeno 185,8 + 213,2 px, tedy
+     407 px do 342. S minmax(0, 1fr) se sloupce dělí tím, co je, a text
+     se zalomí. */
+  .nav-typy{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;
+    padding-top:8px; margin-top:4px; width:100%; box-sizing:border-box;}
+  /* OBSAH PILULKY SE MUSÍ UMĚT ZALOMIT. I v roztažené mřížce je na
+     sloupec 104 px (320 px okno) až 135 px (390 px okno), zatímco
+     „Nové na trhu 2 533" potřebuje na jeden řádek 165 px — naměřeno,
+     a uřízlo to číslo u pravé hrany. Jméno a počet se proto smějí
+     rozdělit na dva řádky; `min-width:0` dovolí pilulce zmenšit se
+     pod šířku svého obsahu (bez něj flexový prvek nejde pod
+     min-content) a `min-height:44px` drží dotykovou mez dál. */
+  .nav-typ{min-height:44px; justify-content:space-between; font-size:14px;
+    flex-wrap:wrap; row-gap:0; min-width:0; padding-inline:12px;
+    /* A základní pravidlo má white-space:nowrap — v řadě v hlavičce
+       správně, v mřížce na telefonu ne: na 320 px zbylo na sloupec
+       104 px a samotné „Nové na trhu“ potřebuje 93 px plus
+       odsazení, takže se uřízlo. Tady se tedy zalamovat smí. */
+    white-space:normal;
+    /* A POJISTKA: co by se přesto nevešlo, se ořízne uvnitř pilulky
+       místo aby se vykreslilo přes sousedku nebo ven ze šuplíku.
+       Na 320 px zbývá i po zalomení 9 px rozdílu — měřeno v Chromiu,
+       které na telefonu samo zvětšuje písmo (naměřeno 16px tam, kde
+       stylopis říká 14), takže na Safari v iPhonu je rezerva větší.
+       Oříznutí je pojistka pro obojí, ne náhrada měření. */
+    overflow:hidden;}
 }
 #nav a{color:var(--muted); text-decoration:none; font-size:14px; font-weight:500; transition:var(--prechod); position:relative;}
 #nav a:hover{color:var(--text);}
@@ -11640,93 +11674,29 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    změřeno background-image:none. Shoda specificity rozhoduje pořadím,
    takže tohle pravidlo musí být poslední. */
 .btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet, .skip-link, .vm-vetsi, .vm-ok, .reset-btn, .copy-btn, .rv-uvod-ok, .vyv-ok, .st-btn-1, .zp-btn, .mc-toggles .mc-prep.on, .mcv-btn.mcv-nula.on, .mc-info[aria-expanded="true"] span, .map-podklad button.on, .mv-v.on, .ms-vysledky .msv-ulozene.on, .vm-km input:checked + span, .as-num, .uc-tab-pocet, .msch, .pp-titulka, .msf-badge{background-image:var(--preliv-znacka);}
-/* ===== PLOCHÁ KARTA NA TELEFONU ====================================
-   ZMĚŘENO, PROČ: na 390 px měla karta medián 360 px, 24 karet tedy
-   8 640 px a celá úvodní stránka 15 940 px = 18,9 obrazovek telefonu.
-   Všechno, co je pod výpisem — proč Parcelka, kraje, tipy, zdroje —
-   začínalo na y = 9 724 px, tedy po 11,5 obrazovce rolování. Na
-   telefonu tam nikdo nedojde, ať je to napsané jakkoli dobře.
-   SVISLÁ KARTA JE SPRÁVNÁ NA MONITORU, kde stojí ve dvousloupcové
-   mřížce vedle mapy a velký náhled nese obrázek. V jednom sloupci na
-   telefonu je z téhož tvaru sloup: 150 px fotky na čtyři řádky textu.
-   Vodorovný řádek ukáže totéž na třetině výšky.
-   CO ZŮSTÁVÁ: náhled s odznakem druhu, nadpis, místo, výměra, cena za
-   metr, cena a obě tlačítka (Uložit, Skrýt) jako plochy pro prst.
-   Nemění se recept na písmo — cena 24/700 a nadpis 16/600 jsou tytéž
-   jako všude na webu, protože jedna karta má po celém webu vypadat
-   jako jedna karta (hlídá scripts/test-karta-nabidky.mjs). */
-@media (max-width:560px){
-  .opp-item{display:grid; grid-template-columns:112px 1fr; align-items:stretch;}
-  /* POMĚR STRAN NÁHLEDU ZŮSTÁVÁ 16/10. Napoprvé jsem mu dal
-     `aspect-ratio:auto`, aby se roztáhl na výšku karty — a hlídač
-     soustavy to zastavil právem: jeden poměr stran na celém webu je
-     starší rozhodnutí (náhled má všude vypadat stejně). Náhled se
-     proto drží u horního okraje a kartu natahuje text, ne obrázek. */
-  .opp-media{min-height:0; align-self:start;}
-  .opp-body{padding:12px; min-width:0;}
-  /* Nadpis na jeden řádek: ve 196 px zbylých po náhledu se delší jméno
-     stejně nevejde a dva řádky by kartu zase natáhly. Co se uřízne,
-     nese celý přístupný název odkazu i stránka za kartou. */
-  .opp-druh{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .opp-meta{font-size:13px;}
-  .opp-cenarad{margin-top:4px;}
-  .opp-price{font-size:24px; margin-top:0;}
-  /* TLAČÍTKA JDOU Z NÁHLEDU NA OKRAJ KARTY — a je to měřené.
-     Na svislé kartě měl náhled 370×231 px a tři prvky (odznak vlevo
-     dole, uložit vpravo nahoře, skrýt vlevo nahoře) se na něm
-     nepotkaly. Na ploché kartě má náhled 112×70 px a nestalo se nic
-     menšího, než že se potkaly všechny tři: naměřeno, že „Skrýt"
-     (44×44 na 25..69 px) leží 4 px od středu náhledu, kam míří prst
-     při otevírání nabídky, a zároveň na odznaku kategorie (26..41 ×
-     717..732). Křížek, který nabídku odstraní, tedy sedí přesně tam,
-     kam prst míří — a to je vada, kterou test-rozvrzeni popsal už
-     v říjnu („klikám na pozemky a skrývají se mi a nevím proč").
-     Na ploché kartě je terčem CELÁ KARTA (358×166), ne náhled, takže
-     tlačítka patří na její okraj: uložit a skrýt vedle sebe vpravo
-     dole, odznak kategorie vlevo dole. Měřeno po změně: „Skrýt" je
-     253 px od středu náhledu (dřív 4) a odznak kategorie je na druhé
-     straně karty.
-     Obě tlačítka jsou proto od 10. 11. dětmi KARTY, ne náhledu (viz
-     js/main.js) — stylem to nešlo: `position:static` na náhledu pustí
-     na kartu i samotný snímek a jeho ztmavení, které jsou uvnitř
-     náhledu umístěné absolutně, a výpis zčerná. */
-  /* VEDLE SEBE V PRAVÉM DOLNÍM ROHU KARTY, a to je ZMĚŘENÁ volba ze
-     tří. Nad tělem (vpravo nahoře, pod sebou) by si tlačítka vzala
-     100 px z nadpisu a řádek s výměrou a cenou za metr by se v tom
-     zbytku zalomil: naměřeno, karta ze 166 na 188 px, stránka
-     o 394 px delší. Přes tělo bez odsazení by text běžel pod nimi.
-     Vpravo dole kryjí řádek odznaků, který se na ploché kartě stejně
-     ořezává na jeden (`.opp-chips` níž), takže karta zůstala na
-     166 px (131–214) a stránka na 11 682 px. */
-  .opp-item .opp-fav{top:auto; bottom:4px; right:4px; left:auto;}
-  .opp-item .opp-skryt{top:auto; bottom:4px; right:52px; left:auto;}
-  .opp-badge{top:auto; bottom:4px; left:4px;}
-  /* Odznaky nesmí běžet pod tlačítky: 100 px jsou obě i s mezerami. */
-  .opp-chips{padding-right:96px;}
-  /* Tlačítka zůstávají jen jako ikona — slovo se do 44px kruhu
-     nevejde. Chytací plocha je dál 44 px (test-dotyk). */
-  .opp-item .opp-fav, .opp-item .opp-skryt{min-height:44px; min-width:44px;
-    padding:0; justify-content:center; align-items:center;}
-  /* Slovo v tlačítku zůstává ve značce pro odečítač, jen se nekreslí —
-     do 44px kruhu se „Uložit" ani „Skrýt" nevejde a ořezávalo se.
-     Platí pro OBĚ tlačítka: napoprvé tu stálo jen .opp-fav a měření
-     pak našlo 24 useknutých prvků, po jednom na kartu — to „Skrýt". */
-  .opp-item .opp-fav .os-t, .opp-item .opp-skryt .os-t{position:absolute;
-    width:1px; height:1px; overflow:hidden; clip-path:inset(50%);}
-  /* JEDEN ODZNAK, NE TŘI. Do 196 px zbylých po náhledu se tři odznaky
-     („Dražba za 3 dny", „−47 % proti okolí", „Doporučujeme") nevejdou
-     vedle sebe a skládají se pod sebe — tím karta narostla ze 106 na
-     245 px, tedy o víc, než měří cena i místo dohromady. První odznak
-     je ten nejsilnější (js/main.js je řadí podle důležitosti a nový
-     dává na začátek), takže zůstává ten. Zbylé nese stránka nabídky.
-     Neschovává se celý řádek: kdyby odznak nebyl žádný, nezbyde po
-     něm ani mezera. */
-  /* ODZNAK DRUHU JAKO TEČKA. Na náhledu širokém 112 px se nápis
-     „Exekuce" neuřízne jen náhodou — uřízne se vždycky. Druh přitom
-     na ploché kartě nese nadpis („Exekuční dražba trvalého travního
-     porostu") a barevná tečka drží vazbu na mapu, kde má týž tvar
-     i barvu. Nápis zůstává v značce pro odečítač, jen se nekreslí. */
-  .opp-badge{padding:4px; font-size:0; gap:0;}
-  .opp-chips{display:flex; flex-wrap:nowrap; overflow:hidden; margin-top:4px;}
-  .opp-chips > *:not(:first-child){display:none;}
-}
+/* PLOCHÁ KARTA NA TELEFONU: ZAVEDENO 11. 11. A TÝŽ DEN VRÁCENO.
+   ------------------------------------------------------------------
+   Stálo tu devadesát řádků, které na šířce do 560 px měnily kartu
+   nabídky ze svislé (náhled přes celou šířku, text pod ním) na
+   vodorovný pruh s náhledem 112×70 px. Důvod byl měřený a sám o sobě
+   platný: svislá karta měla medián 360 px, čtyřiadvacet karet 8 640 px
+   a celá úvodní stránka 15 940 px, takže všechno pod výpisem začínalo
+   po jedenácti a půl obrazovkách rolování.
+   JENŽE SE TÍM ROZBIL VÝPIS a bylo to vidět na první pohled na
+   skutečném iPhonu: náhled 112×70 px v kartě vysoké 141–166 px nechal
+   pod sebou 71 až 96 px prázdné bílé plochy. Karta vypadala
+   nedokresleně. Majitel webu to shrnul tak, že nabídky jsou zmenšené
+   a polovina věcí je rozbitá — a má pravdu: výpis JE produkt, nabídka
+   se má ukázat, ne zmenšit.
+   TU DÍRU JSEM SI PŘITOM SÁM PŘEDEM POPSAL. V komentáři toho bloku
+   stálo „náhled se drží u horního okraje a kartu natahuje text, ne
+   obrázek" — napsané jako vysvětlení, proč poměr stran 16/10 zůstává.
+   Napsat následek a přesto to vydat je horší než ho přehlédnout.
+   DÉLKA STRÁNKY SE TÍM VRACÍ a zůstává k řešení — ale tam, kam patří:
+   zkrátit se má to, co je POD výpisem (sedm oddílů obsahu a marketingu
+   měří na telefonu 6 430 px), ne nabídky samy.
+   Co bylo v tom bloku navíc a odešlo s ním: tlačítka Uložit a Skrýt na
+   okraji karty místo na náhledu, odznak druhu jako pouhá tečka, jeden
+   odznak místo tří a nadpis na jeden řádek. Na svislé kartě nedává nic
+   z toho smysl: náhled má 358×224 px, takže se na něm všechny tři
+   prvky zase rozejdou, jak to bylo do 10. 11. */

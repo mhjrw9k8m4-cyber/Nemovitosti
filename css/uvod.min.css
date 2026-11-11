@@ -250,8 +250,8 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 .nav-typ{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-pill);background:var(--plocha-karta);color:var(--text) !important;font-size:14px;font-weight:600;white-space:nowrap}
 .nav-typ:hover{border-color:var(--line-strong);box-shadow:var(--e1)}
 .nav-typ .nav-pocet{font-weight:500;color:var(--muted)}
-@media (max-width:980px){.nav-typy{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:8px;margin-top:4px}
-.nav-typ{min-height:44px;justify-content:space-between;font-size:14px}
+@media (max-width:980px){.nav-typy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:8px;margin-top:4px;width:100%;box-sizing:border-box}
+.nav-typ{min-height:44px;justify-content:space-between;font-size:14px;flex-wrap:wrap;row-gap:0;min-width:0;padding-inline:12px;white-space:normal;overflow:hidden}
 }
 #nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:var(--prechod);position:relative}
 #nav a:hover{color:var(--text)}
@@ -1653,20 +1653,3 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 
 
 .btn-primary,.nav-add,.lp-btn,.pf-add,.auth-submit,.auth-tab.active,.hl-btn,.mcf-hotovo,.filter-chip.active,.mvt-btn.active,.mcv-btn.on,.mc-prep.on,.map-nastroj[aria-pressed="true"],.map-nastroj[aria-expanded="true"],.loc-btn.primary,.opp-feat,.boost-price,.kt-mail .kt-ico,:root.pk-prihlasen .hdr-ucet,.skip-link,.vm-vetsi,.vm-ok,.reset-btn,.copy-btn,.rv-uvod-ok,.vyv-ok,.st-btn-1,.zp-btn,.mc-toggles .mc-prep.on,.mcv-btn.mcv-nula.on,.mc-info[aria-expanded="true"] span,.map-podklad button.on,.mv-v.on,.ms-vysledky .msv-ulozene.on,.vm-km input:checked + span,.as-num,.uc-tab-pocet,.msch,.pp-titulka,.msf-badge{background-image:var(--preliv-znacka)}
-@media (max-width:560px){.opp-item{display:grid;grid-template-columns:112px 1fr;align-items:stretch}
-.opp-media{min-height:0;align-self:start}
-.opp-body{padding:12px;min-width:0}
-.opp-druh{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.opp-meta{font-size:13px}
-.opp-cenarad{margin-top:4px}
-.opp-price{font-size:24px;margin-top:0}
-.opp-item .opp-fav{top:auto;bottom:4px;right:4px;left:auto}
-.opp-item .opp-skryt{top:auto;bottom:4px;right:52px;left:auto}
-.opp-badge{top:auto;bottom:4px;left:4px}
-.opp-chips{padding-right:96px}
-.opp-item .opp-fav,.opp-item .opp-skryt{min-height:44px;min-width:44px;padding:0;justify-content:center;align-items:center}
-.opp-item .opp-fav .os-t,.opp-item .opp-skryt .os-t{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-.opp-badge{padding:4px;font-size:0;gap:0}
-.opp-chips{display:flex;flex-wrap:nowrap;overflow:hidden;margin-top:4px}
-.opp-chips>*:not(:first-child){display:none}
-}
