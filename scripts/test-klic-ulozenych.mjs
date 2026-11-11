@@ -228,8 +228,17 @@ async function sUlozenymi(klice) {
      původní stav, jinak by se dalo projít jen jedním směrem. */
   pravda('tlačítko po uložení změní slovo na „Uloženo"',
     r.po && r.po.slovo === 'Uloženo', `po klepnutí stojí „${r.po && r.po.slovo}"`);
+  /* POPISEK UŽ ZAČÍNÁ TÍM, CO JE NA TLAČÍTKU VIDĚT. Do 11. 11. se tu
+     hledalo jen slovo „Odebrat" a popisek znělo „Odebrat z uložených",
+     zatímco na tlačítku svítilo „Uloženo". To je vada podle WCAG 2.5.3
+     (Label in Name): kdo ovládá web hlasem, řekne „klepni Uloženo"
+     a nestane se nic, protože jméno tím slovem nezačíná. Popisek je
+     proto teď „Uloženo — odebrat z uložených" a kontrola je OSTŘEJŠÍ,
+     ne slabší: vyžaduje obojí — viditelné slovo na začátku a sdělení,
+     co se klepnutím stane. */
   pravda('a popisek pro odečítač s ním souhlasí',
-    r.po && /Odebrat/.test(r.po.popis || ''), `popisek „${r.po && r.po.popis}"`);
+    r.po && /^Uloženo —/.test(r.po.popis || '') && /odebrat/i.test(r.po.popis || ''),
+    `popisek „${r.po && r.po.popis}"`);
   pravda('a druhé klepnutí vrátí „Uložit"',
     r.zpet && r.zpet.slovo === 'Uložit' && /Uložit pozemek/.test(r.zpet.popis || ''),
     `zpátky stojí „${r.zpet && r.zpet.slovo}" / „${r.zpet && r.zpet.popis}"`);

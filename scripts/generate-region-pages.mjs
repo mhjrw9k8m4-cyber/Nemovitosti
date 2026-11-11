@@ -225,10 +225,28 @@ function pluralNabidky(n, nabidky){
    („58 nemovitostí"), takže si stránka sama se sebou odporovala
    o jeden řádek.
 
-   CO SE NEMĚNÍ: <title>, popis pro vyhledávače ani adresa stránky.
-   Tam je „pozemky" klíčové slovo, podle kterého sem lidé chodí
-   z Googlu, a na rozdíl od nadpisu nad výpisem nelže o tom, co pod
-   ním je — stránka pozemky opravdu nese, jen nejen je. */
+   TITULEK SE ŘÍDÍ PŘEVAHOU, NE VÝLUČNOSTÍ. Do 11. 11. tu stálo, že
+   <title>, popis pro vyhledávače ani adresa se nemění: „pozemky" je
+   klíčové slovo, podle kterého sem lidé chodí z Googlu, a stránka
+   pozemky opravdu nese, jen nejen je.
+
+   ZMĚŘENO 11. 11. na 3 983 nabídkách: na okresní stránce Prahy je
+   z 780 nabídek pozemkem 31, tedy 4 % — zbytek jsou byty, domy
+   a garáže. Tam titulek „Pozemky okres Praha" nelže „jen nejen":
+   vede slovem, které platí pro jednu nabídku z pětadvaceti. Pozemky
+   jsou v menšině na 10 okresech ze 77 (Praha, Brno-město,
+   Plzeň-město, Ostrava-město, Olomouc, Kladno, Jihlava, Trutnov,
+   Sokolov, Rychnov nad Kněžnou).
+
+   PROČ MÁ TITULEK VLASTNÍ MEZ. Výlučnost, kterou měří slovaPoctu
+   („samé pozemky, nebo nic"), je správná pro POČET: napsat „32
+   pozemků" o seznamu s deseti byty je nepravda. Pro titulek je ale
+   přísná zbytečně — titulek je nápis o tom, co na stránce vede.
+   Podle výlučnosti by klíčové slovo ztratilo 94 ze 103 stránek,
+   mezi nimi cenová pásma, kde je pozemků 93–99 %. Převaha tedy řeší
+   obojí: 67 okresů i všechna pásma si „pozemky" udrží a deset
+   stránek, kde pozemky nevedou, se přestane vydávat za pozemkové.
+   Počty pod nadpisem se nemění, ty mají výlučnost dál. */
 function nadpisMnoziny(nabidky){
   const s = KATEGORIE.slovaPoctu(nabidky);
   return s[1].charAt(0).toUpperCase() + s[1].slice(1);
@@ -236,6 +254,51 @@ function nadpisMnoziny(nabidky){
 /** Druhý pád množného čísla: „dražby POZEMKŮ" / „dražby NEMOVITOSTÍ". */
 function druhyPadMnoziny(nabidky){
   return KATEGORIE.slovaPoctu(nabidky)[2];
+}
+/** Slovo do TITULKU podle převahy — zdůvodnění mezí je nad nadpisMnoziny(). */
+function titulekMnoziny(nabidky){
+  const pole = nabidky || [];
+  const pozemku = pole.filter((o) => KATEGORIE.klic(o && o.kat) === 'pozemek').length;
+  return pozemku * 2 >= pole.length ? 'Pozemky' : 'Nemovitosti';
+}
+/* DODATEK TITULKU JEN KDYŽ SE VEJDE. Google ořízne titulek kolem
+   60 znaků — „Pozemky v okrese Rychnov nad Kněžnou — prodej, dražby,
+   exekuce | Parcelka" mělo 73 a ve výsledcích z něj zbyl useknutý cár.
+   Slovo „Nemovitosti" je o čtyři znaky delší než „Pozemky", takže
+   u dlouhých jmen mez přeteče: Ostrava-město vyjde přesně na 60,
+   Rychnov nad Kněžnou na 66. Dodatek se proto pustí jen tehdy, když se
+   celý titulek vejde; jinak zbude jméno stránky a značka, což je pořád
+   celá věta. Měřeno 11. 11.: dodatek si udrží 66 okresů ze 77. */
+function titulekSDodatkem(zaklad, dodatek){
+  const dlouhy = `${zaklad} — ${dodatek} | Parcelka`;
+  return dlouhy.length <= 60 ? dlouhy : `${zaklad} | Parcelka`;
+}
+/* VĚTA „CENY OD" NESMÍ SLIBOVAT SPOLUVLASTNICKÝ PODÍL.
+   ====================================================================
+   V popisu pro vyhledávače stálo „Ceny od " + nejnižší cena ze všech
+   nabídek s cenou. ZMĚŘENO 11. 11.: u 22 okresů ze 77 je ta nejnižší
+   cena cenou spoluvlastnického podílu. V Táboru stál nejlevnější podíl
+   20 000 Kč a nejlevnější celá nemovitost 132 031 Kč, takže úryvek
+   v Googlu sliboval šestinu skutečné ceny; největší rozdíl má
+   Praha-západ — podíl od 25 000 Kč proti celé nemovitosti za 299 000,
+   tedy dvanáctinásobek. Člověk, který na to klepne, dostane zlomek
+   parcely, ne parcelu.
+
+   Číslo se neschovává, jen se pojmenuje: vede cena, kterou lze koupit
+   celou, a podíl se dopoví za ní. Tím se zároveň úryvek nerozejde
+   s dlaždicí „rozpětí cen" v pásu nad výpisem, která ukazuje rozpětí
+   všech nabídek včetně podílů — obě čísla na stránce zůstanou a každé
+   je napsané tím, čím je. Nejdelší popis vyjde na 157 znaků, tedy pod
+   mez úryvku (~160). */
+function vetaOCenach(list, uvod){
+  const sCenou = (list || []).filter((o) => o && o.price > 0);
+  if (!sCenou.length) return '';
+  const nejniz = Math.min(...sCenou.map((o) => o.price));
+  const cele = sCenou.filter((o) => !o.podil).map((o) => o.price);
+  if (!cele.length) return ` ${uvod} od ${fmt(nejniz)} Kč za spoluvlastnický podíl.`;
+  const nejnizCele = Math.min(...cele);
+  if (nejnizCele === nejniz) return ` ${uvod} od ${fmt(nejniz)} Kč.`;
+  return ` ${uvod} od ${fmt(nejnizCele)} Kč, spoluvlastnické podíly od ${fmt(nejniz)} Kč.`;
 }
 /** První pád množného čísla malým: „nejlevnější POZEMKY" / „NEMOVITOSTI". */
 function mnozneCislo(nabidky){
@@ -1174,12 +1237,11 @@ for(const okres of eligibleOkres){
   list.sort((a,b)=>(a.price||1e15)-(b.price||1e15));
   const dispK = (KRAJ_META[kraj]||{}).disp || (kraj+' kraj');
 
-  // Google ořízne titulek kolem 60 znaků. „Pozemky v okrese Rychnov nad
-  // Kněžnou — prodej, dražby, exekuce | Parcelka" má 73 a ve výsledcích
-  // z něj zbyl useknutý cár. Kratší tvar říká totéž a vejde se celý.
-  const title = `Pozemky okres ${okres} — prodej a dražby | Parcelka`;
-  const desc = `${count} ${pluralNabidky(count, list)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, count)};
+  // Volbu slova i mez 60 znaků drží titulekMnoziny() a titulekSDodatkem().
+  const slovoT = titulekMnoziny(list);
+  const title = titulekSDodatkem(`${slovoT} okres ${okres}`, 'prodej a dražby');
+  const desc = `${count} ${pluralNabidky(count, list)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${vetaOCenach(list, 'Ceny')}`;
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`${slovoT} v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky ${druhyPadMnoziny(list)} v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, count)};
   /* KOLIK Z TOHO JSOU SPOLUVLASTNICKÉ PODÍLY. Je to čtvrtina celé
      nabídky webu (531 z 2 019) a u podílu je v inzerátu výměra CELÉ
      parcely, ale cena jen za ten zlomek — cena za metr proto vychází
@@ -1406,9 +1468,10 @@ for(const kraj of eligibleKraj){
   const tS = typStrankyVypisu(vypsane);
   const rows = vypsane.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
 
-  const title = `Pozemky ${meta.disp} — prodej a dražby | Parcelka`;
-  const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralNabidky(count, list)} z veřejných zdrojů: prodeje, dražby i exekuce.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
-  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, list.length)};
+  const slovoT = titulekMnoziny(list);
+  const title = titulekSDodatkem(`${slovoT} ${meta.disp}`, 'prodej a dražby');
+  const desc = `${slovoT} ${meta.loc} na jedné mapě — ${count} ${pluralNabidky(count, list)} z veřejných zdrojů: prodeje, dražby i exekuce.${vetaOCenach(list, 'Ceny')}`;
+  const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`${slovoT} ${meta.disp}`,"inLanguage":"cs","description":`Nabídky ${druhyPadMnoziny(list)} ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, list.length)};
   const crumbs = [
     {name:'Pozemky', href:'index.html', abs:SITE},
     {name:'Pozemky podle okresů', href:'pozemky-podle-okresu.html', abs:SITE+'pozemky-podle-okresu.html'},
@@ -1553,7 +1616,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
   const tS = typStrankyVypisu(drazby);
   const rows = drazby.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
   const title = `Dražby pozemků — aktuální nabídky v ČR | Parcelka`;
-  const desc = `${count} ${sklon(count,'dražba pozemku','dražby pozemků','dražeb pozemků')} z celé ČR na jedné mapě, z veřejné evidence dražeb.${minP?(' Vyvolávací ceny od '+fmt(minP)+' Kč.'):''}`;
+  const desc = `${count} ${sklon(count,'dražba','dražby','dražeb')} ${druhyPadMnoziny(drazby)} z celé ČR na jedné mapě, z veřejné evidence dražeb.${vetaOCenach(drazby, 'Vyvolávací ceny')}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":"Dražby pozemků v ČR","inLanguage":"cs","description":`Aktuální nabídky pozemků v dražbě z veřejné evidence dražeb.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(drazby, count)};
   const crumbs = [
     {name:'Pozemky', href:'index.html', abs:SITE},
@@ -1693,7 +1756,7 @@ for (const d of DRUH_STRANKY) {
     `<a href="${okresFile(ok)}">${esc(ok)} <span>${poOkresu[ok]}</span></a>`).join('');
   const title = `${d.h1} — nabídky z celé ČR | Parcelka`;
   const desc = `${count} ${sklon(count, d.jm[0], d.jm[1], d.jm[2])} z celé ČR na jedné mapě — z veřejných zdrojů.`
-    + (minP ? ` Ceny od ${fmt(minP)} Kč.` : '');
+    + vetaOCenach(list, 'Ceny');
   const jsonld = { "@context": "https://schema.org", "@type": "CollectionPage", name: d.h1,
     inLanguage: "cs", description: desc, mainEntityOfPage: SITE + d.soubor,
     publisher: { "@type": "Organization", name: "Parcelka" },
@@ -1881,11 +1944,12 @@ for (const r of rozpocetVznikne) {
     ? `Stavební pozemek v tomhle rozpočtu <b>v nabídce není ani jeden</b> z ${fmt(count)}.`
     : `Stavebních pozemků ${sklon(stavebnich, 'je', 'jsou', 'je')} v tomhle rozpočtu <b>${fmt(stavebnich)}</b> z ${fmt(count)}` +
       (stavebnich / count < 0.1 ? ` — tedy ${(stavebnich / count * 100).toFixed(1).replace('.', ',')} %.` : '.');
-  const title = `Pozemky do ${r.popis} — nabídky z celé ČR | Parcelka`;
+  const slovoT = titulekMnoziny(list);
+  const title = `${slovoT} do ${r.popis} — nabídky z celé ČR | Parcelka`;
   const desc = `${fmt(count)} ${pluralNabidky(count, list)} do ${r.popis} z celé ČR — z veřejných zdrojů.`
-    + ` Ceny od ${fmt(minP)} Kč, mediánová výměra ${fmt(medVymera)} m².`;
+    + vetaOCenach(list, 'Ceny') + ` Mediánová výměra ${fmt(medVymera)} m².`;
   const jsonld = { "@context": "https://schema.org", "@type": "CollectionPage",
-    name: `Pozemky do ${r.popis}`, inLanguage: "cs", description: desc,
+    name: `${slovoT} do ${r.popis}`, inLanguage: "cs", description: desc,
     mainEntityOfPage: SITE + r.soubor,
     publisher: { "@type": "Organization", name: "Parcelka" },
     mainEntity: seznamNabidek(list, count) };

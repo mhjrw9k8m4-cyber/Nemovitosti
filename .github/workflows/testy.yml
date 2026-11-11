@@ -119,6 +119,14 @@ jobs:
       - name: Čísla na okresních stránkách se přepočítají z dat
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cisla-okresu.mjs
+      # Titulek je ve výsledcích hledání jediné, co člověk před
+      # klepnutím vidí, a věta „Ceny od" jediné číslo. Obojí se dřív
+      # skládalo napevno ze slova „pozemky" a z nejnižší ceny vůbec —
+      # viz zdůvodnění v té zkoušce (Praha: 31 pozemků ze 780; Tábor:
+      # slib 20 000 Kč proti nejlevnější celé nemovitosti za 132 031).
+      - name: Titulek a věta o cenách nelžou o obsahu okresní stránky
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-titulek-mnoziny.mjs
       - name: Změna ceny nesmí nabídce sebrat věk
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-prvni-videno.mjs

@@ -175,8 +175,17 @@ pravda('a titulek stránky se nepřepíše na hlášku',
      webu stěžoval (u dražby a exekuce „Vyvolávací"/„Odhadní cena"
      zůstává, tam to NENÍ totéž co cena prodejní). Hledá se proto
      samotná částka: popisek je ozdoba, číslo je ten obsah. */
-  pravda('živá stránka pozemku se pořád vykreslí celá (cena, mapa, srovnání)',
-    /\d\s*Kč/.test(v.text) && /pozemek na mapě/i.test(v.text)
+  /* NADPIS NAD MAPOU SE ŘÍDÍ KATEGORIÍ, tady stálo napevno „pozemek
+     na mapě". Od §420 ho skládá KATEGORIE.nadpisMapy(): u pozemku
+     „Pozemek na mapě", u bytu, domu nebo garáže „Nemovitost na mapě".
+     Vzorek se bere jako PROSTŘEDNÍ z živých stránek, takže co se sem
+     dostane, rozhodují data — a jak jich přibylo nepozemkových, vyšel
+     11. 11. prostřední dům v Pelhřimově. Stránka byla celou dobu
+     v pořádku (cena, mapa i srovnání na ní jsou), mýlila se zkouška.
+     Přijímají se proto obě slova; na tom, co tahle kontrola hlídá —
+     že se živá stránka vykreslí celá — se nic nemění. */
+  pravda('živá stránka nabídky se pořád vykreslí celá (cena, mapa, srovnání)',
+    /\d\s*Kč/.test(v.text) && /(pozemek|nemovitost) na mapě/i.test(v.text)
     && !/Pozemek nenalezen/.test(v.text),
     `${f}: ${v.text.slice(0, 120).replace(/\n/g, ' / ')}`);
   /* NÁPIS NA TLAČÍTKU ZPĚT SE 9. 11. ZMĚNIL na „Zpět na nabídky"

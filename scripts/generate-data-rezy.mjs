@@ -256,9 +256,28 @@ export async function spust() {
          umí. Pravidlo výběru zůstává v js/porovnani.js (ukazka) —
          tady se jen spočítá, ve kterém okresu je nejsilnější skupina
          jednoho druhu, aby si stránka mohla vzít JEDEN řez místo
-         celých dat. Kdyby ta nápověda nesedla, stránka sáhne po celku,
-         takže se tím nedá nic rozbít, jen zdržet. */
-      if (nabidka && nabidka.okres && nabidka.druh && nabidka.price && nabidka.area) {
+         celých dat.
+
+         POČÍTÁ SE JEN TO, CO STRÁNKA UNESE — OPRAVENO 11. 11.
+         Do té doby stačilo, že nabídka má okres, druh, cenu a výměru.
+         Jenže ukázka srovnává nabídky CENOU ZA METR a `zaMetr()` je
+         úmyslně jen pozemková (js/ceny.js to má rozepsané: byt za
+         122 421 Kč/m² podlahové plochy v jedné stupnici s polem za
+         44 Kč/m² znamená, že každý pozemek vyjde jako zdarma). Jak
+         do dat přibyly byty, vyšel jako nejbohatší Sokolov — šest
+         bytů v jedné skupině —, kdežto pozemkové skupiny měl po dvou.
+         Stránka tedy z toho řezu nevybrala nic a ukázka úplně zmizela;
+         shodilo to tři hlídače v prohlížeči (test-porovnani,
+         test-sazba-dom). Tady se proto počítá přímo tím, čím měří
+         stránka: `CENY.zaMetr()` musí dát číslo. Je to táž funkce,
+         ne druhý opis pravidla — hlídačem je zkouška v prohlížeči.
+
+         A TA ZÁLOŽNÍ CESTA DŘÍV NEEXISTOVALA. Komentář tu tvrdil, že
+         „kdyby nápověda nesedla, stránka sáhne po celku, takže se tím
+         nedá nic rozbít" — nebyla to pravda: js/porovnani.js sahal po
+         celku jen při PRÁZDNÉM řezu, ne když v něm chybí vhodná
+         trojice. Doplněno i tam, takže ta věta platí teprve teď. */
+      if (nabidka && nabidka.okres && nabidka.druh && CENY.zaMetr(nabidka) != null) {
         poDruhu.set(nabidka.druh, (poDruhu.get(nabidka.druh) || 0) + 1);
       }
     }

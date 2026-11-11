@@ -152,9 +152,14 @@
     return idx.map(function (i) { return vyber[i].d; });
   }
 
+  var celekZkusen = false;
   function sUkazkou(D) {
     var tri = ukazka(D);
-    if (!tri.length) return;
+    if (!tri.length) {
+      if (celekZkusen) return;
+      celekZkusen = true;
+      return celek().then(sUkazkou).catch(function () {});
+    }
     host.insertAdjacentHTML('beforeend',
       '<div class="por-ukazka"><h3>Takhle to vypadá</h3>'
       + '<p class="por-pozn">Tohle <b>nejsou</b> vaše uložené pozemky — jsou to tři '

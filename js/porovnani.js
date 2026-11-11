@@ -251,9 +251,37 @@
     return idx.map(function (i) { return vyber[i].d; });
   }
 
+  /* KDYŽ Z ŘEZU UKÁZKA NEVYJDE, DOJDI SI PRO CELEK — JEDEN POKUS.
+     ====================================================================
+     Řez, ze kterého se ukázka staví, vybírá sestavení (nápověda
+     `ukazka` v data/klice-okresu.json) podle nejsilnější skupiny
+     jednoho druhu v okrese. Do 11. 11. ta nápověda nepočítala s tím,
+     že ukázka srovnává CENOU ZA METR a `zaMetr()` je úmyslně jen
+     pozemková: jak do dat přibyly byty, ukázala na Sokolov — šest
+     bytů v jedné skupině, pozemkové skupiny po dvou. Stránka tedy
+     dostala plný řez, ukazka() z něj nevybrala nic a ukázka beze
+     slova zmizela; padli na tom tři hlídači v prohlížeči.
+
+     Nápověda je opravená u zdroje (scripts/generate-data-rezy.mjs
+     počítá jen nabídky, u nichž `zaMetr()` dá číslo), ale záloha patří
+     i sem — stránka se nemá rozbít proto, že nápověda zestárla s daty.
+
+     ZÁLOHA JE AŽ TADY, NE V data(). Napsal jsem ji nejdřív do
+     načítání, jako `D.length && ukazka(D).length ? D : celek()`.
+     Zkouška test-porovnani ji při čtyřech zkouškách naráz shodila:
+     ověřuje totiž, že se bez uložených pozemků NESTAHUJE celek
+     (1,7 MB), a tenhle tvar si o něj při nepřízni času řekl. Tady se
+     zaplatí jen tehdy, když ukázka opravdu není z čeho složit, a jen
+     jednou — opakovaný prázdný výběr už mlčí, ať se stránka nedostane
+     do kruhu. */
+  var celekZkusen = false;
   function sUkazkou(D) {
     var tri = ukazka(D);
-    if (!tri.length) return;      // bez vhodné trojice zůstane jen vysvětlení
+    if (!tri.length) {
+      if (celekZkusen) return;    // bez vhodné trojice zůstane jen vysvětlení
+      celekZkusen = true;
+      return celek().then(sUkazkou).catch(function () {});
+    }
     host.insertAdjacentHTML('beforeend',
       '<div class="por-ukazka"><h3>Takhle to vypadá</h3>'
       + '<p class="por-pozn">Tohle <b>nejsou</b> vaše uložené pozemky — jsou to tři '

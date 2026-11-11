@@ -201,7 +201,11 @@ const bezMrizky = (u) => String(u).split('#')[0];
   await p.waitForTimeout(500);
   pravda('Enter na „Uložit" neodejde z výpisu', bezMrizky(p.url()) === predtim, p.url());
   const popisek = await p.locator('#opp-list .opp-item').first().locator('.opp-fav').getAttribute('aria-label');
-  pravda('Enter na „Uložit" pozemek opravdu uloží', /Odebrat/.test(popisek || ''), 'popisek tlačítka: ' + popisek);
+  /* Hledá se „Uloženo" na začátku popisku, ne samotné „Odebrat":
+     od 11. 11. zní jméno „Uloženo — odebrat z uložených", aby začínalo
+     tím, co je na tlačítku vidět (WCAG 2.5.3, Label in Name). */
+  pravda('Enter na „Uložit" pozemek opravdu uloží',
+    /^Uloženo —/.test(popisek || ''), 'popisek tlačítka: ' + popisek);
   /* A MYŠÍ TAKY — MĚŘENO, NE KLEPNUTO. Plocha odkazu jde přes celou
      kartu, takže kdyby ležela NAD tlačítky, prst by místo uložení
      odešel na pozemek. Napoprvé tu stálo prosté `.click()`: sabotáž

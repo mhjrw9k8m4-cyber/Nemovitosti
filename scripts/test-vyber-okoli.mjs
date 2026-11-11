@@ -167,14 +167,34 @@ let slibenyPocet = null;
   /* ---- 5) slíbený počet je PRAVDA ---- */
   if (!await klikni(p, '#vm-ok', 'výběr se dá potvrdit')) { await ctx.close(); await prohlizec.close(); hotovo(); }
   await p.waitForTimeout(2500);
-  const vysledek = await p.evaluate(() => ({
-    zavreno: !document.querySelector('.vm-panel'),
-    karet: document.querySelectorAll('.opp-item').length,
-  }));
+  const vysledek = await p.evaluate(() => {
+    const kde = document.querySelector('.opp-strany .ops-kde');
+    const m = kde && kde.textContent.match(/z\s*([\d\s\u00a0]+)/);
+    return {
+      zavreno: !document.querySelector('.vm-panel'),
+      karet: document.querySelectorAll('.opp-item').length,
+      stran: m ? +m[1].replace(/[\s\u00a0]/g, '') : 1,
+    };
+  });
   pravda('potvrzením se okno zavře', vysledek.zavreno, 'okno zůstalo otevřené');
+  /* VÝPIS JE STRÁNKOVANÝ — SLIB SE TEDY POROVNÁVÁ S CELÝM VÝPISEM,
+     ne s první stránkou. Do 11. 11. se tu žádalo `karet === slib`
+     a procházelo to jen proto, že okolí Tišnova bylo menší než jedna
+     strana. Jak nabídek přibylo, slíbilo okno 26 a první strana jich
+     unese 24 (NA_STRANKU v js/main.js) — zkouška padla, i když web
+     ukázal správně 24 z 26 a pod nimi patku „Strana 1 z 2".
+     Hlídá se proto to, co má smysl: první strana je plná a počet stran
+     ze stránky samé ten slib přesně pokrývá. Je to ostřejší než
+     původní podmínka: chytí i o jednu stranu víc i o jednu míň.
+     Počet na stranu se tu nikde nepíše napevno, čte se z výpisu. */
+  const naStranu = vysledek.stran > 1 ? vysledek.karet : (+slibenyPocet || 0);
+  const pokryto = vysledek.stran > 1
+    ? (vysledek.stran - 1) * naStranu < +slibenyPocet && +slibenyPocet <= vysledek.stran * naStranu
+    : vysledek.karet === +slibenyPocet;
   pravda('a ve výpisu je přesně tolik pozemků, kolik okno slíbilo',
-    slibenyPocet && vysledek.karet === +slibenyPocet,
-    `okno slíbilo ${slibenyPocet}, ve výpisu je ${vysledek.karet}`);
+    !!slibenyPocet && pokryto,
+    `okno slíbilo ${slibenyPocet}, na první straně je ${vysledek.karet}`
+    + ` a stran je ${vysledek.stran}`);
   pravda('a nic se u toho v prohlížeči nerozbilo', chybyJs.length === 0, chybyJs.join(' | '));
   await ctx.close();
 }
