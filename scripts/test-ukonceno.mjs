@@ -21,6 +21,7 @@ import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { otisk } from './generate-parcel-pages.mjs';
 
 /* PRACUJE SE V KOPII, NE V ŽIVÉM ADRESÁŘI.
    ==================================================================
@@ -166,7 +167,19 @@ try {
      v datech nikdo nemá, klíč bez obce se nespáruje a větev je zaručeně
      ta ukončovací. Okres v názvu souboru zůstává pravý, takže podobné
      pozemky se k ní dál najdou. */
+  /* A S OTISKEM ADRESY INZERÁTU TOTÉŽ, JEN JEŠTĚ DŮRAZNĚJI (11. 11.).
+     Ostrůvek od 11. 11. nese `u` — otisk adresy inzerátu, tedy
+     totožnost, kterou posun souřadnic NEZMĚNÍ; to je přesně účel.
+     Kopie si ho ale brala s sebou, takže generátor ji správně spároval
+     s živou nabídkou a udělal z ní rozcestí — a devět kontrol téhle
+     zkoušky začalo měřit jinou větev (hlásily „pruh chybí", „bez data"
+     a podobně). Fixtura má představovat nabídku, která Z TRHU ODEŠLA:
+     u takové nedrží adresu inzerátu žádná živá nabídka, a tak se otisk
+     z kopie odebírá. Není to obcházení hlídače — je to rozdíl mezi
+     „nabídka se přestěhovala" a „nabídka zmizela", a tahle zkouška
+     měří to druhé. To první měří oddíl na konci souboru. */
   const posun = (t) => String(t)
+    .replace(/,?"u":"[0-9a-z]{5,8}"/g, '')
     .replace(/"k":"([^"|]*)\|([^"|]*)\|([^"|]*)\|(-?\d+(?:\.\d+)?)\|(-?\d+(?:\.\d+)?)"/g,
       (_, o, p, ok, la, lo) => `"k":"${o}|${p}|${ok}|${(Number(la) - 0.002).toFixed(3)}|`
         + `${(Number(lo) - 0.002).toFixed(3)}"`)
@@ -349,6 +362,58 @@ try {
     zleUkoncene.length === 0, zleUkoncene.slice(0, 4).join(' | '));
   pravda('a žádné živé stránce se to pravidlo nerozlilo',
     zleZive.length === 0, zleZive.slice(0, 4).join(' | '));
+}
+
+/* ---- POSUN POLOHY NESMÍ UKONČIT NABÍDKU, KTERÁ JE NA TRHU ----------
+   Klíč stránky nese souřadnice na tři desetinná místa, takže posun
+   o sto metrů z nabídky udělá „jinou" nabídku: stará stránka osiří
+   a sestavení ji orazítkuje jako ukončenou, zatímco vedle vznikne nová.
+   NAMĚŘENO 11. 11. na ostrých datech: 8. 11. se takhle „ukončilo"
+   8 490 stránek a 5 754 z nich má dnes mezi živými nabídkami dvojníka
+   se stejnou obcí, okresem, cenou i výměrou — neodešly z trhu, jen
+   dostaly jiný klíč. Archiv zmizelých přitom ten den zaznamenal 52
+   odchodů, takže „tenhle pozemek odešel z nabídky" lhalo tisícům
+   uložených položek.
+   Od 11. 11. nese ostrůvek `u` — otisk adresy inzerátu, tedy
+   totožnost, která se s polohou nehýbe. Tahle zkouška to prokazuje
+   naostro: vezme živou stránku s otiskem, posune nabídce zeměpisnou
+   šířku o 0,01° (to je jiný klíč i jiné jméno souboru), pustí generátor
+   a stará adresa musí zůstat ROZCESTÍM k nové, ne hrobem. */
+{
+  const dataCesta = path.join(KOREN, 'data', 'opportunities.json');
+  const zivaSOtiskem = readdirSync(KOREN)
+    .filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f))
+    .map((f) => ({ f, h: readFileSync(path.join(KOREN, f), 'utf8') }))
+    .find((x) => x.h.indexOf('PK_UKONCENO') < 0 && /"u":"[0-9a-z]{5,8}"/.test(x.h)
+      && !/window\.PK_PRESUNUTO=/.test(x.h));
+  pravda('je co měřit — živá stránka s otiskem adresy inzerátu', !!zivaSOtiskem,
+    'žádná živá stránka nenese v ostrůvku "u" — pak tahle část neměří nic');
+  if (zivaSOtiskem && existsSync(dataCesta)) {
+    const mujOtisk = (/"u":"([0-9a-z]{5,8})"/.exec(zivaSOtiskem.h) || [])[1];
+    const data = JSON.parse(readFileSync(dataCesta, 'utf8'));
+    const pole = data.opportunities || data;
+    const nabidka = pole.find((o) => typeof o.url === 'string' && o.url && otisk(o.url) === mujOtisk);
+    pravda('a k ní se v datech našla nabídka podle téhož otisku', !!nabidka,
+      'otisk ' + mujOtisk + ' není v datech — pak párování podle adresy neplatí ani pro ni');
+    if (nabidka) {
+      const puvodniSoubor = zivaSOtiskem.f;
+      /* 0,01° je skoro kilometr, tedy jistě jiné třetí desetinné místo
+         — a tedy jiný klíč i jiné jméno souboru. */
+      nabidka.lat = Math.round((nabidka.lat + 0.01) * 1e6) / 1e6;
+      writeFileSync(dataCesta, JSON.stringify(data));
+      generuj();
+      const poBehu = existsSync(path.join(KOREN, puvodniSoubor))
+        ? readFileSync(path.join(KOREN, puvodniSoubor), 'utf8') : '';
+      pravda('stará adresa po posunu polohy nezmizela', !!poBehu,
+        puvodniSoubor + ' se smazal — uložený odkaz by vrátil 404');
+      pravda('a NENÍ označená jako ukončená (nabídka je přitom na trhu)',
+        !!poBehu && poBehu.indexOf('PK_UKONCENO') < 0,
+        'stránka dostala PK_UKONCENO, i když nabídka jen změnila polohu');
+      pravda('ale je z ní rozcestí k nové adrese',
+        !!poBehu && (/window\.PK_PRESUNUTO=/.test(poBehu) || /pz-presun/.test(poBehu)),
+        'není tam ani PK_PRESUNUTO, ani pruh pz-presun — člověk se nedozví, kam nabídka šla');
+    }
+  }
 }
 
 hotovo();

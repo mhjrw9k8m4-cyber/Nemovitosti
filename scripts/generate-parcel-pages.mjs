@@ -1736,7 +1736,21 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        hlavně míň práce pro parser v telefonu.
        Cesta stojí tady, protože okres zná generátor; stránka by si ho
        z vlastního HTML musela luštit. */
-    + `<script>window.PK_POZEMEK=${jsonVeStrance(Object.assign({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` }, historieCeny(d) ? { h: historieCeny(d) } : {}, parcelaZTextu(d) ? { pc: parcelaZTextu(d) } : {}, presnostVsechDruhu() ? { ch: presnostVsechDruhu() } : {}))};</scr` + `ipt>\n$1`);
+    + `<script>window.PK_POZEMEK=${jsonVeStrance(Object.assign({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` },
+      /* OTISK ADRESY INZERÁTU = TOTOŽNOST, KTERÁ SE NEHÝBE.
+         Klíč `k` nese souřadnice na tři desetinná místa, takže stačí,
+         aby geokodér vrátil o sto metrů jinak, a nabídka má jiný klíč,
+         jiné jméno souboru — a sestavení ji nepozná. NAMĚŘENO 11. 11.:
+         8. 11. se takhle „ukončilo" 8 490 stránek a 5 754 z nich má
+         dnes mezi živými nabídkami dvojníka se STEJNOU obcí, okresem,
+         cenou i výměrou. Neodešly tedy z trhu, jen si změnily klíč.
+         Adresa inzerátu je naproti tomu jednoznačná: ze 3 992 nabídek
+         ji má 3 556 (89 %) a 3 555 z nich je jedinečných. Ukládá se
+         jako otisk (táž funkce jako v názvech souborů), aby stránka
+         nepřibrala osmdesát bajtů na dlouhou adresu.
+         Co adresu nemá, jsou nabídky státu (SPÚ, ÚZSVM) — u těch
+         párování podle klíče zůstává. */
+      (typeof d.url === 'string' && d.url ? { u: otisk(d.url) } : {}), historieCeny(d) ? { h: historieCeny(d) } : {}, parcelaZTextu(d) ? { pc: parcelaZTextu(d) } : {}, presnostVsechDruhu() ? { ch: presnostVsechDruhu() } : {}))};</scr` + `ipt>\n$1`);
   /* POPIS OD INZERENTA, vepsaný rovnou do stránky. Leží v samostatném
      souboru (data/popisy.json), protože do opportunities.json, který čte
      úvodní stránka, nepatří — přidal by k němu zhruba megabajt. Sem se
@@ -2160,11 +2174,16 @@ export function generuj() {
   const klicBezObce = (k) => String(k || '').split('|').slice(1).join('|');
   const ziveBezObce = new Map();
   const ziveObce = new Set();
+  /* A TOTÉŽ PODLE OTISKU ADRESY INZERÁTU (viz ostrůvek výš). Tohle je
+     párování podle totožnosti, ne podle podobnosti: adresa inzerátu se
+     s posunem souřadnic ani s přepsanou obcí nemění. */
+  const ziveDleAdresy = new Map();
   for (const { d, soubor } of mapa.values()) {
     if (poTerminu(d)) continue;
     const bez = klicBezObce(pkey(d));
     if (bez.replace(/\|/g, '')) ziveBezObce.set(bez, { soubor, place: d.place });
     if (d.place) ziveObce.add(slug(d.place));
+    if (typeof d.url === 'string' && d.url) ziveDleAdresy.set(otisk(d.url), { soubor, place: d.place });
   }
   let smazano = 0, ukonceno = 0, prepsano = 0, prestehovano = 0;
   const zmizele = [];
@@ -2223,8 +2242,17 @@ export function generuj() {
     const presun = /window\.PK_PRESUNUTO="(\d{4}-\d{2}-\d{2})"/.exec(obsah);
     const mujKlic = (/window\.PK_POZEMEK=\{"k":"((?:[^"\\]|\\.)*)"/.exec(obsah) || [])[1];
     const mojeObec = mujKlic ? mujKlic.replace(/\\"/g, '"').split('|')[0] : '';
-    const jinde = mujKlic && mojeObec && !ziveObce.has(slug(mojeObec))
-      ? ziveBezObce.get(klicBezObce(mujKlic.replace(/\\"/g, '"'))) : null;
+    /* NEJDŘÍV PODLE ADRESY INZERÁTU, teprve pak podle klíče bez obce.
+       Pořadí je záměr: otisk adresy je jednoznačný (3 555 jedinečných
+       z 3 556), takže nepotřebuje žádnou z opatrných podmínek, které si
+       vyžádala heuristika podle obce — a chytí i to, co ona nechytí:
+       posunuté souřadnice, přepsané parcelní číslo, obojí naráz.
+       Stránky vyrobené před 11. 11. otisk v ostrůvku nemají, takže
+       propadnou na dosavadní cestu; nové ho nesou od prvního sestavení. */
+    const mujOtiskAdresy = (/window\.PK_POZEMEK=\{(?:[^<]*?)"u":"([0-9a-z]{5,8})"/.exec(obsah) || [])[1];
+    const dleAdresy = mujOtiskAdresy ? ziveDleAdresy.get(mujOtiskAdresy) : null;
+    const jinde = dleAdresy || (mujKlic && mojeObec && !ziveObce.has(slug(mojeObec))
+      ? ziveBezObce.get(klicBezObce(mujKlic.replace(/\\"/g, '"'))) : null);
     if (jinde && jinde.soubor !== f) {
       if (presun) {
         const stari = (Date.parse(dnes) - Date.parse(presun[1])) / 86400000;
