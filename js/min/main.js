@@ -4071,6 +4071,10 @@
   if (akceZrusit) akceZrusit.addEventListener('click', function () {
     resetFilters();
     zavriPanely(null);
+
+    if (akceHotovo && !akceHotovo.disabled) {
+      try { akceHotovo.focus({ preventScroll: true }); } catch (e) { akceHotovo.focus(); }
+    }
     scrollNaVypis();
   });
 

@@ -489,6 +489,69 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
         fav.on = stav ? stav.on : fav.on;
       }
     }
+    /* 4d) OVLADAČ, KTERÝ SE PO KLEPNUTÍ SÁM SCHOVÁ, NESMÍ UPUSTIT
+       ZAMĚŘENÍ. „Zrušit filtry" zruší filtry a tím zmizí — není co
+       rušit. Naměřeno 11. 11. na 390×844: activeElement === body, tedy
+       kdo jede klávesnicí, se ocitne na začátku dokumentu a zpátky
+       k filtrům se protabuje přes lištu, hledání a pět otvíračů.
+       Je to táž vada jako u skrytí karty (oddíl 1), jen se o ni
+       nestará vratZamereni(): výpis se překresluje v pořádku, zmizí
+       SÁM OVLADAČ, a o to se musí postarat jeho obsluha.
+       MĚŘÍ SE OBOJE. Samotné „zaměření není na body" by prošlo i tehdy,
+       kdyby tlačítko filtry vůbec nezrušilo — kontroluje se proto
+       i odznak počtu filtrů. A kdyby se nepodařilo filtr vůbec zapnout,
+       hlásí se to jako nález, ne jako pád na časový limit (viz
+       scripts/zkouska-pad.mjs). */
+    await cistaStranka();
+    const zapnuto = await p.evaluate(() => {
+      const d = document.getElementById('mf-druh');
+      if (d) d.open = true;
+      const pilulky = [].slice.call(document.querySelectorAll('#mf-druh .filter-chip'));
+      /* „Vše" filtr nezapíná — je to výchozí stav, po kterém se
+         „Zrušit filtry" neukáže (naměřeno). */
+      const cil = pilulky.filter((c) => !/^Vše/.test((c.textContent || '').trim()))[0];
+      if (!cil) return null;
+      cil.click();
+      return (cil.textContent || '').replace(/\s+/g, ' ').trim();
+    });
+    const prisloZrusit = zapnuto ? await p.waitForFunction(() => {
+      const z = document.getElementById('mcf-zrusit');
+      return !!z && !z.hidden && z.getBoundingClientRect().height > 0;
+    }, null, { timeout: 8000 }).then(() => true).catch(() => false) : false;
+    pravda('filtry: po zapnutí filtru se ukáže „Zrušit filtry"', prisloZrusit,
+      zapnuto ? `filtr „${zapnuto}" se zapnul, ale tlačítko zůstalo schované` : 'v panelu druhu není žádná pilulka kromě „Vše"');
+    if (prisloZrusit) {
+      await p.evaluate(() => { const d = document.getElementById('mf-druh'); if (d) d.open = false; });
+      const zamerilo = await p.evaluate(() => {
+        const z = document.getElementById('mcf-zrusit');
+        z.focus();
+        return document.activeElement === z;
+      });
+      pravda('filtry: na „Zrušit filtry" jde zaměření klávesnicí', zamerilo,
+        'tlačítko nejde zaměřit — zkouška níž by měřila něco jiného');
+      if (zamerilo) {
+        await p.click('#mcf-zrusit');
+        await p.waitForFunction(() => {
+          const z = document.getElementById('mcf-zrusit');
+          return !!z && z.hidden;
+        }, null, { timeout: 8000 }).catch(() => {});
+        const stav = await p.evaluate(() => {
+          const a = document.activeElement;
+          const od = document.getElementById('msf-badge');
+          return {
+            schovano: (document.getElementById('mcf-zrusit') || {}).hidden === true,
+            filtruSe: !!od && !od.hidden && (od.textContent || '').trim() !== '',
+            naBody: !a || a === document.body || a === document.documentElement,
+            kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '.' + ((typeof a.className === 'string' ? a.className : '').split(' ')[0] || ''))) : 'nic',
+            vOvladani: !!(a && a.closest && a.closest('#mcf-akce, #mc-rada, .mcp-hledani, .ms-vysledky'))
+          };
+        });
+        pravda('filtry: „Zrušit filtry" filtry opravdu zrušilo', stav.schovano && !stav.filtruSe,
+          JSON.stringify(stav));
+        pravda(`filtry: a zaměření nespadlo na <body> (${stav.kdo})`, !stav.naBody && stav.vOvladani,
+          'zaměření skončilo na ' + stav.kdo + ' — klávesnicí se člověk octne na začátku dokumentu');
+      }
+    }
     pravda('výpis: nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.join(' | '));
   }
   await ctx.close();

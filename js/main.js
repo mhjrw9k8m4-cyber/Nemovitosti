@@ -6724,6 +6724,23 @@
   if (akceZrusit) akceZrusit.addEventListener('click', function () {
     resetFilters();
     zavriPanely(null);
+    /* ZAMĚŘENÍ KLÁVESNICE NESMÍ SPADNOUT NA <body>. Tohle tlačítko
+       zrušením filtrů SAMO ZMIZÍ (prekresliAkceFiltru je schová, když
+       není co rušit), takže prohlížeč zaměření upustí — naměřeno
+       11. 11. na 390×844: activeElement === body. Kdo jede klávesnicí,
+       se tím ocitne na začátku dokumentu a zpátky k filtrům se
+       protabuje přes lištu, hledání a pět otvíračů.
+       Je to táž zásada jako u vratZamereni() výš, jen tam se ruší VÝPIS
+       a tady sám ovladač — proto se o to musí postarat obsluha.
+       BERE HO SOUSED V TÉŽE ŘADĚ, KTERÝ ZŮSTÁVÁ. „Zobrazit N" stojí
+       vedle a po zrušení filtrů nabídky nikdy nezmizí, takže je vždy
+       povolené; výpis by byl horší cíl, protože akce se stala
+       v ovládání filtrů a tam má člověk zůstat.
+       preventScroll: pohled posouvá scrollNaVypis() o řádek níž, ne
+       zaměření — jinak by se stránka hnula dvakrát. */
+    if (akceHotovo && !akceHotovo.disabled) {
+      try { akceHotovo.focus({ preventScroll: true }); } catch (e) { akceHotovo.focus(); }
+    }
     scrollNaVypis();
   });
 
