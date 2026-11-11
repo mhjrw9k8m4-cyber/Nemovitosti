@@ -222,6 +222,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlidac-zdroju.mjs
 
+      - name: Mezipaměť geokodéru si nepamatuje „nevím" jako „neexistuje"
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-geokoder-pamet.mjs
+
       - name: Čtení PDF přečte text a přizná, co neumí
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cti-pdf.mjs

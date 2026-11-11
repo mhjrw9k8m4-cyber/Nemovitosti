@@ -554,6 +554,68 @@ export function jitterVCesku(lat, lng, seedStr, amp) {
   return okresPodleHranice(j.lat, j.lng) ? j : { lat, lng };
 }
 
+/* ============================================================
+   „NEVÍM" NENÍ „NEEXISTUJE" — a mezipaměť to musí rozlišit.
+   ============================================================
+   Všechny tři dotazy do geokodéru měly tenhle tvar:
+
+       try { … if (r.ok) { … } } catch { (síť selhala, mlčky) }
+       GEO_CACHE[key] = coord;      // i když se nikdo nezeptal
+
+   Jedno zaškobrtnutí sítě, jedno 429 od Nominatimu nebo jedna
+   odpověď, která se nepřečte jako JSON, se tedy do mezipaměti
+   zapsala jako platná odpověď „tohle místo v Česku není". A protože
+   se mezipaměť commituje a `key in GEO_CACHE` se ptá na PŘÍTOMNOST
+   klíče, zůstalo by to tam navždy: nabídka by neměla okres, nedostala
+   by se na web a nikdo by se nedozvěděl proč. Nominatim přitom
+   omezuje tempo (asi dotaz za sekundu) a při 429 `stahni` po
+   vyčerpání pokusů vyhodí výjimku — tedy právě ten případ.
+   JEN SKUTEČNÁ ODPOVĚĎ SE PAMATUJE. Prázdné pole od Nominatimu je
+   odpověď („v Česku nic takového neznám") a pamatuje se dál — na tom
+   stojí úspora u zahraničních adres, které by se jinak ptaly každou
+   noc znovu.
+   A KDYŽ SLUŽBA ODMÍTÁ V ŘADĚ, PŘESTANE SE PTÁT. Pět nezdarů za
+   sebou znamená, že je zeď, ne náhoda; bez téhle zarážky by se běh
+   protáhl o jeden a půl sekundy za každé zbylé jméno (při tisíci
+   jmen půl hodiny) a nezapsal by se ani jeden výsledek. */
+export const GEO_SELHANI_STROP = 5;
+let geoSelhaniVRade = 0;
+let geoZedOhlasena = false;
+
+/** Zeptá se geokodéru. `odpovedel` je false, když se nešlo zeptat. */
+export async function geoDotaz(url, volby = {}, stahniFn = stahni) {
+  try {
+    const r = await stahniFn(url, volby);
+    if (!r || !r.ok) return { odpovedel: false, proc: 'stav ' + (r ? r.status : 'bez odpovědi') };
+    let data;
+    try { data = await r.json(); } catch (e) { return { odpovedel: false, proc: 'odpověď není JSON' }; }
+    return { odpovedel: true, data: data };
+  } catch (e) {
+    return { odpovedel: false, proc: String((e && e.message) || e) };
+  }
+}
+
+/** Zapíše do mezipaměti JEN skutečnou odpověď. Vrací, zda zapsal. */
+export function geoZapis(cache, key, hodnota, odpovedel) {
+  if (!odpovedel) return false;
+  cache[key] = hodnota;
+  return true;
+}
+
+/** Ptá se geokodéru ještě vůbec? Po GEO_SELHANI_STROP nezdarech ne. */
+export function geoZed() { return geoSelhaniVRade >= GEO_SELHANI_STROP; }
+export function geoPoDotazu(odpovedel, kde) {
+  if (odpovedel) { geoSelhaniVRade = 0; return; }
+  geoSelhaniVRade++;
+  if (geoZed() && !geoZedOhlasena) {
+    geoZedOhlasena = true;
+    console.log(`Geokodér neodpověděl ${geoSelhaniVRade}× v řadě (naposledy ${kde}) —`
+      + ' do konce běhu se už neptám a nic si nepamatuju jako „místo neexistuje".');
+  }
+}
+/* Jen pro zkoušku: stav počítadla se musí dát vrátit na začátek. */
+export function geoStavReset() { geoSelhaniVRade = 0; geoZedOhlasena = false; }
+
 // Přesnější poloha podle názvu katastrálního území (Nominatim / OpenStreetMap).
 const GEO_UA = { 'user-agent': BOT_UA };
 /* Okres se dosud předával jen do klíče mezipaměti, ale do DOTAZU ne — ptali
@@ -568,17 +630,16 @@ async function geocodeName(place, okres) {
   const key = (place + '|' + okres).toLowerCase();
   if (key in GEO_CACHE) return GEO_CACHE[key];
   const stred = OKRESY_MAP[okres] || null;
+  if (geoZed()) return null;
   let coord = null;
-  try {
-    const q = encodeURIComponent(place + (okres ? ', okres ' + okres : '') + ', Česko');
-    const r = await stahni(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j)) {
-        for (const v of j) {
-          const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
-          if (!isFinite(la) || !isFinite(ln)) continue;
-          /* DVĚ PODMÍNKY, NE JEDNA. polohaSediSOkresem měří jen
+  const q = encodeURIComponent(place + (okres ? ', okres ' + okres : '') + ', Česko');
+  const odp = await geoDotaz(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
+  geoPoDotazu(odp.odpovedel, place);
+  if (Array.isArray(odp.data)) {
+    for (const v of odp.data) {
+      const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
+      if (!isFinite(la) || !isFinite(ln)) continue;
+      /* DVĚ PODMÍNKY, NE JEDNA. polohaSediSOkresem měří jen
              VZDÁLENOST od středu okresu (55 km), takže bod za hranicí
              republiky jí projde — a taky projel: naměřeno 8. 11. 2026
              u „Loučné pod Klínovcem" (obec leží přímo na hranici),
@@ -586,16 +647,13 @@ async function geocodeName(place, okres) {
              okrese, a na webu o českých nemovitostech visela nabídka
              v Německu. Hranice okresů tu rozhodují TOUŽ funkcí, jakou
              se ptá geocodeObec i zkouška scripts/test-data.mjs. */
-          if (maHranice() && !okresPodleHranice(la, ln)) continue;
-          if (!polohaSediSOkresem(la, ln, okres)) continue;
-          coord = [la, ln];
-          break;
-        }
-      }
+      if (maHranice() && !okresPodleHranice(la, ln)) continue;
+      if (!polohaSediSOkresem(la, ln, okres)) continue;
+      coord = [la, ln];
+      break;
     }
-  } catch { /* síť selhala – necháme null */ }
-  GEO_CACHE[key] = coord;
-  geoCacheDirty = true;
+  }
+  if (geoZapis(GEO_CACHE, key, coord, odp.odpovedel)) geoCacheDirty = true;
   await sleep(1100); // Nominatim: max ~1 dotaz/s
   return coord;
 }
@@ -614,27 +672,23 @@ async function geocodeName(place, okres) {
 async function geocodeObec(place) {
   const key = (place + '|*').toLowerCase();
   if (key in GEO_CACHE) return GEO_CACHE[key];
+  if (geoZed()) return null;
   let coord = null;
-  try {
-    const q = encodeURIComponent(place + ', Česko');
-    const r = await stahni(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j)) {
-        for (const v of j) {
-          const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
-          if (!isFinite(la) || !isFinite(ln)) continue;
-          /* Hranice okresů rozhodují: bod musí ležet v některém z nich.
-             Bez toho by se sem dostal i bod za hranicemi republiky. */
-          if (maHranice() && !okresPodleHranice(la, ln)) continue;
-          coord = [la, ln];
-          break;
-        }
-      }
+  const q = encodeURIComponent(place + ', Česko');
+  const odp = await geoDotaz(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
+  geoPoDotazu(odp.odpovedel, place);
+  if (Array.isArray(odp.data)) {
+    for (const v of odp.data) {
+      const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
+      if (!isFinite(la) || !isFinite(ln)) continue;
+      /* Hranice okresů rozhodují: bod musí ležet v některém z nich.
+         Bez toho by se sem dostal i bod za hranicemi republiky. */
+      if (maHranice() && !okresPodleHranice(la, ln)) continue;
+      coord = [la, ln];
+      break;
     }
-  } catch { /* síť selhala — necháme null */ }
-  GEO_CACHE[key] = coord;
-  geoCacheDirty = true;
+  }
+  if (geoZapis(GEO_CACHE, key, coord, odp.odpovedel)) geoCacheDirty = true;
   await sleep(1100); // Nominatim: max ~1 dotaz/s
   return coord;
 }
@@ -705,14 +759,13 @@ async function castPodleGPS(lat, lng) {
      v téže čtvrti sdílejí odpověď a Nominatim se neptá zbytečně. */
   const key = 'cast|' + (+lat).toFixed(3) + ',' + (+lng).toFixed(3);
   if (key in GEO_CACHE) return GEO_CACHE[key];
+  if (geoZed()) return null;
   let cast = null;
-  try {
-    const u = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language=cs&lat=${lat}&lon=${lng}`;
-    const r = await stahni(u, { headers: OBEC_UA });
-    if (r.ok) cast = castZOdpovedi(await r.json());
-  } catch { /* síť selhala – zůstane bez čtvrti, nic se nerozbije */ }
-  GEO_CACHE[key] = cast;
-  geoCacheDirty = true;
+  const u = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language=cs&lat=${lat}&lon=${lng}`;
+  const odp = await geoDotaz(u, { headers: OBEC_UA });
+  geoPoDotazu(odp.odpovedel, key);
+  if (odp.odpovedel) cast = castZOdpovedi(odp.data);
+  if (geoZapis(GEO_CACHE, key, cast, odp.odpovedel)) geoCacheDirty = true;
   await sleep(1100); // Nominatim: max ~1 dotaz/s
   return cast;
 }

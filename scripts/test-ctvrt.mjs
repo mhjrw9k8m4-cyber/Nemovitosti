@@ -81,8 +81,20 @@ je('ani odpověď bez adresy', castZOdpovedi({ error: 'Unable to geocode' }), nu
 pravda('čtvrť se dohledává jen u souřadnic od zdroje',
   /if \(!o\._gps \|\| !jenObec\(o\.place, o\.okres\)\) continue;/.test(ROBOT),
   'robot se ptá i u poloh, které si sám dopočítal — pak by čtvrť byla vymyšlená');
-pravda('odpovědi se ukládají do mezipaměti', /GEO_CACHE\[key\] = cast;/.test(ROBOT),
+/* TVAR ZÁPISU SE 11. 11. ZMĚNIL, A TVRZENÍ S NÍM ZESÍLILO.
+   Dřív tu stálo `GEO_CACHE[key] = cast;` — zapiš vždycky. Jenže tím
+   se do mezipaměti dostala i NEODPOVĚĎ (výpadek sítě, 429 od
+   Nominatimu, odpověď, která se nepřečte jako JSON) jako platné
+   „tohle místo neexistuje", a protože se mezipaměť commituje a ptá se
+   na přítomnost klíče, bylo to navždy. Zápis proto jde přes geoZapis(),
+   který skutečnou odpověď od nezdaru rozlišuje (hlídá
+   scripts/test-geokoder-pamet.mjs). Kontrola tu zůstává, protože její
+   tvrzení platí dál — odpovědi se MAJÍ pamatovat — a hlídá navíc, aby
+   se nevrátil bezpodmínečný zápis. */
+pravda('odpovědi se ukládají do mezipaměti', /geoZapis\(GEO_CACHE, key, cast, odp\.odpovedel\)/.test(ROBOT),
   'bez mezipaměti se Nominatimu klepe na dveře při každém běhu znovu');
+pravda('a nezdar se do ní nezapisuje', !/GEO_CACHE\[key\] = cast;/.test(ROBOT),
+  'vrátil se bezpodmínečný zápis — jeden výpadek sítě by jméno vyřadil navždy');
 pravda('a mezi dotazy se čeká', /castPodleGPS[\s\S]{0,1200}?await sleep\(/.test(ROBOT),
   'Nominatim má limit ~1 dotaz za vteřinu');
 /* Čtvrť se nesmí zapsat do `place`: to je v klíči pozemku (place|parcel|

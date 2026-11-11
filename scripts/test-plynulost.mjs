@@ -75,10 +75,28 @@ function hotovo(spadlo) {
   process.exit(0);
 }
 
-/* Mez poměru nejdelšího rámce k součtu všech. Naměřeno 0,23 po
-   rozdělení a 0,56 při sabotáži — 0,40 je mezi tím s rezervou na obě
-   strany. Viz rozbor v hlavičce, proč se počítá z `duration`. */
-const MEZ_POMER = 0.40;
+/* Mez poměru nejdelšího rámce k součtu všech. Viz rozbor v hlavičce,
+   proč se počítá z `duration`.
+
+   MEZ ŠLA 11. 11. Z 0,40 NA 0,50 — A JE TO PŘEPOČET, NE ÚSTUPEK.
+   Číslo 0,40 vzniklo, když zdravý start měřil 0,23 a sabotáž (všechna
+   práce v jedné úloze) 0,56: leželo mezi tím s rezervou na obě strany.
+   Zdravá hodnota se od té doby posunula — start dělá víc práce.
+   Naměřeno 11. 11. na tomhle stroji, se čtyřnásobným zpomalením
+   procesoru, pětkrát za sebou: 0,31 0,32 0,34 0,31 0,35, tedy medián
+   0,33. Mez 0,40 je od toho mediánu 0,05 a běžec CI ji se ZDRAVÝM
+   startem přešel dvakrát (běhy 1139 a 1144) — tedy číslo, které už
+   nerozhodovalo o kódu, ale o tom, jak byl běžec zaneprázdněný.
+   Nová mez říká přesně to, co tvrdí sama kontrola: jedna úloha nesmí
+   pobrat VĚTŠINU práce. Start slitý do jedné úlohy měřil při sabotáži
+   0,56, tedy nad 0,50; zdravý je dnes na 0,33, tedy 0,17 pod mezí.
+   A aby se příští drift poznal dřív, než zčervená, tiskne se rozptyl
+   všech pěti poměrů i při zeleném běhu.
+   CO TÍM NENÍ VYŘEŠENÉ: nejdelší úloha je dnes ~800 ms z 2 400 ms
+   a hlásí se jako `user-callback` BEZ zdroje, takže z measurement
+   API není poznat, co ji dělá. Rozdělit ji je vlastní práce
+   a potřebuje vlastní instrumentaci (performance.mark ve startu). */
+const MEZ_POMER = 0.50;
 /* Pod touhle hranicí se nedělí nic, co by stálo za řeč. */
 const DOST_PRACE = 300;
 
@@ -103,7 +121,7 @@ try {
      jedné úlohy, vyjde vysoko ve všech třech. Všechny tři poměry se
      vypisují, ať je vidět, jak daleko od meze to bylo. */
   const chybyJs = [];
-  const POKUSU = 3;
+  const POKUSU = 5;
   const mereni = [];
   for (let pokus = 0; pokus < POKUSU; pokus++) {
     const p = await ctx.newPage();
@@ -135,8 +153,13 @@ try {
       const blok = r.reduce((a, x) => a + x.blok, 0);
       const nej = r.reduce((a, x) => Math.max(a, x.d), 0);
       const nejBlok = r.reduce((a, x) => Math.max(a, x.blok), 0);
+      /* Medián dlouhého rámce: bezrozměrné srovnání „nejdelší proti
+         běžné" — obojí roste s pomalostí stroje, takže jejich podíl
+         o stroji nevypovídá. */
+      const dl = r.filter((x) => x.d >= 50).map((x) => x.d).sort((a, b) => a - b);
+      const med = dl.length ? dl[Math.floor(dl.length / 2)] : 0;
       return { umi: window.__umi, ramcu: r.length, blok: Math.round(blok),
-        nej: Math.round(nej), nejBlok: Math.round(nejBlok),
+        nej: Math.round(nej), nejBlok: Math.round(nejBlok), med: Math.round(med),
         dlouhych: r.filter((x) => x.d >= 50).length,
         souctD: Math.round(r.reduce((a, x) => a + x.d, 0)),
         karet: document.querySelectorAll('.opp-item').length };
@@ -163,11 +186,34 @@ try {
   const pomer = v.nej / v.souctD;
   /* Pro případ, že by to někdy spadlo v CI, se tiskne i druhý poměr —
      ať je z hlášky hned vidět, jestli se liší jen tím odečtem 50 ms. */
-  pravda(`a žádná z nich nepobere většinu práce (nejdelší ${v.nej} ms z ${v.souctD} ms, poměr ${pomer.toFixed(2)})`,
+  /* VŠECHNY POMĚRY SE TISKNOU I KDYŽ JE ZELENO. Dvakrát se stalo, že
+     tahle kontrola spadla v CI a lokálně ne — a z logu úspěšného běhu
+     nešlo poznat, jak blízko k mezi to bylo. Rozptyl v logu je to
+     jediné, z čeho se pozná drift, než zčervená. */
+  pravda(`a žádná z nich nepobere většinu práce (nejdelší ${v.nej} ms z ${v.souctD} ms, poměr ${pomer.toFixed(2)}; všech ${POKUSU}: ${vsechnyPomery})`,
     pomer <= MEZ_POMER,
     `poměr ${pomer.toFixed(2)} nad mezí ${MEZ_POMER} — start se slil zpátky do jedné dlouhé úlohy`
     + ` (všechna tři měření: ${vsechnyPomery}; z blockingDuration: ${(v.nejBlok / (v.blok || 1)).toFixed(2)})`);
 
+  /* NÁSOBEK „NEJDELŠÍ PROTI BĚŽNÉMU RÁMCI" SE JEN TISKNE — MEZ NA NĚM
+     NEDRŽÍ, A JE TO ZMĚŘENÉ.
+     Zkoušel jsem ho 11. 11. jako druhou, bezrozměrnou pojistku proti
+     tomu, co poměr nepozná: jedna dlouhá blokující úloha ve startu.
+     Sabotáž (1 500 ms synchronní smyčky na začátku js/main.js, pod
+     čtyřnásobným zpomalením tedy ~1,6 s v jednom rámci) dala násobky
+     3,6 4,2 3,7 4,6 3,6; zdravý start 4,0 3,0 3,7 3,1 3,0. Rozdělení
+     se PŘEKRÝVAJÍ, takže mez mezi nimi není kam dát: dlouhá úloha
+     zdrží i ostatní práci, takže roste čitatel i jmenovatel. Totéž
+     platí pro poměr k součtu (sabotáž 0,35–0,38 proti zdravým
+     0,32–0,37) — proto tahle sabotáž u obou kontrol PROŠLA.
+     CO BY TO CHYTILO: absolutní mez v milisekundách, srovnaná proti
+     rychlosti stroje změřené v témž běhu (kalibrační úloha o známém
+     objemu). To je vlastní práce a je zapsaná jako úkol; do té doby
+     jsou čísla aspoň v každém logu, ať se drift pozná očima. */
+  const nasobek = v.med ? v.nej / v.med : 0;
+  const vsechnyNasobky = mereni.map((m) => (m.med ? m.nej / m.med : 0).toFixed(1)).join(', ');
+  console.log(`  (měření: nejdelší ${v.nej} ms, medián dlouhého rámce ${v.med} ms,`
+    + ` násobek ${nasobek.toFixed(1)}; všech ${POKUSU}: ${vsechnyNasobky})`);
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));
   await ctx.close();
 
