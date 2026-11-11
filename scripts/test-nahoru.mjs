@@ -331,33 +331,91 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
      vadu webu, která tam není. Na mém stroji to prošlo 198 kontrol bez
      chyby, protože se stihlo dokreslit dřív. */
   await domUtichlo(p, 400);
+  /* POSUN JE OKAMŽITÝ, NE PLYNULÝ. Stránka pozemku má ve stylopisu
+     `html{scroll-behavior:smooth}`, takže dvouparametrové
+     `window.scrollTo(0, y)` rozjede animaci a čtení hned za ním měří
+     polohu v půlce letu. Naměřeno 11. 11.: po posunu o 2 159 px stojí
+     stránka v t=0 pořád na y=0, v t=250 je na 1 659 a usadí se až
+     v t≈500. Týž důvod má `behavior:'instant'` v kontrole níž.
+
+     CÍL ZŮSTÁVÁ U DOLNÍ HRANY, a je to měřením. Zkusil jsem mířit do
+     středu pásu (24–70 px nade dnem, js/hlavicka.js), protože se to
+     zdálo bezpečnější. Naměřeno 11. 11. na 390×844, kolik pixelů
+     dokreslení nad řádkem oba cíle snesou, než řádek z pásu vypadne:
+
+       cíl „dolní hrana 40 px nade dnem": top 752, rezerva 68 px
+       cíl „střed řádku ve středu pásu":  top 771, rezerva 49 px
+
+     Dokreslení totiž řádek posouvá jen DOLŮ (obsah nad ním se
+     zvětšuje), takže symetrie k ničemu není — rezerva se počítá jen
+     k horní hranici a vyhrává cíl, který leží výš. Střed je proto
+     ZAHOZENÝ. */
   const posun = (kam) => p.evaluate((k) => {
     const a = document.querySelector('.pz-akce-hlavni');
     if (!a) return false;
     const r = a.getBoundingClientRect();
-    window.scrollTo(0, r.top + window.pageYOffset - (k === 'dno' ? (innerHeight - r.height - 40) : 220));
+    window.scrollTo({ behavior: 'instant',
+      top: r.top + window.pageYOffset - (k === 'dno' ? (innerHeight - r.height - 40) : 220) });
     return true;
   }, kam);
   /* V jakém pásu řádek akcí po posunu OPRAVDU leží. Pás knoflíku je
      24 až 70 px nade dnem okna (js/hlavicka.js), takže tohle je přesně
      ta podmínka, na kterou web reaguje — a zkouška ji musí umět ověřit,
-     ne jen předpokládat. */
-  const vPasu = () => p.evaluate(() => {
+     ne jen předpokládat. Vrací i naměřená čísla, aby pád v CI řekl,
+     KDE řádek skončil, ne jen že se posun nepovedl. */
+  const mistoRadku = () => p.evaluate(() => {
     const a = document.querySelector('.pz-akce-hlavni');
     if (!a) return null;
     const r = a.getBoundingClientRect();
-    return r.top < innerHeight - 24 && r.bottom > innerHeight - 70;
+    return { top: Math.round(r.top), bottom: Math.round(r.bottom), okno: innerHeight,
+      vyska: Math.round(document.documentElement.scrollHeight),
+      vPasu: r.top < innerHeight - 24 && r.bottom > innerHeight - 70 };
   });
+  /* POSUN SE DĚLÁ DVAKRÁT, a je to měřením. Mapa v panelu se zapíná
+     teprve, až přijde na dohled (líně načtené Leaflet), a pak si doplní
+     řádek vrstev. Naměřeno 11. 11. na 390×844: 750 ms PO posunu
+     naroste `#pzm-vr` o 57 px (přidá se „žádná vrstva" a knoflík
+     „Znovu"), stránka z 4 026 na 4 083 px a řádek akcí se posune
+     z 2 911 na 2 968. Spouštěčem je tedy sám posun — proto to
+     nezachytí ani čekání na utichlý DOM, ani na ustálenou výšku před
+     posunem (zkusil jsem obojí, stránka se do posunu nehýbe vůbec).
+     Kdo posune jen jednou, skončí 11 px od horní hranice pásu — a tím
+     v CI padl běh 1145. Posune se proto znovu, až se poloha řádku
+     přestane hýbat; čeká se na STAV (tři shodná čtení), ne na
+     hodinky, a druhý posun už míří na ustálenou stránku. */
+  const kdeRadek = () => p.evaluate(() => {
+    const a = document.querySelector('.pz-akce-hlavni');
+    return a ? Math.round(a.getBoundingClientRect().top + window.pageYOffset) : null;
+  });
+  const usadSe = async () => {
+    let kde = await kdeRadek(), shodnych = 0;
+    for (let i = 0; i < 30 && shodnych < 3; i++) {
+      await p.waitForTimeout(150);
+      const nove = await kdeRadek();
+      shodnych = nove === kde ? shodnych + 1 : 0;
+      kde = nove;
+    }
+    return kde;
+  };
   const jeAkce = await posun('dno');
   // PŘEDPOKLAD: bez řádku akcí by se neporovnávalo nic
   pravda(`stránka pozemku ${POZEMEK} má řádek s hlavní akcí`, jeAkce === true,
     '.pz-akce-hlavni na stránce není');
   if (jeAkce) {
     /* Kdyby se stránka protáhla ještě po posunu, posune se znovu —
-       jinak by se měřil jiný stav, než o kterém zkouška mluví. */
-    for (let i = 0; i < 3 && !(await vPasu()); i++) { await posun('dno'); await p.waitForTimeout(400); }
+       jinak by se měřil jiný stav, než o kterém zkouška mluví. Cyklus
+       končí NA STAVU: jak je řádek v pásu, dál se nečeká. */
+    await usadSe();
+    await posun('dno');
+    let misto = await mistoRadku();
+    for (let i = 0; i < 5 && misto && !misto.vPasu; i++) {
+      await usadSe();
+      await posun('dno');
+      misto = await mistoRadku();
+    }
     pravda('řádek s hlavní akcí se posunem opravdu dostal do pásu knoflíku',
-      (await vPasu()) === true, 'posun se nepovedl — kontrola níž by neměřila ústup');
+      !!misto && misto.vPasu === true,
+      'posun se nepovedl — kontrola níž by neměřila ústup: ' + JSON.stringify(misto));
     const uDna = await dokud(p, (s) => s.show === false, 2500);
     pravda('tlačítko nahoru ustoupí, když je hlavní akce u spodní hrany',
       uDna && uDna.show === false && uDna.udalosti === 'none', JSON.stringify(uDna));
