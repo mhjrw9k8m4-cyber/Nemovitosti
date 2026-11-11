@@ -888,7 +888,20 @@ jobs:
           for pokus in 1 2 3; do
             if npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 && npx playwright install --with-deps chromium; then break; fi
             if [ "$pokus" = 3 ]; then
-              echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
+              # ZÁLOŽNÍ CESTA: bez systémových závislostí. `--with-deps`
+              # volá apt, a ten jde na zrcadla Ubuntu — ta byla 11. 11.
+              # nedostupná celých třicet minut (DNS runneru), takže tři
+              # pokusy nepomohly a všechny tři směny v prohlížeči padly,
+              # ani jedna zkouška se nespustila. Sám prohlížeč se přitom
+              # stahuje odjinud (CDN Playwrightu), takže tahle cesta
+              # projde i při výpadku zrcadel. Co z apt chybí, jsou
+              # především PÍSMA (fonts-ipafont, xfonts-*) — web si svoje
+              # písmo nese v repozitáři a zkoušky měří geometrii a ARIA,
+              # ne systémové fonty. Hlásí se to nahlas, aby bylo v logu
+              # vidět, že běh nestál na plné instalaci.
+              echo "POZOR: systémové závislosti se nepodařilo nainstalovat ani na třetí pokus (zrcadla Ubuntu). Zkouším jen prohlížeč."
+              npx playwright install chromium && break
+              echo "Nepodařilo se nainstalovat ani samotný prohlížeč (viz chyby výš)."
               exit 1
             fi
             echo "Pokus $pokus selhal — nejčastěji síť runneru. Zkouším znovu."
@@ -1140,7 +1153,20 @@ jobs:
           for pokus in 1 2 3; do
             if npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 && npx playwright install --with-deps chromium; then break; fi
             if [ "$pokus" = 3 ]; then
-              echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
+              # ZÁLOŽNÍ CESTA: bez systémových závislostí. `--with-deps`
+              # volá apt, a ten jde na zrcadla Ubuntu — ta byla 11. 11.
+              # nedostupná celých třicet minut (DNS runneru), takže tři
+              # pokusy nepomohly a všechny tři směny v prohlížeči padly,
+              # ani jedna zkouška se nespustila. Sám prohlížeč se přitom
+              # stahuje odjinud (CDN Playwrightu), takže tahle cesta
+              # projde i při výpadku zrcadel. Co z apt chybí, jsou
+              # především PÍSMA (fonts-ipafont, xfonts-*) — web si svoje
+              # písmo nese v repozitáři a zkoušky měří geometrii a ARIA,
+              # ne systémové fonty. Hlásí se to nahlas, aby bylo v logu
+              # vidět, že běh nestál na plné instalaci.
+              echo "POZOR: systémové závislosti se nepodařilo nainstalovat ani na třetí pokus (zrcadla Ubuntu). Zkouším jen prohlížeč."
+              npx playwright install chromium && break
+              echo "Nepodařilo se nainstalovat ani samotný prohlížeč (viz chyby výš)."
               exit 1
             fi
             echo "Pokus $pokus selhal — nejčastěji síť runneru. Zkouším znovu."
@@ -1493,7 +1519,20 @@ jobs:
           for pokus in 1 2 3; do
             if npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1 && npx playwright install --with-deps chromium; then break; fi
             if [ "$pokus" = 3 ]; then
-              echo "Prohlížeč se nepodařilo nainstalovat ani na třetí pokus (viz chyby výš)."
+              # ZÁLOŽNÍ CESTA: bez systémových závislostí. `--with-deps`
+              # volá apt, a ten jde na zrcadla Ubuntu — ta byla 11. 11.
+              # nedostupná celých třicet minut (DNS runneru), takže tři
+              # pokusy nepomohly a všechny tři směny v prohlížeči padly,
+              # ani jedna zkouška se nespustila. Sám prohlížeč se přitom
+              # stahuje odjinud (CDN Playwrightu), takže tahle cesta
+              # projde i při výpadku zrcadel. Co z apt chybí, jsou
+              # především PÍSMA (fonts-ipafont, xfonts-*) — web si svoje
+              # písmo nese v repozitáři a zkoušky měří geometrii a ARIA,
+              # ne systémové fonty. Hlásí se to nahlas, aby bylo v logu
+              # vidět, že běh nestál na plné instalaci.
+              echo "POZOR: systémové závislosti se nepodařilo nainstalovat ani na třetí pokus (zrcadla Ubuntu). Zkouším jen prohlížeč."
+              npx playwright install chromium && break
+              echo "Nepodařilo se nainstalovat ani samotný prohlížeč (viz chyby výš)."
               exit 1
             fi
             echo "Pokus $pokus selhal — nejčastěji síť runneru. Zkouším znovu."

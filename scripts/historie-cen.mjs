@@ -174,18 +174,23 @@ for (const [den, sha] of chybi) {
    tak se bere on — a den, který už z commitu vyšel, se jím přepíše. */
 {
   const dnes = new Date().toISOString().slice(0, 10);
-  let liziSe = true;
-  try { git('diff', '--quiet', 'HEAD', '--', ZDROJ); liziSe = false; } catch (e) { liziSe = true; }
-  if (liziSe) {
-    try {
-      const j = JSON.parse(readFileSync(path.join(KOREN, ZDROJ), 'utf8'));
-      const nab = Array.isArray(j) ? j : (j.opportunities || []);
-      if (nab.length) {
-        noveHladiny.set(dnes, hladinyZeSnimku(nab));
-        console.log(`  ${dnes}: ${nab.length} nabídek z pracovního stromu (novější než poslední commit)`);
-      }
-    } catch (e) { console.log('  pracovní strom se nedal přečíst: ' + String(e).split('\n')[0]); }
-  }
+  /* BERE SE VŽDY, ne jen když se soubor od posledního commitu liší.
+     Do 11. 11. tu stála podmínka `git diff --quiet HEAD` — a tím se
+     dnešní bod po COMMITU přestal přepočítávat: zůstal ten z commitu,
+     který byl ten den první. Naměřeno: po ruční opravě okresu u 21
+     nabídek řada dál tvrdila „okres Praha-východ 10 000 Kč/m²", zatímco
+     web počítal 10 786,6, a test-historie-cen to správně hlásil jako
+     dvojí číslo. V CI se tím nic nemění (po checkoutu je pracovní strom
+     totožný s HEAD), jen se tu přestalo spoléhat na to, že commit
+     přijde vždycky až po přepočtu. */
+  try {
+    const j = JSON.parse(readFileSync(path.join(KOREN, ZDROJ), 'utf8'));
+    const nab = Array.isArray(j) ? j : (j.opportunities || []);
+    if (nab.length) {
+      noveHladiny.set(dnes, hladinyZeSnimku(nab));
+      console.log(`  ${dnes}: ${nab.length} nabídek z pracovního stromu (ten je vždy to nejčerstvější)`);
+    }
+  } catch (e) { console.log('  pracovní strom se nedal přečíst: ' + String(e).split('\n')[0]); }
 }
 
 /* ---- slož řadu: dny setříděné, pole zarovnaná na dny ---- */
