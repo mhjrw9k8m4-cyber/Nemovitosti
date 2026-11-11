@@ -904,6 +904,87 @@ if (smazat) {
     const n = Number((/(\d[\d\s ]*)/.exec(t) || [, ''])[1].replace(/[\s ]/g, ''));
     je('a je to počet PODÍLŮ, ne celkový počet nabídek', n, 2);
   }
+
+  /* PŘÍSTUPNOST FORMULÁŘE „Nové hlídání". Měřeno sondou v prohlížeči
+     11. 11. 2026 na přihlášené stránce; vyšlo pět vad, které vidí jen
+     ten, kdo nepoužívá oči:
+       - skryté zaškrtávátko #ns-celek stálo v pořadí zaměření (tabulátor
+         na něm zastavil na neviditelném prvku) a odečítač touž volbu
+         přečetl dvakrát — vedle něj je vidět tlačítko, které ji ovládá;
+       - osm tlačítek rychlé volby ceny a výměry nesla stav jen v barvě
+         (aria-pressed nebylo ani u jednoho z osmi);
+       - #ns-souhrn („Dnes tomu odpovídá N nemovitostí") se mění podle
+         vyplnění, ale bez role=status se ohlášení neozve;
+       - dvě tlačítka „i" měla týž aria-label „Co to znamená";
+       - na celé stránce byl jediný nadpis (h1), takže hlavy sekcí
+         („Cena", „Výměra", „Místo") se čtou jako běžný text.
+     Hlídá se tedy stav, ne vzhled: tohle se po změně formuláře snadno
+     rozbije a na snímku se to nepozná. */
+  const ZAMERITELNE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]),'
+    + ' textarea:not([disabled]), [tabindex]';
+  const pristup = await pp.evaluate((sel) => {
+    const vidi = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+    const celek = document.getElementById('ns-celek');
+    /* Pořadí zaměření se POČÍTÁ, ne odečte z atributu: prvek je v něm,
+       když je vidět, není vypnutý a nemá tabindex -1 — přesně podle toho
+       ho prochází prohlížeč. Sabotáž (smazat tabindex) tohle překlopí. */
+    const vPoradi = [...document.querySelectorAll(sel)]
+      .filter((el) => vidi(el) && el.getAttribute('tabindex') !== '-1');
+    const rychla = [...document.querySelectorAll('.hl-rychle')];
+    const info = [...document.querySelectorAll('.hl-info')];
+    const souhrn = document.getElementById('ns-souhrn');
+    return {
+      celekJe: !!celek,
+      /* Schovává se ŠTÍTEK (.hl-skryty-vstup: 1×1 px, clip-path:inset(50%),
+         overflow:hidden). Samo zaškrtávátko vevnitř má rect 13×13 px —
+         getBoundingClientRect o odstřižení rodičem neví, takže měřit
+         plochu zaškrtávátka by bylo měření vedle (naměřeno 169 px²).
+         Měří se tedy plocha štítku a u zaškrtávátka to, na čem záleží:
+         že nestojí v pořadí zaměření. */
+      stitekPlocha: celek && celek.closest('label')
+        ? Math.round(celek.closest('label').getBoundingClientRect().width
+          * celek.closest('label').getBoundingClientRect().height) : null,
+      celekVPoradi: !!celek && vPoradi.indexOf(celek) !== -1,
+      stitekHidden: celek && celek.closest('label') ? celek.closest('label').getAttribute('aria-hidden') : null,
+      rychlych: rychla.length,
+      rychleSeStavem: rychla.filter((b) => b.getAttribute('aria-pressed') !== null).length,
+      souhrnJe: !!souhrn,
+      souhrnRole: souhrn ? souhrn.getAttribute('role') : null,
+      infoTlacitek: info.length,
+      infoJmen: new Set(info.map((b) => (b.getAttribute('aria-label') || '').trim())).size,
+      nadpisu: document.querySelectorAll('h1, h2, h3').length,
+    };
+  }, ZAMERITELNE);
+  // PŘEDPOKLAD: bez vykresleného formuláře by kontroly níž prošly o prázdnu.
+  pravda('formulář nového hlídání je vykreslený (zaškrtávátko, rychlé volby, souhrn)',
+    pristup.celekJe && pristup.rychlych >= 6 && pristup.souhrnJe,
+    JSON.stringify(pristup));
+  pravda('štítek zaškrtávátka „jen celé" je pro oči schovaný (plocha ' + pristup.stitekPlocha + ' px²)',
+    pristup.stitekPlocha !== null && pristup.stitekPlocha <= 4,
+    'plocha vyšla ' + pristup.stitekPlocha + ' px² — pak už to není skrytý dvojník viditelného tlačítka a kontrola níž míří vedle');
+  je('a nestojí v pořadí zaměření (tabulátor na neviditelném prvku nezastaví)',
+    pristup.celekVPoradi, false);
+  je('a odečítač ho nepřečte dvakrát (štítek je aria-hidden)', pristup.stitekHidden, 'true');
+  je('každé tlačítko rychlé volby nese stav v aria-pressed',
+    pristup.rychleSeStavem, pristup.rychlych);
+  je('souhrn počtu nemovitostí je živá oblast', pristup.souhrnRole, 'status');
+  je('každé tlačítko „i" má vlastní jméno', pristup.infoJmen, pristup.infoTlacitek);
+  pravda('hlavy sekcí formuláře jsou nadpisy, ne jen tučný text (' + pristup.nadpisu + ')',
+    pristup.nadpisu >= 4, 'nadpisů na stránce: ' + pristup.nadpisu + ' — hlavy sekcí se čtou jako běžný text');
+
+  /* A stav se opravdu PŘEPÍNÁ. Atribut v předloze by sám o sobě mohl
+     navždy zůstat na „false" — to by odečítači lhalo hůř než nic. */
+  const prvni = await pp.$('.hl-rychle[data-pole="cena"]');
+  if (prvni) {
+    await prvni.click();
+    await pp.waitForTimeout(150);
+    const stavy = await pp.evaluate(() => [...document.querySelectorAll('.hl-rychle[data-pole="cena"]')]
+      .map((b) => b.getAttribute('aria-pressed')));
+    je('po klepnutí svítí v aria-pressed právě jedna volba ceny',
+      [stavy[0], stavy.filter((s) => s === 'true').length], ['true', 1]);
+  } else {
+    pravda('rychlá volba ceny je na stránce', false, 'nenašlo se .hl-rychle[data-pole="cena"]');
+  }
   await ctxP.close();
 }
 

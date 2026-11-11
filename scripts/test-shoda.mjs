@@ -298,6 +298,35 @@ const podezrelyPodil = await p.evaluate((D) => {
   const d = D.find((x) => M.neduveryhodna(x) && x.podil);
   return d ? { place: d.place, parcel: d.parcel, price: d.price } : null;
 }, CISTA);
+/* TŘETÍ VĚTEV: státní půda podle § 12. Dřív tu nebyla a chybělo to:
+   11. 11. byly VŠECHNY nevěrohodné nabídky v datech úřední cena
+   (46 ze 46, podílů nula), takže obě dosavadní větve vyšly prázdné
+   a zkouška spadla na pojistce — aniž by se na webu cokoli pokazilo.
+   Měřeno sondou nad data/opportunities.json a js/ceny.js: 3 471 nabídek
+   má cenu, výměru i hladinu; pod mezí (medián/50) jich je 46, pod
+   mediánem/20 devadesát dva. Model tedy funguje, jen se trh přerovnal.
+   A tahle větev navíc něco MĚŘÍ: u úřední ceny se odznak „k ověření"
+   ukázat nesmí (cenu stanovil úřad, není co ověřovat) a místo něj má
+   karta nést „úřední cena (§ 12)". */
+const podezrelySpravni = await p.evaluate((D) => {
+  const M = window.PK_CENY.postav(D);
+  const d = D.find((x) => M.neduveryhodna(x) && !x.podil && M.spravniCena && M.spravniCena(x));
+  return d ? { place: d.place, parcel: d.parcel, price: d.price } : null;
+}, CISTA);
+/* Kolik jich je v každé přihrádce — do hlášky, aby se příště nemuselo
+   měřit zvlášť, až některá větev zůstane prázdná. */
+const rozpadPodezrelych = await p.evaluate((D) => {
+  const M = window.PK_CENY.postav(D);
+  const r = { celkem: 0, bezne: 0, podil: 0, uredni: 0 };
+  for (const x of D) {
+    if (!M.neduveryhodna(x)) continue;
+    r.celkem++;
+    if (x.podil) r.podil++;
+    else if (M.spravniCena && M.spravniCena(x)) r.uredni++;
+    else r.bezne++;
+  }
+  return r;
+}, CISTA);
 /* KTERÁ NABÍDKA SE NAJDE, URČUJE TRH — ZKOUŠKA NE.
    Tahle kontrola tu stála jako tvrdé „aspoň jedna taková v datech
    JE". Jenže hledá nabídku, která je nevěrohodná a zároveň NENÍ ani
@@ -311,11 +340,28 @@ const podezrelyPodil = await p.evaluate((D) => {
    mít musí. Že odznak „k ověření" opravdu vzniká, hlídá navíc
    test-strop-ceny na okresních stránkách, takže o pokrytí se tím
    nepřichází. */
-pravda('je co měřit — v datech je aspoň jedna nevěrohodná nabídka',
-  !!(podezrely || podezrelyPodil),
-  'ani mimo podíly, ani mezi podíly se dnes žádná nenašla');
+/* POJISTKA SE PTÁ NA MODEL, NE NA SKLADBU TRHU (opraveno 11. 11.).
+   Stálo tu „aspoň jedna z prvních dvou větví něco má" — a to je
+   požadavek na to, CO PRÁVĚ JE v nabídce: nevěrohodná nabídka, která
+   není ani podíl, ani státní půda. Takovou skladbu zkouška neovlivní
+   a 11. 11. v datech nebyla (0 běžných, 0 podílů, 46 úředních), takže
+   hlídač spadl na čistých datech — tentýž omyl, před kterým varuje
+   komentář o kus výš a kvůli kterému se sem 20. 10. přidala druhá
+   větev. Ptá se proto na jedinou věc, která je opravdu nutná: hlásí
+   ještě model NĚJAKOU nevěrohodnou nabídku? Když ne, nemá co měřit ani
+   jedna ze tří větví a je to zpráva o modelu, ne o trhu. */
+pravda('je co měřit — model hlásí nevěrohodné nabídky ('
+  + rozpadPodezrelych.celkem + ': ' + rozpadPodezrelych.bezne + ' běžných, '
+  + rozpadPodezrelych.podil + ' podílů, ' + rozpadPodezrelych.uredni + ' úředních)',
+  rozpadPodezrelych.celkem > 0,
+  'neduveryhodna() dnes nehlásí ani jednu nabídku z ' + CISTA.length
+  + ' — buď se mez (medián/50) rozešla s daty, nebo hladina nevychází');
 if (!podezrely) zpravy.push('  — nevěrohodná nabídka mimo podíly a státní půdu dnes v datech není, tahle část se přeskočila');
-if (podezrely) {
+/* VÝPIS SE OTEVŘE, KDYŽ MÁ CO MĚŘIT KTERÁKOLI ZE TŘÍ VĚTVÍ.
+   Dřív tu stálo `if (podezrely)`, takže s prázdnou první větví se
+   přeskočilo i to, co na ní nezávisí — kontrola podílu a hledání podle
+   parcelního čísla. 11. 11. se tím neměřilo nic z téhle části. */
+if (podezrely || podezrelyPodil || podezrelySpravni) {
   const p3 = await ctx.newPage();
   await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   /* ČEKÁ SE NA VYKRESLENÝ VÝPIS A NA CENOVÝ MODEL, ne na klid v DOMu.
@@ -349,12 +395,18 @@ if (podezrely) {
       const li = vsechny.find((e) => e.textContent.replace(/\D/g, '').indexOf(String(cena)) >= 0);
       return li ? { text: li.textContent.replace(/\s+/g, ' ').trim(),
         overit: !!li.querySelector('.opp-overit'),
+        /* Odznak úřední ceny se hledá podle TŘÍDY, ne podle textu:
+           text „úřední cena (§ 12)" by se dal přepsat, aniž by o tom
+           kontrola věděla, a naopak. */
+        uredni: !!li.querySelector('.opp-urad'),
         podilovy: /podíl/i.test(li.textContent) } : null;
     }, co.price);
   };
-  const karta = await kartaPro(podezrely);
-  pravda('podezřelá nabídka má varování rovnou na kartě',
-    !!(karta && karta.overit), karta ? karta.text.slice(0, 120) : 'karta se nenašla');
+  if (podezrely) {
+    const karta = await kartaPro(podezrely);
+    pravda('podezřelá nabídka má varování rovnou na kartě',
+      !!(karta && karta.overit), karta ? karta.text.slice(0, 120) : 'karta se nenašla');
+  }
 
   /* A druhá strana téhož rozhodnutí: u podílu se varování ukázat NESMÍ.
      Bez téhle kontroly by se „oprava", která odznak vrátí všem, poznala
@@ -364,6 +416,17 @@ if (podezrely) {
     pravda('u spoluvlastnického podílu se varování naopak neukazuje (je to cena ze zákona)',
       !!(kp && !kp.overit && kp.podilovy),
       kp ? `odznak „ověřit": ${kp.overit}, slovo „podíl" na kartě: ${kp.podilovy} — ${kp.text.slice(0, 110)}` : 'karta se nenašla');
+  }
+
+  /* A totéž u úředně stanovené ceny: cenu určil úřad podle § 12, takže
+     „k ověření" by člověka posílalo ověřovat něco, co ověřit nejde —
+     a karta to má místo toho rovnou říct odznakem. Že odznak vzniká,
+     hlídá i test-ceny; tady se měří, že se NEUKÁŽE ten druhý. */
+  if (podezrelySpravni) {
+    const ku = await kartaPro(podezrelySpravni);
+    pravda('u úředně stanovené ceny se varování neukazuje a karta přizná § 12',
+      !!(ku && !ku.overit && ku.uredni),
+      ku ? `odznak „ověřit": ${ku.overit}, odznak „úřední cena": ${ku.uredni} — ${ku.text.slice(0, 110)}` : 'karta se nenašla');
   }
 
   // Hledání podle parcelního čísla.

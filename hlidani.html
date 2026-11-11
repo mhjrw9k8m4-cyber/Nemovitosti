@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-NFnA4RA20PuBNTYLpOzE4N4b77fAj7Ku+1muv9elPY0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-u0L5WQ8uM1q3bj0Vs/s7cr2IMSGJopJeHQCiVD3XQJ4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -213,10 +213,10 @@
        flex:none na <b> a zalomení celé řady to obrací: nadpis drží
        pohromadě a poznámka spadne na druhý řádek. */
     .hl-sekce-h{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; margin-bottom:8px;}
-    .hl-sekce-h b{flex:none;}
+    .hl-sekce-h h2{flex:none; margin:0;}
     .hl-sekce-h svg{width:var(--ik-xs); height:var(--ik-xs); flex:none; fill:none; stroke:var(--znacka);
       stroke-width:var(--ik-xs-tah); stroke-linecap:round; stroke-linejoin:round;}
-    .hl-sekce-h b{font-size:14px; font-weight:700; color:var(--text); letter-spacing:0.01em;}
+    .hl-sekce-h h2{font-size:14px; font-weight:700; color:var(--text); letter-spacing:0.01em;}
     .hl-sekce-h .hl-pozn{font-size:13px;}
     /* ROZSAH JAKO JEDNA VĚC. „od (Kč)" a „do (Kč)" byly dvě osamocené
        krabičky pod sebou a jednotka se opakovala v obou popiscích.
@@ -942,10 +942,15 @@
   /* Odkazy do sady (scripts/ikony.mjs) — celé, aby je sestavení našlo
      a vložilo do stránky jen ty, které tu opravdu jsou. */
   var IKONY = { kde: '#i-spendlik', cena: '#i-cena', vymera: '#i-vymera', musi: '#i-pozadavky' };
+  /* HLAVA SEKCE JE NADPIS, ne jen tučný text. Naměřeno 11. 11.: na celé
+     přihlášené stránce byl jediný nadpis (h1 „Hlídání nabídek"), takže
+     odečítač neměl čím formulář procházet — „Cena", „Výměra", „Místo"
+     se čtou jako běžný text uprostřed polí. Vzhled se nemění, h2 má
+     ve stylopisu týž řez i velikost jako dřív <b>. */
   function sekceHlava(id, popisek, pozn) {
     return '<div class="hl-sekce-h">' +
       '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="' + IKONY[id] + '"/></svg>' +
-      '<b>' + esc(popisek) + '</b>' +
+      '<h2>' + esc(popisek) + '</h2>' +
       (pozn ? '<span class="hl-pozn">' + esc(pozn) + '</span>' : '') + '</div>';
   }
   /* ROZSAH OD–DO PŘESNĚ JAKO V HLEDÁNÍ. Dřív tu byly nad každým
@@ -1035,13 +1040,13 @@
       ['do 100 tis.', 0, 100000], ['100–500 tis.', 100000, 500000],
       ['0,5–2 mil.', 500000, 2000000], ['nad 2 mil.', 2000000, 0],
     ].map(function (x) {
-      return '<button type="button" class="hl-rychle" data-od="' + x[1] + '" data-do="' + x[2] + '" data-pole="cena">' + esc(x[0]) + '</button>';
+      return '<button type="button" class="hl-rychle" aria-pressed="false" data-od="' + x[1] + '" data-do="' + x[2] + '" data-pole="cena">' + esc(x[0]) + '</button>';
     }).join('');
     var vymeraPresety = [
       ['do 1 000 m²', 0, 1000], ['1 000–5 000 m²', 1000, 5000],
       ['0,5–2 ha', 5000, 20000], ['nad 2 ha', 20000, 0],
     ].map(function (x) {
-      return '<button type="button" class="hl-rychle" data-od="' + x[1] + '" data-do="' + x[2] + '" data-pole="vymera">' + esc(x[0]) + '</button>';
+      return '<button type="button" class="hl-rychle" aria-pressed="false" data-od="' + x[1] + '" data-do="' + x[2] + '" data-pole="vymera">' + esc(x[0]) + '</button>';
     }).join('');
     return '<div class="hl-card hl-new">' +
         '<div class="hl-new-head"><b>Nové hlídání</b>' +
@@ -1107,7 +1112,7 @@
              řekne. Krátké věty („Když necháte prázdné, hlídáme celou
              ČR.") zůstávají vidět — ty se čtou rychleji, než se na ně
              klepne. */
-          '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-perm2-pozn" aria-label="Co to znamená"><span aria-hidden="true">i</span></button>' +
+          '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-perm2-pozn" aria-label="Co znamená cena za metr"><span aria-hidden="true">i</span></button>' +
           '<p class="hl-napoveda" id="ns-perm2-pozn" hidden>Podle ceny za metr se nabídky srovnávají nejčastěji — velká levná nemovitost tak neutopí malou drahou.</p>' +
           /* Podíl patří k ceně, ne k výměře: je to jiná odpověď na otázku
              „co vlastně kupuju", a nejčastěji si ho člověk všimne právě
@@ -1131,8 +1136,13 @@
             '<span class="hl-prep-n">' + (podiluDnes
               ? fmt(podiluDnes) + '\u00a0podíl' + (podiluDnes === 1 ? '' : (podiluDnes >= 2 && podiluDnes <= 4 ? 'y' : 'ů'))
               : 'žádné\u00a0podíly') + '</span></button>' +
-          '<label class="hl-skryty-vstup"><input type="checkbox" id="ns-celek">Jen celé nemovitosti — bez spoluvlastnických podílů</label>' +
-          '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-podil-pozn" aria-label="Co to znamená"><span aria-hidden="true">i</span></button>' +
+          /* MIMO POŘADÍ ZAMĚŘENÍ, stejně jako skrytý <select> u typu
+               nabídky o pár řádků výš. Naměřeno 11. 11.: tabulátor na
+               tomhle neviditelném zaškrtávátku zastavil a odečítač tutéž
+               volbu přečetl dvakrát (tlačítko i zaškrtávátko). Prvek
+               samotný zůstává — drží stav formuláře. */
+            '<label class="hl-skryty-vstup" aria-hidden="true"><input type="checkbox" id="ns-celek" tabindex="-1">Jen celé nemovitosti — bez spoluvlastnických podílů</label>' +
+          '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-podil-pozn" aria-label="Co znamená jen celé nemovitosti"><span aria-hidden="true">i</span></button>' +
           '<p class="hl-napoveda" id="ns-podil-pozn" hidden>Bez spoluvlastnických podílů. U podílu je v ceně zlomek, ale výměra celé parcely, takže vychází podezřele levně. Dnes je takových ' +
             fmt(DATA.filter(function (d) { return d.podil; }).length) + ' z ' + fmt(DATA.length) + '.</p>' +
         '</div>' +
@@ -1158,7 +1168,11 @@
           '<div class="hl-feats">' + feats + '</div>' +
         '</div>' +
 
-        '<div class="hl-souhrn" id="ns-souhrn"></div>' +
+        /* ŽIVÁ OBLAST: věta „Dnes tomu odpovídá N nemovitostí" se mění
+               podle toho, co člověk vyplní. Bez role=status se to
+               neohlásí a slepý uživatel uloží hlídání, které nic
+               nenajde, a nedozví se to. */
+            '<div class="hl-souhrn" id="ns-souhrn" role="status"></div>' +
         '<button class="hl-btn" id="ns-save">Uložit hlídání</button>' +
         /* Živá oblast: nese „Ukládám…", „Uložení se nepovedlo." a hlavně
            větu o tom, co se z hlídání nepropsalo. Staví se prázdná a
@@ -1301,11 +1315,18 @@
         var odEl = document.getElementById(pole === 'cena' ? 'ns-price-od' : 'ns-area');
         var doEl = document.getElementById(pole === 'cena' ? 'ns-price' : 'ns-area-do');
         var uzSviti = b.classList.contains('on');
-        root.querySelectorAll('.hl-rychle[data-pole="' + pole + '"]').forEach(function (x) { x.classList.remove('on'); });
+        /* STAV JDE DO ARIA, NE JEN DO BARVY. Naměřeno 11. 11.: osm
+           tlačítek rychlé volby mělo aria-pressed prázdné, takže
+           odečítač přečetl osmkrát totéž bez rozlišení a vybranou
+           volbu poznal jen ten, kdo vidí zelenou výplň. */
+        root.querySelectorAll('.hl-rychle[data-pole="' + pole + '"]').forEach(function (x) {
+          x.classList.remove('on');
+          x.setAttribute('aria-pressed', 'false');
+        });
         // Druhé klepnutí na tutéž volbu ji zruší — jinak se meze nedají sundat.
         odEl.value = uzSviti ? '' : (od === '0' ? '' : od);
         doEl.value = uzSviti ? '' : (doo === '0' ? '' : doo);
-        if (!uzSviti) b.classList.add('on');
+        if (!uzSviti) { b.classList.add('on'); b.setAttribute('aria-pressed', 'true'); }
         prepocti();
       });
     });
