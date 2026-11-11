@@ -113,6 +113,7 @@ await ctx.route('**/*', (r) => {
 });
 const p = await ctx.newPage();
 const desky = new Map();
+const karty = new Map();
 /* ZELENÁ PLOCHA MÁ PŘELIV ZNAČKY — sbírá se při témž průchodu.
    Majitel 1. 11.: „všechny zelené věci jako má naše ikonka ten přechod,
    udělej to na všech tlačítkách." Naměřeno tehdy 17 druhů zelených
@@ -172,12 +173,40 @@ for (const s of STRANKY) {
         padL: Math.round(parseFloat(cs.paddingLeft) || 0),
         ram: maRam ? cs.borderTopColor : null,
         ramSila: ramy[0],
+        /* Plocha a styl rámu: podle nich se pozná RODINA KARET (oddíl 5).
+           Bez nich by se do ní počítal i vsazený pruh na tlumené ploše
+           nebo čárkovaný obrys prázdného stavu. */
+        plocha: cs.backgroundColor,
+        styl: cs.borderTopStyle,
         stin: maStin ? cs.boxShadow : 'bez',
       });
     }
     return out;
   }).catch(() => []);
   for (const x of nalez) if (!desky.has(x.jm)) desky.set(x.jm, { ...x, kde: s });
+  /* DRUHÝ SBĚR: KARTY. Sada výš schválně nesahá na <button> a <a> —
+     ovladače mají vlastní pravidla a hlídá je „Jeden ovladač". Jenže
+     karta tipu JE <button> (klikne se celá), takže do sady výš nikdy
+     nespadla: hlídač ji neviděl vůbec. Karty se proto sbírají zvlášť
+     a ptají se jen na recept deskové plochy, kterému ovladač neodpoví
+     (jeho rám je zelený, ne --line). */
+  for (const x of await p.evaluate(() => {
+    const out = [];
+    for (const e of document.querySelectorAll('div,section,article,aside,li,button,a')) {
+      const rc = e.getBoundingClientRect();
+      if (rc.width < 60 || rc.height < 40) continue;
+      const cs = getComputedStyle(e);
+      if (cs.borderTopStyle !== 'solid') continue;
+      if (cs.backgroundColor === 'rgba(0, 0, 0, 0)') continue;
+      const tridy = (e.getAttribute('class') || '').split(/\s+/).filter(Boolean);
+      out.push({ jm: tridy.length ? tridy[0] : e.tagName.toLowerCase(),
+        z: Math.round(parseFloat(cs.borderTopLeftRadius) || 0),
+        ramSila: Math.round(parseFloat(cs.borderTopWidth) || 0),
+        ram: cs.borderTopColor, plocha: cs.backgroundColor,
+        stin: (cs.boxShadow && cs.boxShadow !== 'none') ? cs.boxShadow : 'bez' });
+    }
+    return out;
+  }).catch(() => [])) if (!karty.has(x.jm)) karty.set(x.jm, { ...x, kde: s });
 }
 await prohlizec.close();
 
@@ -255,6 +284,48 @@ const stiny = new Map();
 for (const [, d] of desky) if (d.stin !== 'bez') stiny.set(d.stin, (stiny.get(d.stin) || 0) + 1);
 pravda('klidové stíny jsou nejvýš dva (deska na stránce a deska nad obsahem)',
   stiny.size <= 2, [...stiny].map(([s, n]) => `${n}× ${s.slice(0, 60)}`).join('\n      '));
+
+/* 5) KARTA TIPU JE TÁŽ DESKA JAKO KARTA VE VÝPISU.
+   ------------------------------------------------------------------
+   Oddíly 1–4 měří ROZMANITOST: kolik zaoblení, kolik sil rámu, kolik
+   receptů stínu. Ani jeden se neptá, jestli karta svůj stín VŮBEC má —
+   a to je slepé místo, které bylo prokázáno sabotáží: po odebrání
+   `box-shadow:var(--e1)` kartě tipu zůstalo všech sedm kontrol
+   zelených, protože receptů stínu tím ubylo, ne přibylo.
+   A byla v tom druhá, horší vada: sada prvků výš sahá na
+   `div,section,article,…`, ale NE na <button> — zatímco karta tipu
+   <button> je, protože se na ni klepne celá. Hlídač ji tedy neviděl
+   vůbec, ať by měla cokoli.
+   CO SE TEDY MĚŘÍ: že karta tipu nese TÝŽ recept jako karta ve výpisu.
+   To není nový vzhledový nápad, ale rozhodnutí z §199 a §277 („jedna
+   karta nabídky pro výpis, tipy i hlídání") — tahle kontrola ho jen
+   drží. Modelem je .opp-item, ta deska, podle které se srovnával celý
+   web (§151); recept se z ní ČTE, místo aby se opisoval, takže se
+   nerozejde ani při změně tokenu.
+   PROČ NE OBECNÉ „každá bílá deska musí mít stín": změřeno 11. 11. na
+   všech typech stránek — z 25 neprůhledných desek s plným rámem jich
+   10 stín nemá a není to vada. Čtyři stojí na tlumené ploše
+   (.auth-tabs, .md-vse, .pzm-zaklad, .add-cross), tedy vsazené prvky,
+   a šest je bílý panel, který plavat nemá (.aside-card, .pz-gtk,
+   .pz-sour, .md-radek, .por-tab-obal, .dt-tab-obal). Takové pravidlo
+   by nehlídalo vzhled, ale přemalovalo šest míst — a to je rozhodnutí
+   o vzhledu, ne hlídač. */
+const model = karty.get('opp-item');
+pravda('karta výpisu (.opp-item) je k nalezení — je podle čeho měřit',
+  !!model, 'bez .opp-item nemá oddíl 5 model a tvrzení o kartě tipu by bylo prázdné');
+const tip = karty.get('deal-card');
+pravda('karta tipu (.deal-card) je k nalezení — tipy se opravdu vykreslily',
+  !!tip, 'bez karty tipu by kontrola níž prošla o prázdnu');
+if (model && tip) {
+  const recept = (d) => `plocha ${d.plocha}, zaoblení ${d.z}, rám ${d.ramSila}px ${d.ram}, stín ${d.stin}`;
+  for (const [co, klic] of [['tutéž plochu', 'plocha'], ['totéž zaoblení', 'z'],
+    ['tutéž sílu rámu', 'ramSila'], ['tutéž barvu rámu', 'ram'],
+    ['tentýž klidový stín', 'stin']]) {
+    pravda(`karta tipu má ${co} jako karta ve výpisu`,
+      String(tip[klic]) === String(model[klic]),
+      `výpis: ${recept(model)}\n      tip:   ${recept(tip)}`);
+  }
+}
 
 console.log('\nJedna deska: zaoblení, rám a stín na celém webu');
 console.log(zpravy.join('\n'));
