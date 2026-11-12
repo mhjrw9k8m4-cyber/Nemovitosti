@@ -9325,21 +9325,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      a display:contents: oba obaly zmizí z rozvržení a jejich tlačítka
      padnou rovnou do společné mřížky, kde se pořadí určí `order`em.
      Strom zůstává, jak byl; mění se jen to, co je vidět. */
-  /* ŠEST SLOUPCŮ, NE DVA — A JE TO ZMĚŘENÉ, NE ÚPRAVA PRO KRÁSU.
-     Dva sloupce dělily každý řádek přesně napůl. Dokud v řádku stála
-     dvě stejná tlačítka („Uložené" a „Stáhnout výběr"), bylo to
-     správně; jakmile si od 12. 11. řádek dělí POČET a ŘAZENÍ, přestalo
-     to platit, protože ty dvě věci stejně široké nejsou. Naměřeno na
-     390 px: rozbalovač dostal 175 px, z toho na nápis zbylo 94 —
-     a usekával se („Největší sleva proti okolí" o 81 px, „Nejdřív
-     končící dražba" o 66). Na 320 px se do 140 px tlačítka nevešlo ani
-     „Doporučené" (přetok 25 px).
-     Šestina je nejmenší díl, kterým jdou obě dvojice vyjádřit přesně:
-     stejná tlačítka si berou po třech šestinách (tedy pořád půlku),
-     počet dvě a řazení čtyři. Naměřeno po změně na 390 px: počet
-     114 px (text „3 993 na mapě" se vejde), řazení 236 px; na 320 px
-     90 a 198. */
-  .ms-vysledky{display:grid; grid-template-columns:repeat(6, minmax(0, 1fr));
+  .ms-vysledky{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
     /* MEZERA 8, NE 12. Hlavička má na telefonu čtyři řádky, takže na
        mezerách leží 48 px; osmička je odstup ze stupnice a mezi
        stejně vysokými terči (44 px) stačí. Naměřeno 12. 11. na
@@ -9357,46 +9343,14 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .map-side .ms-vysledky > .mc-akce, .ms-vysledky > .mc-akce{display:contents;}
   /* 1. nahoře, přes celou šířku */
   .ms-vysledky #mc-rychly{grid-column:1 / -1; order:-1;}
-  /* PŮLKA ŘÁDKU JE VÝCHOZÍ PRO VŠECHNO, CO DO MŘÍŽKY SPADNE.
-     Obaly .msv-ovladani a .mc-akce mají `display:contents`, takže
-     jejich tlačítka padají rovnou sem — a js/main.js jich do .mc-akce
-     vkládá podle stavu různý počet: „Stáhnout výběr", „Procházet po
-     jednom", „Zobrazit skryté", „Zobrazit i podobné názvy". Při šesti
-     sloupcích by každé bez pravidla dostalo jednu šestinu.
-     NAMĚŘENÁ VADA, kterou to vyrobilo: po hledání bez shody naskočí
-     „Zobrazit i podobné názvy" a hlídač test-ovladani-vypisu ohlásil
-     „text 94 px v 51 px" na 390 px a „60 px v 39 px" na 320 px —
-     nápis přerostl rámeček, protože tlačítko dostalo 53 px.
-     Výchozí jsou proto tři šestiny, tedy půlka řádku jako dřív;
-     výjimky (celý řádek, dvě šestiny, čtyři) se vypisují níž podle id,
-     které je silnější než tahle třída. */
-  .ms-vysledky > .msv-ovladani > *, .ms-vysledky > .mc-akce > *{grid-column:span 3;}
-  /* 3. dole: řazení i počet — a od 12. 11. VEDLE SEBE, ne pod sebou.
-     Majitelův nákres z 30. 10. má „řazení (Doporučené) a počet" jako
-     JEDNU položku pořadí, tedy jednu věc dole; že z toho byly dva
-     řádky, bylo moje provedení. Jeden řádek je taky tvar, jaký nad
-     výpisem má každý velký realitní web: vlevo kolik jich je, vpravo
-     podle čeho jsou seřazené.
-     CO SE TÍM MĚNÍ PROTI 30. 10., A PŘIZNÁVÁM TO: majitel tehdy řekl
-     „to řazení udělej stejně velké jako pozemky po jednom" a rozbalovač
-     byl od té doby terč přes celý řádek (358 px na telefonu 390 px).
-     Teď má polovinu řádku. VÝŠKA 44 px i dotykový terč zůstávají — to,
-     co na té větě byla míra pro prst, platí dál; mění se jen šířka,
-     protože vedle něj stojí počet.
-     Naměřeno na 390 px: počet měl vlastní řádek 38 px a nad ním řazení
-     44 px, dohromady 90 px i s mezerou; teď 44. */
-  .ms-vysledky > .map-count{grid-column:span 2; order:8; margin-bottom:0;
-    align-self:center;}
-  /* ČÍSLO NA VLASTNÍ ŘÁDEK, PŘÍPISEK POD NĚJ — a je to oprava zalomení,
-     ne ozdoba. Počet zní „3 993 na mapě" a ve dvou šestinách řádku
-     (114 px na telefonu 390 px) se na jeden řádek nevejde. Prohlížeč
-     ho zalomil, kde mohl, tedy UPROSTŘED přípisku: „3 993 na" / „mapě".
-     Na snímku to vypadalo jako rozbitý text.
-     `display:block` na čísle zalomení určí: číslo nahoře, celý přípisek
-     pod ním. Stejnou sazbu má ostatně cena na kartě nabídky.
-     Zúžit místo toho přípisek nejde: „na mapě" je holý text uvnitř
-     .mc-sub, ne vlastní prvek, takže na něj stylopis nedosáhne. */
-  .ms-vysledky > .map-count .mc-cislo{display:block;}
+  /* 3. dole: řazení i počet. `order` o stupeň výš než všechno ostatní.
+     VRÁCENO 12. 11. NA MAJITELŮV POKYN: „to řazení udělej původní."
+     Zkusil jsem dát počet a řazení vedle sebe na jeden řádek, jak to
+     má nad výpisem většina velkých realitních webů, a ušetřilo to
+     46 px. Majitel to odmítl, takže obojí stojí zase pod sebou přes
+     celou šířku — a platí dál jeho pokyn z 30. 10. („to řazení udělej
+     stejně velké jako pozemky po jednom"). */
+  .ms-vysledky > .map-count{grid-column:1 / -1; order:9; margin-bottom:0;}
   /* A ŘAZENÍ JE STEJNĚ VELKÉ JAKO „PROCHÁZET PO JEDNOM" — majitel
      30. 10.: „to řazení udělej stejně velké jako pozemky po jednom."
      Obojí je od téhle chvíle terč přes celý řádek (358 px na telefonu
@@ -9404,30 +9358,11 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      „Procházet po jednom" je akce a řazení je nastavení.
      Počet („1 897 na mapě") se tím odsune pod něj — .map-count je
      zalamovaná řada, takže mu stačí říct, že bere celou šířku. */
-  /* ŘAZENÍ MÁ VYŠŠÍ `order` NEŽ POČET, A JE TO PODMÍNKA, NE KOSMETIKA.
-     Napoprvé měly obě položky order:8 a rozhodovalo pořadí ve stromu,
-     kde <select> pro řazení stojí PŘED hlavičkou výpisu. Mřížka tedy
-     umístila řazení do druhého sloupce, posunula kurzor za něj — a počet
-     s `grid-column:1` se do téhož řádku už nevešel, protože běžné
-     skládání (`grid-auto-flow: row`, bez `dense`) se nevrací zpět.
-     Naměřeno: řádek počtu zůstal vlastní, úspora nula.
-     Pořadí se proto určí `order`em: nejdřív počet do prvního sloupce,
-     pak řazení do druhého téhož řádku. */
-  .ms-vysledky > .cdd{grid-column:span 4; order:9; width:auto;}
+  .ms-vysledky > .cdd{grid-column:1 / -1; order:8; width:auto;}
   .ms-vysledky > .cdd > .cdd-btn{width:100%;}
-  /* POPISEK „Řazení" NA PŮLCE ŘÁDKU NEZBYDE MÍSTO — a nechybí.
-     V tlačítku stojí ikona řazení, popisek „Řazení" a hodnota
-     („Doporučené"). Na celém řádku se vešlo obojí; na polovině (175 px
-     na telefonu 390 px) by se usekla hodnota, a to vždycky ta nejdelší,
-     tedy „Největší sleva proti okolí".
-     Co nese význam, je hodnota — a že jde o řazení, říká ikona vedle ní
-     i přístupné jméno ovladače (aria-label „Řazení příležitostí"
-     v index.html), takže pro odečítač se nemění nic. Je to týž recept,
-     jakým mají otvírače filtrů krátká jména (.mf-jm-k). */
-  .ms-vysledky > .cdd > .cdd-btn .cdd-k{display:none;}
   /* Bez skriptu zůstane v hlavičce holý <select> — ať stojí tam, kde
      by stál rozbalovač, a ne mezi tlačítky. */
-  .ms-vysledky > .map-select{grid-column:span 4; order:9;}
+  .ms-vysledky > .map-select{grid-column:1 / -1; order:8;}
 
   /* STEJNÁ POLÍČKA, NE ČTYŘI RŮZNĚ ŠIROKÉ. Nad výpisem stojí dvě
      dvojice ovladačů pod sebou — „Uložené / Doporučené" a „Procházet
