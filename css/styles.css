@@ -6338,9 +6338,30 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* Panel: zleva, protože zleva je hamburger. Šířka je min(88vw,380px) —
      na 390px displeji 343 px, takže je za ním vidět proužek stránky
      a je poznat, že se dá klepnutím mimo zavřít. */
+  /* DVĚ DEKLARACE ZE ZÁKLADU LIŠTY SE TU MUSÍ ZRUŠIT — a je to vada,
+     kterou majitel vyfotil 12. 11. („totálně dojebané").
+     Základní `#nav` je VODOROVNÁ lišta na monitoru a má
+     `justify-content:flex-end` (odkazy u pravého kraje) a
+     `flex-wrap:wrap` (typy nemovitostí na druhý řádek). V šuplíku se
+     `#nav` překlopí na sloupec — a tytéž dvě deklarace tam znamenají
+     něco úplně jiného:
+       `flex-end` v sloupci = obsah se zarovná na SPODEK. Naměřeno na
+         390×844: obsah měl 816 px, takže nahoře zbylo 37 px prázdna.
+         Na majitelově telefonu (308×640 CSS px) je obsah o 176 px
+         vyšší než okno, takže se mezera protáhla přes půl obrazovky —
+         přesně jak to vyfotil.
+       `wrap` v sloupci = co se do výšky nevejde, zalomí se do DRUHÉHO
+         SLOUPCE VPRAVO. Odtud ty bílé obdélníky „Pozemky / Byty /
+         Exekuce" čouhající zpoza hrany šuplíku: nejsou to filtry pod
+         překryvem, jsou to štítky druhů z menu, které se zalomily
+         vedle a vytekly ven.
+     V šuplíku je tedy obsah od vrchu a nezalamuje se; co se nevejde,
+     se roluje (`overflow-y:auto` o dva řádky níž), jak to má každý
+     mobilní šuplík. */
   #nav{position:fixed; top:0; left:0; bottom:0; z-index:91;
     width:min(88vw, 380px); max-height:none; margin:0; padding:20px 0 28px;
     display:flex; flex-direction:column; align-items:stretch; gap:0;
+    flex-wrap:nowrap; justify-content:flex-start;
     /* ZAPUŠTĚNÝ PODKLAD, ne bílý. Na bílém se bílé desky řádků ztratí
        a zbyde seznam oddělený linkami — přesně to, co majitel
        vyfotil. Je to táž předloha jako všude jinde na webu: zapuštěná
@@ -6446,6 +6467,53 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      3. ::details-content se musí odemknout, jinak ho prohlížeč drží
      schovaný bez ohledu na display. Bod 3 jsem při přestavbě vynechal
      a na snímku z telefonu nebyly Zprávy ani Hlídání. */
+  /* JEDNA SVISLICE PRO CELÝ ŠUPLÍK (12. 11.).
+     Naměřeno před opravou: hlava začínala na x=0, tlačítko „Přidat
+     nemovitost" na x=20, řádky nabídky na x=16 a štítky druhů zase na
+     x=0 — čtyři různé svislice v jednom panelu širokém 343 px.
+     Šestnáctka je ta, kterou měly řádky nabídky, a je to týž okraj
+     jako u karet ve výpisu. */
+  /* .nav-typy V SEZNAMU NENÍ, A JE TO ZÁMĚR: odsazení si nesou samy
+     její řádky. Jsou to <a>, takže na ně platí `#nav a:not(.btn-primary)`
+     s `margin:0 16px` — kdyby je blok odsadil ještě jednou, stály by
+     na 32 px místo 16 (naměřeno). */
+  #nav > .nav-hlava, #nav > .btn-primary, #nav > .nav-pata{
+    margin-inline:16px; width:auto; box-sizing:border-box;}
+  /* A DRUHY NEMOVITOSTÍ PATŘÍ NAD ÚČET, NE POD PATIČKU.
+     Základ jim dává `order:10`, což je pořadí pro vodorovnou lištu
+     (tam se mají kreslit dole pod vším). V šuplíku z toho vyšlo, že
+     „Pozemky / Domy / Byty" stály POD větou „Data z veřejných zdrojů"
+     — naměřeno y 615–816, kdežto patička 556–611.
+     Pořadí šuplíku je teď shora dolů: hlava (−4), křížek (−3),
+     „Přidat nemovitost" (−2), hledání (1), ceny (5), DRUHY (6),
+     účet (7), patička (9). Je to pořadí velkých realitních aplikací:
+     značka, hlavní akce, kam jít, co se prodává, můj účet, tiráž. */
+  /* DRUHY NEMOVITOSTÍ JSOU V ŠUPLÍKU ŘÁDKY, NE MŘÍŽKA KACHLÍ (12. 11.).
+     Mřížka 2×3 tu byla od 10. 11. kvůli výšce (201 px místo 272).
+     Jenže do sloupce širokého 83–119 px se jména s počty nevejdou:
+     naměřeno na 308 px se usekávaly ČTYŘI z šesti štítků („Nové na
+     trhu" o 46 px, „Pozemky" o 19, „Exekuce" o 14, „Dražby" o 3),
+     na 390 px jeden. Oříznutí bylo zapsané jako „pojistka", ale stalo
+     se z něj pravidlo: na snímku z telefonu to byla hromada kachlí
+     s uříznutými nápisy a čísly pod nimi.
+     Teď je to týž řádek jako „Hledat na mapě" nad nimi — jméno vlevo,
+     počet vpravo, výška jako u ostatních položek, jedna deska.
+     Celé menu tím má JEDEN rytmus, což je přesně to, co majitel žádal
+     („urovnej to a vyčisti"). Šuplík se tím prodlouží a začne se
+     rolovat; roluje se od 30. 10. (`overflow-y:auto` výš) a je to
+     způsob, jakým mobilní šuplík řeší dlouhý obsah každý velký web. */
+  .nav-typy{order:6; display:flex; flex-direction:column; gap:0;
+    padding:0; margin-top:8px; border-top:0;}
+  .nav-typ{min-height:56px; justify-content:space-between; gap:12px;
+    padding:0 16px; border:0; border-radius:0;
+    background:var(--plocha-karta); box-shadow:var(--e1);
+    font-size:16px; font-weight:600; letter-spacing:-0.01em;
+    white-space:nowrap; overflow:visible; flex-wrap:nowrap;}
+  .nav-typ:first-child{border-top-left-radius:var(--r-ovladani); border-top-right-radius:var(--r-ovladani);}
+  .nav-typ:last-child{border-bottom-left-radius:var(--r-ovladani); border-bottom-right-radius:var(--r-ovladani);}
+  .nav-typ + .nav-typ{box-shadow:var(--e1), inset 0 1px 0 var(--line);}
+  .nav-typ .nav-pocet{flex:none; font-size:14px; font-weight:500; color:var(--muted);}
+  .nav-typ:active{background:var(--plocha-tlumena);}
   .nav-sk{display:flex; flex-direction:column; min-width:0;}
   .nav-sk-panel, .nav-sk:not([open]) > .nav-sk-panel{
     display:flex; flex-direction:column; position:static; min-width:0;
@@ -6564,7 +6632,11 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* 16 px nahoře a dole, ne 14: řádky nabídky kolem tlačítka mají 52
      a 56 px. Mez 52 si web klade sám (hlídá ji test-menu) a hlavní akce
      v nabídce nemá být ten nejhůř trefitelný cíl ze všech. */
-  #nav a.btn-primary{order:-2; display:block; margin:16px 20px 8px; text-align:center;
+  /* ŠESTNÁCTKA PO STRANÁCH, JAKO VŠECHNO OSTATNÍ V ŠUPLÍKU (12. 11.).
+     Stálo tu 20 px, takže tlačítko bylo o 4 px užší než řádky nabídky
+     pod ním a jeho hrany nestály na téže svislici — naměřeno x=20
+     proti x=16 u všeho dalšího. */
+  #nav a.btn-primary{order:-2; display:block; margin:16px 16px 8px; text-align:center;
     padding:16px; font-size:16px;}
 
   /* =================================================================

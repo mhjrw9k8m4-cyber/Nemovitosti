@@ -128,6 +128,9 @@ try {
       const q = x.getBoundingClientRect();
       return { kam: x.getAttribute('href'), txt: x.textContent.trim(),
         s: Math.round(q.width), v: Math.round(q.height), x: Math.round(q.left),
+        /* Poloha vůči hornímu okraji okna: podle ní se pozná, co je
+           v šuplíku vidět bez rolování. */
+        y: Math.round(q.top),
         ikona: getComputedStyle(x, '::before').backgroundImage !== 'none',
         /* Prázdné místo po ikoně: ::before v řádku JE (má obsah i šířku),
            ale nekreslí nic — text je pak odstrčený o nic. */
@@ -146,6 +149,14 @@ try {
          otázka: vejde se nabídka na obrazovku, nebo se musí rolovat? */
       podHranou: Math.max(0, n.scrollHeight - n.clientHeight),
       obsah: n.scrollHeight,
+      /* Rolovatelnost se měří TAHEM, ne jen stylem: scrollTop se
+         nastaví na konec a přečte. Prvek s `overflow-y:auto`, který
+         nemá co rolovat, vrátí nulu — a to je taky v pořádku, protože
+         pak není co zpřístupňovat. */
+      overflowY: s.overflowY,
+      rolovatelny: (() => { const p = n.scrollTop; n.scrollTop = 99999;
+        const k = n.scrollTop; n.scrollTop = p;
+        return k > 0 || n.scrollHeight <= n.clientHeight + 1; })(),
       radku: new Set(a.map((x) => x.v && x.x >= 0 ? Math.round(x.v) : 0)).size,
       ySad: new Set(a.map((x) => Math.round(x.v))).size, a };
   });
@@ -223,16 +234,40 @@ try {
   pravda(`každý viditelný nadpis oddílu má ikonu (${l.odd.length} oddílů)`,
     l.odd.length >= 1 && l.odd.every((x) => x.ikona),
     JSON.stringify(l.odd));
-  /* A TOHLE JE TA VLASTNÍ OTÁZKA — a chyběla tu.
+  /* A TOHLE JE TA VLASTNÍ OTÁZKA.
      NAMĚŘENO 26. 10. na 390×844: obsah šuplíku 1 206 px v 844px okně,
      tedy 362 px za spodní hranou. Prvních 458 px zabíralo tlačítko
      s prodejní větou a účet; pozemky začínaly na 436 px a „Kontakt"
      byl až na 1 122. Majitel: „menu nemá mít tisíc kolonek ani tisíce
-     textů." Po úklidu (viz scripts/hlavicka.mjs) je obsah 844 px —
-     celá nabídka se vejde a neroluje se. Mez je 0: jakmile se sem
-     vrátí jediný řádek navíc, zkouška to řekne. */
-  pravda(`celá nabídka se vejde na obrazovku (obsah ${l.obsah} z ${l.okno} px)`,
-    l.podHranou === 0, `za spodní hranou zůstalo ${l.podHranou} px`);
+     textů." Po úklidu byl obsah 844 px a mez tu zněla „podHranou === 0",
+     tedy „nabídka se nesmí rolovat".
+
+     OD 12. 11. SE MĚŘÍ NĚCO JINÉHO, A JE TO ZMĚNA ROZHODNUTÍ.
+     Majitel vyfotil šuplík se slovy, že je „totálně dojebaný", a mezi
+     vadami byla jedna, která se bez rolování opravit nedá: štítky
+     druhů nemovitostí byly mřížka 2×3 a do sloupce širokého 83 px se
+     jména s počty nevešla — na 308 px se usekávaly ČTYŘI z šesti.
+     Jako řádky se vejdou všechny, ale zaberou 336 px místo 201,
+     takže obsah vyšel na 966 px.
+     Mez „neroluje se" navíc nikdy neplatila na jeho vlastním telefonu:
+     ten má 640 CSS px na výšku, takže se nevešel ani obsah 844 px.
+     Chránila tedy vlastnost, kterou web stejně nesplňoval — a bránila
+     opravě vady, kterou je vidět.
+     Měří se proto to, co za tou větou opravdu je:
+       1. KOLIK TOHO V NABÍDCE JE (žádné „tisíce kolonek"),
+       2. ŽE TO PODSTATNÉ JE VIDĚT HNED, bez rolování,
+       3. ŽE SE ZBYTEK DÁ ODROLOVAT — jinak by byl nedosažitelný.
+     Dvanáct položek je dnešní stav (dvě cesty, šest druhů, čtyři řádky
+     účtu); mez 14 nechává rezervu na jednu dvě a shodí se, jakmile by
+     se nabídka začala zase nafukovat. */
+  pravda(`v nabídce je nejvýš 14 položek (dnes ${l.a.length})`,
+    l.a.length <= 14, JSON.stringify(l.a.map((x) => x.txt.slice(0, 18))));
+  const nadHranou = l.a.filter((x) => x.y >= 0 && x.y + x.v <= l.okno);
+  pravda(`a bez rolování je vidět aspoň pět položek (${nadHranou.length} z ${l.a.length})`,
+    nadHranou.length >= 5, JSON.stringify(nadHranou.map((x) => x.txt.slice(0, 18))));
+  pravda('a co se nevejde, se dá odrolovat',
+    l.podHranou === 0 || l.rolovatelny === true,
+    `za spodní hranou ${l.podHranou} px, overflow-y: ${l.overflowY}`);
   /* Mez 44 px si web klade sám (hlídá ji test-rozvrzeni i test-dotyk);
      v panelu je místa na víc, takže se čeká 52. */
   pravda('a dá se trefit prstem (52 px na výšku)', l.a.every((x) => x.v >= 52),
