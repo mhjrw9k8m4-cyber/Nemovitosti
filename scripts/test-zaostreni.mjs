@@ -734,6 +734,84 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
   await ctx.close();
 }
 
+/* ----------------------------------------------------------------------
+   LIŠTA AKCÍ FILTRŮ: KDO STISKNE, NESMÍ SKONČIT NA <body>
+   ----------------------------------------------------------------------
+   Od 12. 11. je lišta akcí na telefonu vidět jen ve dvou stavech:
+   při otevřeném panelu skupiny, nebo když je co rušit. Tím oba její
+   ovladače po stisku SAMY ZMIZÍ:
+     „Zobrazit N nemovitostí" zavře panely → lišta zmizí;
+     „Zrušit filtry" zruší filtry → lišta zmizí.
+   Prohlížeč v takové chvíli zaměření upustí na <body> a kdo jede
+   klávesnicí, se octne na začátku dokumentu — táž třída vady jako
+   v oddílu 96. Obsluha v js/main.js to proto přebírá: zaměření jde na
+   hlavičku výpisu (#map-count, `tabindex="-1"`), kam se zároveň roluje,
+   protože nese počet, na který se člověk filtrováním ptal. Na monitoru
+   lišta zůstává, takže tam zaměření bere soused „Zobrazit N".
+   MĚŘÍ SE OBA STISKY NA OBOU ŠÍŘKÁCH a mez je „ne na body" — ne
+   „přesně na #map-count", protože na monitoru je správný cíl jiný. */
+{
+  for (const [sirka, telefon] of [[390, true], [1280, false]]) {
+    const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+      viewport: { width: sirka, height: 844 }, isMobile: telefon, hasTouch: telefon, locale: 'cs-CZ' });
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+    await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+      null, { timeout: 60000 }).catch(() => {});
+    const v = await p.evaluate(async () => {
+      const spi = (ms) => new Promise((r) => setTimeout(r, ms));
+      const kdo = () => { const a = document.activeElement;
+        return a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '')) : 'nic'; };
+      const out = {};
+      /* 1. „Zobrazit N" z otevřeného panelu. */
+      document.querySelector('#mf-druh summary').click(); await spi(250);
+      const h = document.getElementById('mcf-hotovo');
+      out.hotovoVidno = !!h.offsetParent;
+      h.focus(); h.click(); await spi(450);
+      out.poHotovo = kdo();
+      /* 2. „Zrušit filtry" se zavřeným panelem. */
+      document.querySelector('#mf-druh summary').click(); await spi(250);
+      document.querySelector('#map-filters .filter-chip[data-type="drazba"]').click(); await spi(350);
+      document.querySelector('#mf-druh summary').click(); await spi(300);
+      const z = document.getElementById('mcf-zrusit');
+      out.zrusitVidno = !!z.offsetParent;
+      z.focus(); z.click(); await spi(450);
+      out.poZruseni = kdo();
+      /* 3. A sabotáž: bez `tabindex` na hlavičce výpisu nemá zaměření
+            kam jít, takže na telefonu MUSÍ spadnout na body. Tím je
+            vidět, že mez výš měří živou vlastnost, a ne že by na body
+            nespadlo samo. */
+      document.getElementById('map-count').removeAttribute('tabindex');
+      document.querySelector('#mf-druh summary').click(); await spi(250);
+      const h2 = document.getElementById('mcf-hotovo');
+      h2.focus(); h2.click(); await spi(450);
+      out.sabotKdo = kdo();
+      document.getElementById('map-count').setAttribute('tabindex', '-1');
+      return out;
+    });
+    const jm = telefon ? `telefon ${sirka}` : `stolní ${sirka}`;
+    pravda(`${jm}: „Zobrazit N" je v otevřeném panelu vidět`, v.hotovoVidno === true,
+      JSON.stringify(v));
+    pravda(`${jm}: a po jeho stisku zaměření nespadne na body (${v.poHotovo})`,
+      v.poHotovo !== 'body', JSON.stringify(v));
+    pravda(`${jm}: „Zrušit filtry" je se zapnutým filtrem vidět`, v.zrusitVidno === true,
+      JSON.stringify(v));
+    pravda(`${jm}: a po jeho stisku zaměření nespadne na body (${v.poZruseni})`,
+      v.poZruseni !== 'body', JSON.stringify(v));
+    /* Sabotáž má smysl jen tam, kde lišta po stisku mizí — tedy na
+       telefonu. Na monitoru zůstává soused, takže by neprokázala nic
+       a měří se místo toho, že se tam opravdu nic nerozbilo. */
+    if (telefon) {
+      pravda(`${jm}: a mez je živá — bez tabindexu na hlavičce výpisu zaměření spadne (${v.sabotKdo})`,
+        v.sabotKdo === 'body', JSON.stringify(v));
+    } else {
+      pravda(`${jm}: lišta po stisku zůstává, takže zaměření drží i bez náhradníka (${v.sabotKdo})`,
+        v.sabotKdo !== 'body', JSON.stringify(v));
+    }
+    await ctx.close();
+  }
+}
+
 await prohlizec.close();
 console.log('\nZaostření klávesnicí');
 console.log(zpravy.join('\n'));

@@ -6725,6 +6725,17 @@
     var tab = document.querySelector('.mvt-btn[data-mv="seznam"]');
     if (tab && !tab.classList.contains('active')) tab.click();
     scrollNaVypis();
+    /* ZAMĚŘENÍ KLÁVESNICE NESMÍ SPADNOUT NA <body>. Tohle tlačítko
+       zavřením panelů v klidovém stavu bez zapnutého filtru SAMO ZMIZÍ
+       (lišta akcí je od 12. 11. na telefonu vidět jen při otevřeném
+       panelu nebo když je co rušit), takže by prohlížeč zaměření
+       upustil — táž třída vady jako u „Zrušit filtry" níž.
+       Zaměření jde na hlavičku výpisu, kam se zároveň roluje: nese
+       počet, na který se člověk filtrováním ptal. preventScroll proto,
+       že rolování si už obstaral scrollNaVypis a dvojí posun by
+       stránkou cuknul. */
+    var hl = document.getElementById('map-count');
+    if (hl) { try { hl.focus({ preventScroll: true }); } catch (e3) { try { hl.focus(); } catch (e4) {} } }
   });
   if (akceZrusit) akceZrusit.addEventListener('click', function () {
     resetFilters();
@@ -6743,8 +6754,18 @@
        v ovládání filtrů a tam má člověk zůstat.
        preventScroll: pohled posouvá scrollNaVypis() o řádek níž, ne
        zaměření — jinak by se stránka hnula dvakrát. */
-    if (akceHotovo && !akceHotovo.disabled) {
-      try { akceHotovo.focus({ preventScroll: true }); } catch (e) { akceHotovo.focus(); }
+    /* OD 12. 11. SOUSED NEMUSÍ ZŮSTAT. „Zobrazit N" je na telefonu
+       vidět jen při otevřeném panelu, takže po zrušení filtrů se
+       zavřeným panelem zmizí celá lišta — a zaměření by spadlo na
+       <body> i tak. Proto se nejdřív zkusí soused, a když ten na
+       obrazovce není, bere zaměření hlavička výpisu (#map-count,
+       `tabindex="-1"`), kam se zároveň roluje. `offsetParent` je
+       spolehlivý test, protože display:none ho dá na null. */
+    var nahradnik = document.getElementById('map-count');
+    var kam = (akceHotovo && !akceHotovo.disabled && akceHotovo.offsetParent)
+      ? akceHotovo : nahradnik;
+    if (kam) {
+      try { kam.focus({ preventScroll: true }); } catch (e) { try { kam.focus(); } catch (e2) {} }
     }
     scrollNaVypis();
   });

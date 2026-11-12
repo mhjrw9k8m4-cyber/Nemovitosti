@@ -4069,13 +4069,19 @@
     var tab = document.querySelector('.mvt-btn[data-mv="seznam"]');
     if (tab && !tab.classList.contains('active')) tab.click();
     scrollNaVypis();
+
+    var hl = document.getElementById('map-count');
+    if (hl) { try { hl.focus({ preventScroll: true }); } catch (e3) { try { hl.focus(); } catch (e4) {} } }
   });
   if (akceZrusit) akceZrusit.addEventListener('click', function () {
     resetFilters();
     zavriPanely(null);
 
-    if (akceHotovo && !akceHotovo.disabled) {
-      try { akceHotovo.focus({ preventScroll: true }); } catch (e) { akceHotovo.focus(); }
+    var nahradnik = document.getElementById('map-count');
+    var kam = (akceHotovo && !akceHotovo.disabled && akceHotovo.offsetParent)
+      ? akceHotovo : nahradnik;
+    if (kam) {
+      try { kam.focus({ preventScroll: true }); } catch (e) { try { kam.focus(); } catch (e2) {} }
     }
     scrollNaVypis();
   });

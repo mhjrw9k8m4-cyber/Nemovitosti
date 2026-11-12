@@ -5758,6 +5758,42 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      SOUROZENEC summary, ne jeho potomek, takže se dál věší na .mc-rada
      a kreslí se přes celou šířku řádku. */
   .mc-rada-pas .mf-btn{position:relative;}
+  /* LIŠTA AKCÍ V KLIDU NENÍ — a je to rozhodnutí o vzhledu, ne úklid.
+     Majitel poslal snímek ovládání nad výpisem se slovy, že „se to
+     bohužel nedá pozerat". Na telefonu stálo nad prvním inzerátem pět
+     řádků ovladačů a nejhlasitější z nich byla plná zelená plocha
+     „Zobrazit 3 993 nemovitostí" přes celou šířku (46 px, lišta
+     s odstupy 61 px) — která opakuje TÝŽ POČET, jaký o 230 px níž
+     nese hlavička výpisu („3 993 nemovitostí"), a na telefonu
+     v klidovém stavu nemá co dělat: filtry se použijí hned, jak se
+     naklikají, a výpis je rovnou pod ní.
+     Vlastní zdůvodnění toho tlačítka to potvrzuje. Vzniklo 10. 11.,
+     aby se o něm dozvěděl ten, kdo si naklikal filtry v otevřeném
+     panelu (do té doby bylo na dně panelu, 1 459 px od jeho začátku).
+     Tedy: má smysl, dokud je panel otevřený. Pak ne.
+     ZŮSTÁVÁ VE DVOU STAVECH, a oba nesou informaci, kterou jinde
+     nevidět není:
+       1. otevřený panel skupiny — tam je to potvrzení volby a lišta
+          se navíc přilepí ke spodní hraně obrazovky (pravidlo výš);
+       2. zapnutý filtr — pak v liště svítí „Zrušit filtry" (#mcf-zrusit
+          odkládá `hidden` JS podle jeNecoZapnute()) a celkový odznak
+          #msf-badge s počtem zapnutých filtrů.
+     Na monitoru od 1041 px lišta zůstává vždy: tam stojí v mřížce
+     vedle filtrů, ne jako vlastní řádek nad výpisem, a 46 px ve
+     třetím řádku mřížky nikomu neodsouvá první nabídku.
+     Měřeno na 390 px: lišta akcí y 297–358, první nabídka 584 px. */
+  .map-controls-panel:not(:has(details.mf[open]))
+    .mcf-akce:not(:has(.mcf-zrusit:not([hidden]))){display:none;}
+  /* A SE ZAPNUTÝM FILTREM ZBYDE JEN „ZRUŠIT FILTRY".
+     Lišta se v tom stavu vrátit MUSÍ (nese odznak s počtem zapnutých
+     filtrů a jediné tlačítko, kterým se dají zrušit), ale „Zobrazit N
+     nemovitostí" v ní pořád opakuje počet z hlavičky výpisu o dva
+     řádky níž — a navíc nemá co zobrazovat, protože zapnutý filtr se
+     na výpisu projevil hned.
+     Naměřeno na 390 px: se zapnutým filtrem a zavřeným panelem měla
+     lišta 141 px (dvě tlačítka pod sebou, column-reverse), bez
+     „Zobrazit N" zbyde jedno. */
+  .map-controls-panel:not(:has(details.mf[open])) .mcf-hotovo{display:none;}
   .map-side{order:2; border-right:0; max-height:none;}
   /* STEJNÁ ÚROVEŇ JAKO VÝPIS (31. 10.). V seznamu začíná první
      ovladač 16 px pod pásem s hledáním, mapa začínala rovnou na něm —

@@ -273,6 +273,68 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
   await ctx.close();
 }
 
+/* ----------------------------------------------------------------------
+   LIŠTA AKCÍ MÁ NA TELEFONU TŘI STAVY
+   ----------------------------------------------------------------------
+   ROZHODNUTÍ Z 12. 11., ne mez na čísla. Majitel poslal snímek ovládání
+   nad výpisem se slovy, že „se to bohužel nedá pozerat". Nejhlasitější
+   prvek v něm byla plná zelená plocha „Zobrazit 3 993 nemovitostí" přes
+   celou šířku — a ta opakuje TÝŽ POČET, jaký o dva řádky níž nese
+   hlavička výpisu, přičemž filtry se použijí hned, jak se naklikají.
+   Lišta proto na telefonu v klidu není. Vrací se jen tam, kde nese
+   informaci, která jinde vidět není:
+     klid bez filtru  → lišta skrytá;
+     otevřený panel   → lišta i „Zobrazit N" (potvrzení volby);
+     zapnutý filtr    → lišta a „Zrušit filtry", ale „Zobrazit N" ne.
+   Na monitoru lišta zůstává vždy: stojí v mřížce vedle filtrů, ne jako
+   vlastní řádek nad výpisem.
+   Naměřeno na 390 px: první nabídka začínala na 636 px, po rolovacím
+   řádku filtrů na 584 a po skrytí lišty na 511. Se zapnutým filtrem
+   měla lišta 141 px, bez „Zobrazit N" 87.
+   Kontrola je sama sobě důkazem živosti: kdyby pravidlo přestalo
+   platit, lišta by byla vidět i v klidu a první kontrola spadne. */
+{
+  for (const [sirka, telefon] of [[390, true], [1280, false]]) {
+    const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+      viewport: { width: sirka, height: 844 }, isMobile: telefon, hasTouch: telefon, locale: 'cs-CZ' });
+    await ctx.route('**/*', (r) => {
+      const h = new URL(r.request().url()).hostname;
+      return (h === '127.0.0.1' || h === 'localhost') ? r.continue() : r.abort();
+    });
+    const p = await ctx.newPage();
+    await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+    await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+      null, { timeout: 60000 }).catch(() => {});
+    const v = await p.evaluate(async () => {
+      const spi = (ms) => new Promise((r) => setTimeout(r, ms));
+      const vys = (id) => { const e = document.getElementById(id);
+        return e ? Math.round(e.getBoundingClientRect().height) : -1; };
+      const out = { klid: vys('mcf-akce'), klidHotovo: vys('mcf-hotovo') };
+      document.querySelector('#mf-druh summary').click(); await spi(300);
+      out.panel = vys('mcf-akce'); out.panelHotovo = vys('mcf-hotovo');
+      document.querySelector('#map-filters .filter-chip[data-type="drazba"]').click(); await spi(400);
+      document.querySelector('#mf-druh summary').click(); await spi(350);
+      out.filtr = vys('mcf-akce'); out.filtrHotovo = vys('mcf-hotovo');
+      out.filtrZrusit = vys('mcf-zrusit');
+      return out;
+    });
+    const jm = telefon ? `telefon ${sirka}` : `stolní ${sirka}`;
+    if (telefon) {
+      pravda(`${jm}: lišta akcí v klidu není`, v.klid <= 2, JSON.stringify(v));
+      pravda(`${jm}: s otevřeným panelem je i s „Zobrazit N"`,
+        v.panel > 40 && v.panelHotovo > 40, JSON.stringify(v));
+      pravda(`${jm}: se zapnutým filtrem zbyde „Zrušit filtry" bez „Zobrazit N"`,
+        v.filtr > 40 && v.filtrZrusit > 40 && v.filtrHotovo <= 2, JSON.stringify(v));
+    } else {
+      pravda(`${jm}: lišta akcí je vidět ve všech třech stavech`,
+        v.klid > 40 && v.panel > 40 && v.filtr > 40, JSON.stringify(v));
+      pravda(`${jm}: a „Zobrazit N" v ní zůstává taky`,
+        v.klidHotovo > 40 && v.panelHotovo > 40 && v.filtrHotovo > 40, JSON.stringify(v));
+    }
+    await ctx.close();
+  }
+}
+
 await prohlizec.close();
 console.log('\nŘádek filtrů je vidět bez klepnutí a žádná skupina se neroluje');
 console.log(zpravy.join('\n'));

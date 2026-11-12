@@ -416,7 +416,18 @@ try {
              se nic nenapsalo, a „Zrušit filtry", dokud není co rušit.
              Ty se neschovávají, aby se musely odhalit klepnutím —
              schovávají se, protože by nic neudělaly. */
-          && !e.hidden)
+          && !e.hidden
+          /* TOTÉŽ, JEN STYLOPISEM: „Zobrazit N nemovitostí" je od
+             12. 11. na telefonu vidět jen při otevřeném panelu
+             skupiny. Není to rozbalovátko a klepnutím se nikde
+             neodhalí: je to POTVRZENÍ VOLBY, které v klidu nemá co
+             potvrzovat, a navíc opakuje počet z hlavičky výpisu o dva
+             řádky níž. Proto jmenovitě, ne obecné povolení pro
+             `display:none` — tím by se kontrola vykuchala, protože
+             právě to je způsob, jakým by se dala hlavní funkce zase
+             schovat za klepnutí. Že se v těch dvou stavech lišta
+             opravdu vrací, měří test-filtry-radek. */
+          && e.id !== 'mcf-hotovo')
         .filter((e) => { const r = e.getBoundingClientRect();
           return r.width < 2 || r.height < 2; }).length,
     };
