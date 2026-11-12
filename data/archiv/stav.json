@@ -14652,16 +14652,6 @@
    "dr": "orná půda",
    "t": "sale"
   },
-  "Vrbice|—|Nymburk|50.181|15.230#45qaq": {
-   "od": "2026-11-10",
-   "videno": "2026-11-12",
-   "c": 3279000,
-   "v": 63002,
-   "m": "Vrbice",
-   "o": "Nymburk",
-   "dr": "orná půda",
-   "t": "sale"
-  },
   "Chlum Svaté Maří|—|Sokolov|50.145|12.536#obla": {
    "od": "2026-11-10",
    "videno": "2026-11-12",
@@ -24032,16 +24022,6 @@
    "dr": "byt",
    "t": "sale"
   },
-  "Varnsdorf|—|Děčín|50.908|14.618#9qy5k": {
-   "od": "2026-11-10",
-   "videno": "2026-11-12",
-   "c": 2300000,
-   "v": 68,
-   "m": "Varnsdorf",
-   "o": "Děčín",
-   "dr": "byt",
-   "t": "sale"
-  },
   "Rudé armády|—|Praha-západ|49.987|14.323#1xu4u": {
    "od": "2026-11-07",
    "videno": "2026-11-12",
@@ -24290,16 +24270,6 @@
    "m": "Partyzánská",
    "o": "Praha",
    "dr": "byt",
-   "t": "sale"
-  },
-  "Černovická|—|Praha|50.030|14.303#9pgcq": {
-   "od": "2026-11-10",
-   "videno": "2026-11-12",
-   "c": 750000,
-   "v": 21,
-   "m": "Černovická",
-   "o": "Praha",
-   "dr": "garáž",
    "t": "sale"
   },
   "Častohostice|—|Třebíč|49.009|15.811#25axu": {
@@ -24630,16 +24600,6 @@
    "m": "Moravská Třebová",
    "o": "Svitavy",
    "dr": "dům",
-   "t": "sale"
-  },
-  "Borová|—|Havlíčkův Brod|49.641|15.779#lefi": {
-   "od": "2026-11-07",
-   "videno": "2026-11-12",
-   "c": 1400000,
-   "v": 35,
-   "m": "Borová",
-   "o": "Havlíčkův Brod",
-   "dr": "byt",
    "t": "sale"
   },
   "Slavonice|—|Jindřichův Hradec|49.001|15.347#knhc": {
@@ -39931,6 +39891,46 @@
    "o": "Kroměříž",
    "dr": "orná půda",
    "t": "exekuce"
+  },
+  "Vrbice|—|Prachatice|49.144|13.707#45qaq": {
+   "od": "2026-11-10",
+   "videno": "2026-11-12",
+   "c": 3279000,
+   "v": 63002,
+   "m": "Vrbice",
+   "o": "Nymburk",
+   "dr": "orná půda",
+   "t": "sale"
+  },
+  "Husova|—|České Budějovice|48.973|14.467#9qy5k": {
+   "od": "2026-11-10",
+   "videno": "2026-11-12",
+   "c": 2300000,
+   "v": 68,
+   "m": "Varnsdorf",
+   "o": "Děčín",
+   "dr": "byt",
+   "t": "sale"
+  },
+  "Chomutov|—|Chomutov|50.456|13.415#9pgcq": {
+   "od": "2026-11-10",
+   "videno": "2026-11-12",
+   "c": 750000,
+   "v": 21,
+   "m": "Černovická",
+   "o": "Praha",
+   "dr": "garáž",
+   "t": "sale"
+  },
+  "Chomutov|—|Chomutov|50.460|13.423#lefi": {
+   "od": "2026-11-07",
+   "videno": "2026-11-12",
+   "c": 1400000,
+   "v": 35,
+   "m": "Borová",
+   "o": "Havlíčkův Brod",
+   "dr": "byt",
+   "t": "sale"
   }
  }
 }
