@@ -247,12 +247,14 @@ async function otevri(soubor, sirka, vyska) {
       const mezera = Math.round(odkazy[0].getBoundingClientRect().left - logo.getBoundingClientRect().right);
       // Odkaz, který se sám zalomil na dva řádky (kromě tlačítka s výplní).
       const sirsi = odkazy.filter((a) => {
-        /* Vyplněný ovladač není zalomený text. Tlačítko i štítek typu
-           nemovitosti (.nav-typ, druhá řada lišty od 10. 11.) jsou vyšší
-           než řádek schválně — mají výplň a chytací plochu. Měří se tu
-           VADA, kterou to pravidlo vzniklo chytat: nápis rozsekaný na
-           dva řádky uvnitř odkazu („Hledat / na / mapě"). */
-        if (a.classList.contains('btn-primary') || a.classList.contains('nav-typ')) return false;
+        /* Vyplněný ovladač není zalomený text: tlačítko je vyšší než
+           řádek schválně, má výplň a chytací plochu. Měří se tu VADA,
+           kterou to pravidlo vzniklo chytat: nápis rozsekaný na dva
+           řádky uvnitř odkazu („Hledat / na / mapě").
+           (Do 12. 11. tu byla druhá výjimka, .nav-typ — řada štítků
+           typů nemovitostí. Majitel ji nechal z lišty odstranit, takže
+           výjimka neměla co vyjímat.) */
+        if (a.classList.contains('btn-primary')) return false;
         const r = a.getBoundingClientRect();
         return r.height > parseFloat(getComputedStyle(a).lineHeight) * 1.6;
       }).map((a) => a.textContent.trim());
@@ -2230,7 +2232,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
    to na úvodní stránce našlo 22 nálezů a všechny byly nevinné —
    .visually-hidden je 1 px široký blok s `overflow:hidden` a dlouhým
    textem, takže „přetéká" o 260 px, a stejně tak usekávané nápisy
-   (.skip-link, .nav-typ, .hu-out). Měří se proto SKUTEČNÉ UJETÍ:
+   (.skip-link, .hu-out). Měří se proto SKUTEČNÉ UJETÍ:
    scrollLeft se nastaví na konec, přečte a vrátí zpátky.
    PROČ SE MĚŘÍ JEN ŠIROKÉ BLOKY. Štítek široký 1 px, který ujede, nikoho
    neposune. Co bolí, je pruh rozvržení: ten pod prstem ujede celý

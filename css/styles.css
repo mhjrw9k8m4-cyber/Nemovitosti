@@ -1982,10 +1982,10 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    PANELU na telefonu; v liště na monitoru stojí ty dva odkazy, účet
    a tlačítko, jak to bylo rozhodnuté (viz scripts/hlavicka.mjs). */
 @media (min-width:1041px){
-  /* Počet se v liště na monitoru schovává — kromě štítků typů, kde je
-     to půlka sdělení („Exekuce 45" říká, jestli tam má smysl klepnout). */
+  /* Počet se v liště na monitoru schovává. (Do 12. 11. tu byla
+     výjimka pro štítky typů; ty v liště nejsou, viz níž.) */
   #nav .nav-hlava, #nav .nav-oddil, #nav .nav-pata, #nav .nav-mobil,
-  #nav a:not(.nav-typ) .nav-pocet{display:none;}
+  #nav a .nav-pocet{display:none;}
   #nav a:not(.btn-primary) > .ik{display:none;}
 }
 .hdr-ucet{display:none;}
@@ -2111,72 +2111,17 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
 #nav{display:flex; flex:1; flex-wrap:wrap; gap:24px; align-items:center;
   justify-content:flex-end;}
 #nav > a{white-space:nowrap;}
-/* ===== ŘADA TYPŮ NEMOVITOSTÍ V LIŠTĚ ===============================
-   Druhý řádek lišty: co se na webu prodává, s počtem u každého.
-   Zdůvodnění, proč tu je a proč je to obrat proti dvěma starším
-   pokynům, stojí u TYPY_HTML v scripts/hlavicka.mjs — tady je jen to,
-   jak se to sází.
-   NA ŠIROKÉM DISPLEJI JE TO VLASTNÍ ŘÁDEK. `flex-basis:100%` ho
-   v pružné liště zalomí pod první řadu; `order` ho drží až za účtem
-   a tlačítkem, aby v značce zůstalo pořadí pro odečítač (hledání
-   první, akce poslední) a zároveň se kreslil dole.
-   ŠTÍTEK, NE ODKAZ V ŘÁDCE. Typ je cíl, na který se klepe prstem
-   i myší, takže má plochu a obrys — ne podtržené slovo mezi ostatními.
-   Výška 36 px na monitoru, na dotyku 44 (viz @media níž). */
-.nav-typy{display:flex; flex-wrap:wrap; gap:8px; flex-basis:100%;
-  order:10; margin:0; padding:12px 0 0; border-top:1px solid var(--line);}
-.nav-typ{display:inline-flex; align-items:center; gap:8px; min-height:36px;
-  padding:0 12px; border:1px solid var(--line); border-radius:var(--r-pill);
-  background:var(--plocha-karta); color:var(--text) !important;
-  font-size:14px; font-weight:600; white-space:nowrap;}
-.nav-typ:hover{border-color:var(--line-strong); box-shadow:var(--e1);}
-.nav-typ .nav-pocet{font-weight:500; color:var(--muted);}
-/* V ŠUPLÍKU NA TELEFONU JE TO MŘÍŽKA, NE ŘADA.
-   Změřeno: jako pružná řada se šest štítků po 56 px zalomilo do čtyř
-   řádků a šestý skončil POD HRANOU okna — šuplík se přestal vejít do
-   844 px, což je mez, kterou hlídá scripts/test-menu.mjs.
-   Dvěma sloupci se z toho stanou tři řádky po 44 px (dotyková mez),
-   tedy 148 px místo 272. Štítek je dál celý chytací plochou; zmenšila
-   se jen jeho šířka, ne výška. */
-@media (max-width:980px){
-  /* ŠÍŘKU SI MŘÍŽKA NESMÍ URČIT Z OBSAHU. V otevřeném šuplíku je #nav
-     svislý pružný pás a .nav-typy v něm nebyla roztažená, takže si
-     šířku spočítala z nejširší pilulky: naměřeno na 390 px dva sloupce
-     185,8 + 213,2 px, dohromady 407 px do šuplíku širokého 343 —
-     mřížka visela 65 px MIMO stránku a pilulky „Pozemky", „Byty"
-     a „Exekuce" měly levou hranu na −49 px, tedy uříznuté oknem.
-     `width:100%` je přišpendlí k šuplíku a 1fr 1fr se pak dělí tím,
-     co je k dispozici. box-sizing kvůli tomu, aby se do té šířky
-     počítalo i odsazení.
-     A TRACKY JSOU minmax(0, 1fr), NE 1fr. Samotné 1fr má spodní mez
-     min-content, takže dlouhý nápis („Nové na trhu 2 533“) sloupec
-     roztáhne i v roztažené mřížce: naměřeno 185,8 + 213,2 px, tedy
-     407 px do 342. S minmax(0, 1fr) se sloupce dělí tím, co je, a text
-     se zalomí. */
-  .nav-typy{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;
-    padding-top:8px; margin-top:4px; width:100%; box-sizing:border-box;}
-  /* OBSAH PILULKY SE MUSÍ UMĚT ZALOMIT. I v roztažené mřížce je na
-     sloupec 104 px (320 px okno) až 135 px (390 px okno), zatímco
-     „Nové na trhu 2 533" potřebuje na jeden řádek 165 px — naměřeno,
-     a uřízlo to číslo u pravé hrany. Jméno a počet se proto smějí
-     rozdělit na dva řádky; `min-width:0` dovolí pilulce zmenšit se
-     pod šířku svého obsahu (bez něj flexový prvek nejde pod
-     min-content) a `min-height:44px` drží dotykovou mez dál. */
-  .nav-typ{min-height:44px; justify-content:space-between; font-size:14px;
-    flex-wrap:wrap; row-gap:0; min-width:0; padding-inline:12px;
-    /* A základní pravidlo má white-space:nowrap — v řadě v hlavičce
-       správně, v mřížce na telefonu ne: na 320 px zbylo na sloupec
-       104 px a samotné „Nové na trhu“ potřebuje 93 px plus
-       odsazení, takže se uřízlo. Tady se tedy zalamovat smí. */
-    white-space:normal;
-    /* A POJISTKA: co by se přesto nevešlo, se ořízne uvnitř pilulky
-       místo aby se vykreslilo přes sousedku nebo ven ze šuplíku.
-       Na 320 px zbývá i po zalomení 9 px rozdílu — měřeno v Chromiu,
-       které na telefonu samo zvětšuje písmo (naměřeno 16px tam, kde
-       stylopis říká 14), takže na Safari v iPhonu je rezerva větší.
-       Oříznutí je pojistka pro obojí, ne náhrada měření. */
-    overflow:hidden;}
-}
+/* ŘADA TYPŮ NEMOVITOSTÍ V LIŠTĚ UŽ NENÍ (12. 11.).
+   Byla tu od 10. 11.: šest štítků s počty (Pozemky, Domy, Byty,
+   Dražby, Exekuce, Nové na trhu) jako druhý řádek lišty a jako
+   mřížka v šuplíku. Majitel ji zakroužkoval na snímku z telefonu:
+   „proč tam cpeš tohle, dej to pryč, k čemu je to dobré."
+   Dvakrát se přestavovala kvůli tomu, že se nápisy nevešly
+   (mřížka 2×3, pak řádky), a ani podruhé to nebyla odpověď na
+   otázku, nač tam je: na mapu i na filtry vede „Hledat na mapě"
+   o řádek výš a druh se vybírá v panelu filtrů, kde to má souseda.
+   Stylopis po ní nenese nic — kdo by ji chtěl zpět, najde ji
+   v historii u téhle poznámky. */
 #nav a{color:var(--muted); text-decoration:none; font-size:14px; font-weight:500; transition:var(--prechod); position:relative;}
 #nav a:hover{color:var(--text);}
 /* CTA v hlavičce musí být tmavý text na teal HNED (ne až po najetí myší) —
@@ -6513,47 +6458,12 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      x=0 — čtyři různé svislice v jednom panelu širokém 343 px.
      Šestnáctka je ta, kterou měly řádky nabídky, a je to týž okraj
      jako u karet ve výpisu. */
-  /* .nav-typy V SEZNAMU NENÍ, A JE TO ZÁMĚR: odsazení si nesou samy
-     její řádky. Jsou to <a>, takže na ně platí `#nav a:not(.btn-primary)`
-     s `margin:0 16px` — kdyby je blok odsadil ještě jednou, stály by
-     na 32 px místo 16 (naměřeno). */
   #nav > .nav-hlava, #nav > .btn-primary, #nav > .nav-pata{
     margin-inline:16px; width:auto; box-sizing:border-box;}
-  /* A DRUHY NEMOVITOSTÍ PATŘÍ NAD ÚČET, NE POD PATIČKU.
-     Základ jim dává `order:10`, což je pořadí pro vodorovnou lištu
-     (tam se mají kreslit dole pod vším). V šuplíku z toho vyšlo, že
-     „Pozemky / Domy / Byty" stály POD větou „Data z veřejných zdrojů"
-     — naměřeno y 615–816, kdežto patička 556–611.
-     Pořadí šuplíku je teď shora dolů: hlava (−4), křížek (−3),
-     „Přidat nemovitost" (−2), hledání (1), ceny (5), DRUHY (6),
-     účet (7), patička (9). Je to pořadí velkých realitních aplikací:
-     značka, hlavní akce, kam jít, co se prodává, můj účet, tiráž. */
-  /* DRUHY NEMOVITOSTÍ JSOU V ŠUPLÍKU ŘÁDKY, NE MŘÍŽKA KACHLÍ (12. 11.).
-     Mřížka 2×3 tu byla od 10. 11. kvůli výšce (201 px místo 272).
-     Jenže do sloupce širokého 83–119 px se jména s počty nevejdou:
-     naměřeno na 308 px se usekávaly ČTYŘI z šesti štítků („Nové na
-     trhu" o 46 px, „Pozemky" o 19, „Exekuce" o 14, „Dražby" o 3),
-     na 390 px jeden. Oříznutí bylo zapsané jako „pojistka", ale stalo
-     se z něj pravidlo: na snímku z telefonu to byla hromada kachlí
-     s uříznutými nápisy a čísly pod nimi.
-     Teď je to týž řádek jako „Hledat na mapě" nad nimi — jméno vlevo,
-     počet vpravo, výška jako u ostatních položek, jedna deska.
-     Celé menu tím má JEDEN rytmus, což je přesně to, co majitel žádal
-     („urovnej to a vyčisti"). Šuplík se tím prodlouží a začne se
-     rolovat; roluje se od 30. 10. (`overflow-y:auto` výš) a je to
-     způsob, jakým mobilní šuplík řeší dlouhý obsah každý velký web. */
-  .nav-typy{order:6; display:flex; flex-direction:column; gap:0;
-    padding:0; margin-top:8px; border-top:0;}
-  .nav-typ{min-height:56px; justify-content:space-between; gap:12px;
-    padding:0 16px; border:0; border-radius:0;
-    background:var(--plocha-karta); box-shadow:var(--e1);
-    font-size:16px; font-weight:600; letter-spacing:-0.01em;
-    white-space:nowrap; overflow:visible; flex-wrap:nowrap;}
-  .nav-typ:first-child{border-top-left-radius:var(--r-ovladani); border-top-right-radius:var(--r-ovladani);}
-  .nav-typ:last-child{border-bottom-left-radius:var(--r-ovladani); border-bottom-right-radius:var(--r-ovladani);}
-  .nav-typ + .nav-typ{box-shadow:var(--e1), inset 0 1px 0 var(--line);}
-  .nav-typ .nav-pocet{flex:none; font-size:14px; font-weight:500; color:var(--muted);}
-  .nav-typ:active{background:var(--plocha-tlumena);}
+  /* POŘADÍ ŠUPLÍKU shora dolů: hlava (−4), křížek (−3), „Přidat
+     nemovitost" (−2), hledání (1), ceny (5), účet (7), patička (9).
+     Mezi „ceny" a „účet" stála do 12. 11. řada druhů nemovitostí;
+     majitel ji nechal odstranit (viz poznámka u .nav-typy výš). */
   .nav-sk{display:flex; flex-direction:column; min-width:0;}
   .nav-sk-panel, .nav-sk:not([open]) > .nav-sk-panel{
     display:flex; flex-direction:column; position:static; min-width:0;

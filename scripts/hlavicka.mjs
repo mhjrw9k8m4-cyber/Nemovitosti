@@ -103,18 +103,12 @@ function poctyZDat() {
        pozemek ho nemá (je to výchozí), takže se pozná tím, že chybí. */
     const kat = (x) => String((x && x.kat) || 'pozemek');
     const kolik = (f) => o.reduce((a, x) => a + (f(x) ? 1 : 0), 0);
-    /* „Nové na trhu" je týž výběr, jaký vypisuje nove-pozemky.html:
-       co robot poprvé viděl za posledních sedm dní. Počítá se stejně,
-       aby lišta a cílová stránka netvrdily dvě různá čísla. */
-    const prah = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+    /* ŠEST POČTŮ PODLE TYPU TU BYLO DO 12. 11. (tPozemky, tDomy,
+       tByty, tDrazby, tExekuce, tNove). Živily řadu štítků v liště,
+       kterou majitel nechal odstranit — bez ní je nikdo nečte, takže
+       se ani nepočítají. `kolik` zůstává, protože ho používá `vse`. */
     return {
       vse: n(o.length),
-      tPozemky: n(kolik((x) => kat(x) === 'pozemek')),
-      tDomy: n(kolik((x) => kat(x) === 'dum')),
-      tByty: n(kolik((x) => kat(x) === 'byt')),
-      tDrazby: n(kolik((x) => x && x.type === 'drazba')),
-      tExekuce: n(kolik((x) => x && x.type === 'exekuce')),
-      tNove: n(kolik((x) => x && typeof x.first_seen === 'string' && x.first_seen >= prah)),
       /* Totéž číslo bez sazby — pro skloňování slova za ním. */
       vseCislo: o.length,
       /* Kdy robot naposledy obešel zdroje — „30. 10." česky, bez roku:
@@ -163,57 +157,32 @@ const ikona = (jm) => `<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><u
    a tak to čte i scripts/test-data.mjs („nahoře je hledání pozemků").
    V šuplíku na telefonu tlačítko vyskočí nahoru přes `order` v CSS;
    jedna značka, dvě podoby. */
-/* ŘADA TYPŮ NEMOVITOSTÍ — VSTUP DO PRODUKTU, NE DALŠÍ ROZCESTNÍK.
+/* ŘADA TYPŮ NEMOVITOSTÍ V LIŠTĚ UŽ NENÍ (12. 11.).
    ------------------------------------------------------------------
-   Majitel 10. 11.: „na hlavní funkce a hlavní menu úplně zanedbáváš,
-   přeřež to, najdi si šablony a předělej to, vezmi si inspiraci klidně
-   z jiných webů."
-   ZMĚŘENO, než se sem sáhlo: na 1440 px nesla lišta ČTYŘI položky
-   (značka, Hledat na mapě, Ceny pozemků, Můj profil, Přidat), na
-   telefonu se jich do šuplíku vysypalo DESET — a ze 103 generovaných
-   stránek pozemky-*.html z lišty nevedla ani jedna. Dražby, exekuce
-   ani nové na trhu taky ne, přestože ty stránky existují a chodí na ně
-   vyhledávač.
-   A JE TO OBRAT PROTI DVĚMA STARŠÍM POKYNŮM, tak ať je vidět proč.
-   29. 10.: „zbav se těch věcí v menu a prokliků, nemá to být příručka,
-   ale web na prodej." 30. 10.: „nemáš tam přidávat další věci, jen to
-   menu vykrášlit." Obojí platí dál pro ROZCESTNÍK — články, nápovědu
-   a odkazy na výklad lišta nenese a nést nebude; ty jsou v patičce.
-   Tohle je něco jiného: ne seznam stránek, ale to, co se prodává,
-   s počtem u každého. Jak to má každý velký portál, protože bez toho
-   návštěvník netuší, že web umí i domy, byty a dražby.
-   POČET U TYPU NENÍ OZDOBA. Říká, jestli má smysl tam klepnout —
-   u exekucí je jich 45, ne 4 500, a to je poctivé přiznat předem.
-   Čísla jdou z týchž dat jako mapa (data/mapa.json), takže nemůžou
-   zestárnout proti tomu, co výpis ukáže.
-   ODKAZY VEDOU NA FILTR, NE NA NOVOU STRÁNKU. Klíče `tn` (kategorie)
-   a `t` (druh nabídky) sdílí js/odkaz.js, takže „Byty" otevře mapu
-   rovnou přefiltrovanou — a dá se to poslat odkazem. Jediná výjimka je
-   „Nové na trhu", která má vlastní stránku už dnes.
-   PROČ JE ŘADA UVNITŘ <nav id="nav">. Sestavení nahrazuje celý ten
-   blok jedním vzorem (VZOR níž); cokoli mimo něj by se při každém
-   dalším běhu přidalo znovu — to se v repozitáři už jednou stalo
-   s tlačítkem v hlavičce. Na telefonu je to proto táž značka v šuplíku,
-   jen se sází jako zalomená řada štítků, ne jako sedm řádků po 52 px,
-   které by šuplík rozrolovaly (mez hlídá scripts/test-menu.mjs). */
-const TYPY = [
-  ['Pozemky', 'tn=pozemek', 'tPozemky'],
-  ['Domy', 'tn=dum', 'tDomy'],
-  ['Byty', 'tn=byt', 'tByty'],
-  ['Dražby', 't=drazba', 'tDrazby'],
-  ['Exekuce', 't=exekuce', 'tExekuce'],
-];
-const TYPY_HTML = `<div class="nav-typy">`
-  + TYPY.map(([jm, dotaz, klic]) =>
-    `<a class="nav-typ" href="index.html?${dotaz}#mapa">${jm}${pocet(klic)}</a>`).join('')
-  + `<a class="nav-typ" href="nove-pozemky.html">Nové na trhu${pocet('tNove')}</a>`
-  + `</div>`;
+   Od 10. 11. tu stálo šest štítků s počty — Pozemky, Domy, Byty,
+   Dražby, Exekuce, Nové na trhu — jako druhý řádek lišty a jako
+   mřížka v šuplíku na telefonu. Majitel je na snímku z telefonu
+   zakroužkoval: „proč tam cpeš tohle, dej to pryč, k čemu je to
+   dobré."
+   PROČ TO PADLO, ne jen že padlo. Vznikly jako odpověď na „z lišty
+   nevede na 103 generovaných stránek ani jeden odkaz" — jenže to
+   nebyl problém lišty, byl to problém rozcestníku, a ten je v patičce.
+   Co se prodává, říká mapa („Hledat na mapě" o řádek výš) a vybírá
+   panel filtrů, kde druh nabídky i druh pozemku stojí vedle ceny
+   a výměry, tedy tam, kde se o nich rozhoduje. Štítky navíc dvakrát
+   prohrály souboj s místem (mřížka 2×3 → řádky), protože na 308 px se
+   „Nové na trhu 2 281" prostě nevejde.
+   A VRACÍ TO PLATNOST DVOU STARŠÍCH POKYNŮ, proti kterým se tehdy
+   šlo: 29. 10. „zbav se těch věcí v menu a prokliků, nemá to být
+   příručka, ale web na prodej" a 30. 10. „nemáš tam přidávat další
+   věci, jen to menu vykrášlit".
+   Nic po nich nezbylo: ani styly (css/styles.css), ani počty
+   v POCTY výš. */
 
 export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
       <div class="nav-hlava"><span class="logo-mark" aria-hidden="true"></span><span class="nav-znacka">Parcelka</span></div>
       <a href="${NAV_MAPA}">${ikona('mapa')}Hledat na mapě${pocet('vse')}</a>
       <a href="cena-pozemku.html">${ikona('cena')}Ceny pozemků</a>
-      ${TYPY_HTML}
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
         <a href="muj-inzerat.html" id="nav-ucet">${ikona('seznam')}Moje inzeráty</a>
