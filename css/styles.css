@@ -2720,12 +2720,26 @@ h1 em{ color:var(--znacka-svetla);
 /* Panel skupiny je bílá karta — text v ní se nesmí nakazit barvou,
    kterou deska dává svým potomkům. */
 .map-controls-panel .mf-panel{color:var(--text);}
-/* BÍLÉ JAKO ČIPY VEDLE. Tlačítko „Pozemky v okolí" neslo tutéž
-   tlumenou dlaždici jako čipy před 29. 10.; čipy zbělely, a kdyby
-   tohle zůstalo šedé, byly by na jednom pásu dva druhy ovladačů.
-   Hlídá to scripts/test-hledani-vzhled.mjs („tutéž plochu jako
-   ovladač nad nimi") — a chytil to dřív, než jsem si toho všiml. */
-.map-controls-panel .map-okoli button{background:var(--plocha-karta);
+/* „BÍLÉ JAKO ČIPY VEDLE" PLATILO DO 12. 11., PAK SE OBRÁTILO.
+   Pravidlo `.map-controls-panel .map-okoli button{background:
+   var(--plocha-karta)}` vzniklo 29. 10.: čipy tehdy zbělely a tlačítko
+   „Nabídky v okolí" by vedle nich zůstalo jako jediné šedé.
+   Jenže 11. a 12. 11. se ovládání nad výpisem na majitelovo zadání
+   ztišilo — čipy i otvírače filtrů mají dnes tichou výplň
+   --plocha-jemna a obrys. Pravidlo tím přestalo sjednocovat a začalo
+   rozdělovat: jakmile „Okolí" stanulo v řádku filtrů jako první
+   otvírač, svítilo bílou proti šedým sousedům. Přesně to, čemu mělo
+   zabránit.
+   JE TO TAKY ODPOVĚĎ NA VČEREJŠÍ ZÁHADU. 11. 11. jsem si do stylopisu
+   zapsal „NEDOŘEŠENO": .map-near-btn počítalo rgb(255,255,255),
+   přestože mu základ dává --plocha-jemna, a žádné pravidlo se nenašlo.
+   Hledal jsem podle `.map-near-btn` a `#map-near` — jenže selektor
+   míří na `button` uvnitř `.map-okoli`, takže se v žádném z těch
+   hledání neukázal. Dvě tehdejší domněnkové záplaty (silnější selektor,
+   `background-color` místo zkratky) proto neudělaly nic a byly
+   vráceny; vada nebyla v síle pravidla, ale v tom, kde se hledalo.
+   Zbytek (obrys a barva textu) zůstává: ten je týž jako u otvíračů. */
+.map-controls-panel .map-okoli button{
   border-color:var(--obrys-tlacitka); color:var(--text);}
 .map-controls-panel .map-okoli button svg,
 .map-controls-panel .mf-ic{color:var(--pas-akcent);}
@@ -2912,6 +2926,24 @@ h1 em{ color:var(--znacka-svetla);
    druhá cesta nemá co nabídnout. */
 .map-okoli{display:flex; flex-direction:column; align-items:center;}
 .map-okoli .map-near-btn{width:100%;}
+/* „OKOLÍ" JE PRVNÍ OTVÍRAČ V ŘÁDKU FILTRŮ (12. 11.).
+   Do té doby mělo vlastní řádek přes celou šířku — na telefonu 390 px
+   z toho bylo 52 px hned pod přepínačem Seznam/Mapa, a vypadalo to
+   jako třetí velké tlačítko v řadě stejných obdélníků pod sebou.
+   Je to přitom filtr podle MÍSTA: vybírá okruh, ve kterém se hledá.
+   Patří tedy mezi ostatní otvírače a mluví jejich řečí — týž obrys,
+   táž výplň, táž výška 44 px a týž tvar jako .mf-btn, jen místo
+   šipky dolů nese špendlík. Stojí první, protože místo je první
+   otázka, kterou si člověk u pozemku klade.
+   Pravidlo přebíjí `width:100%` a `margin-top:8px` ze základu —
+   v řadě si bere jen tolik místa, kolik má nápis. */
+.mc-rada-pas .map-okoli{display:block;}
+.mc-rada-pas .map-near-btn{width:auto; margin-top:0; min-height:44px;
+  padding:0 12px; gap:8px; font-size:14px; font-weight:600; line-height:1;
+  white-space:nowrap; border-radius:var(--r-ovladani);
+  border:1px solid var(--line-ui); background:var(--plocha-jemna);
+  color:var(--text);}
+.mc-rada-pas .map-near-btn:hover{border-color:var(--znacka-svetla);}
 .mnb-ceka{width:15px; height:15px; flex:none; border-radius:50%;
   border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
   animation:mnbTocSe .8s linear infinite;}
@@ -2936,7 +2968,19 @@ h1 em{ color:var(--znacka-svetla);
 .filter-chip{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
   font:inherit; font-size:14px; font-weight:600;
   cursor:pointer; min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
-  border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
+  /* TICHÁ VÝPLŇ, NE BÍLÁ DESKA (12. 11.). Do té doby tu stálo
+     --plocha-karta, tedy bílá, a bylo to správně: ovladače kolem čipů
+     byly tehdy taky bílé a šedý čip by mezi nimi vypadal jako vypnutý.
+     Při ztišení ovládání 11. a 12. 11. ovladače kolem bílou ztratily
+     (--plocha-jemna a obrys), ale na čipy se zapomnělo — takže zůstaly
+     jediné bílé a nesrovnalost se obrátila. Našel ji
+     test-hledani-vzhled kontrolou „tutéž plochu jako ovladač nad nimi":
+     odznak rgb(255,255,255), soused rgba(16,21,19,0.05).
+     Zapnutý čip má dál sytou zeleň (.filter-chip.active níž), takže
+     rozdíl zapnuto/vypnuto se tím nestírá; obrys --line-ui zůstává,
+     protože tichá výplň má na bílé jen 1,11 : 1 a ovladač se musí od
+     pozadí odlišit (WCAG 1.4.11, hlídá test-okraje). */
+  border:1px solid var(--line-ui); background:var(--plocha-jemna); color:var(--text);
   /* Jediné `transition:all` na webu bylo tady — a mělo následek: animoval
      se i OBRYS, takže prstenec po stisku tabulátoru nenaskočil, ale
      dojížděl. Kdo prochází web klávesnicí rychle, nevidí, kde stojí.
@@ -5576,12 +5620,15 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
        hledání nevejde a zalomením by si vzaly dvojí výšku, takže mají
        druhý pruh přes celou šířku — tak jako v nástrojích velkých
        realitních webů: hledání nahoře, filtry pod ním. */
+    /* OBLAST „okoli" TU STÁLA DO 12. 11. Tlačítko „Nabídky v okolí"
+       se přestěhovalo do řádku filtrů (je to filtr podle místa), takže
+       ho mřížka nerozmisťuje; druhý sloupec prvního řádku je teď
+       prázdný stejně jako třetí. */
     grid-template-areas:
-      "hledani okoli ."
+      "hledani . ."
       "filtry filtry filtry"
       "akce akce akce";}
   .map-controls-panel > .map-search{grid-area:hledani;}
-  .map-controls-panel .map-okoli{grid-area:okoli;}
   .map-controls-panel .mc-rada{grid-area:filtry;}
   .map-controls-panel .mcf-akce{grid-area:akce; margin-top:8px; padding:0;
     border-top:0; justify-content:flex-start;}
@@ -5603,16 +5650,15 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      by jen rozhodila svislé zarovnání. */
   .map-controls-panel > *{margin-top:0;}
   .map-controls-panel > .map-search{min-width:0;}
-  /* NEDOŘEŠENO (12. 11.): tohle tlačítko si jako jediné z řady drží
-     bílou plochu. V stylopisu má `background:var(--plocha-jemna)`
-     jako filtry vedle, token se u něj vyhodnotí správně
-     (rgba(16,21,19,0.05)), vložený styl nemá, žádné pravidlo s bílou
-     na ně nesedí — a prohlížeč přesto hlásí rgb(255,255,255).
-     Zkoušel jsem opakovat deklaraci se silnějším selektorem i zapsat
-     ji jako background-color; obojí bez účinku, tak jsem obě záplaty
-     vzal zpátky, aby v souboru nezůstala mrtvá pravidla. Zbytek řady
-     (filtry, Uložené, Procházet po jednom, Stáhnout výběr, řazení)
-     tichou výplň má. Dohledat příčinu je vlastní úkol. */
+  /* DOŘEŠENO TÝŽ DEN. Tohle tlačítko si jako jediné z řady drželo
+     bílou plochu, přestože mu základ dává --plocha-jemna jako filtrům
+     vedle, token se u něj vyhodnocoval správně a vložený styl nemělo.
+     Příčinu jsem nenašel proto, že jsem hledal podle `.map-near-btn`
+     a `#map-near` — a pravidlo, které bílou dávalo, míří na `button`
+     uvnitř `.map-okoli` (viz komentář u něj nahoře v souboru). Tehdejší
+     dvě domněnkové záplaty proto nemohly zabrat a byly vráceny.
+     Vidět to šlo teprve ve chvíli, kdy „Okolí" stanulo v řádku filtrů
+     a svítilo bílou proti šedým sousedům. */
   .map-controls-panel .map-near-btn{margin-top:0; width:auto; white-space:nowrap;}
   /* Rozpoznané odznaky na jeden řádek: v liště nesmí druhý řádek
      odznaků zvednout celou lištu a ukrojit ze seznamu. (Odznaky druhů

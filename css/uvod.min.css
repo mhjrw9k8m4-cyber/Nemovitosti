@@ -381,7 +381,7 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .map-controls-panel .ms-lupa{color:var(--text-zastupny)}
 .map-controls-panel .mf-btn{border-color:var(--obrys-tlacitka);color:var(--text)}
 .map-controls-panel .mf-panel{color:var(--text)}
-.map-controls-panel .map-okoli button{background:var(--plocha-karta);border-color:var(--obrys-tlacitka);color:var(--text)}
+.map-controls-panel .map-okoli button{border-color:var(--obrys-tlacitka);color:var(--text)}
 .map-controls-panel .map-okoli button svg,.map-controls-panel .mf-ic{color:var(--pas-akcent)}
 .map-side{grid-column:1;grid-row:2;display:flex;flex-direction:column;border:0;border-right:1px solid var(--line);border-radius:0;padding:16px 16px;min-height:0}
 .map-holder{grid-column:2;grid-row:2}
@@ -430,6 +430,9 @@ to{opacity:1;transform:none}
 .vm-napred{color:var(--muted);font-size:13px;line-height:1.4}
 .map-okoli{display:flex;flex-direction:column;align-items:center}
 .map-okoli .map-near-btn{width:100%}
+.mc-rada-pas .map-okoli{display:block}
+.mc-rada-pas .map-near-btn{width:auto;margin-top:0;min-height:44px;padding:0 12px;gap:8px;font-size:14px;font-weight:600;line-height:1;white-space:nowrap;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-jemna);color:var(--text)}
+.mc-rada-pas .map-near-btn:hover{border-color:var(--znacka-svetla)}
 .mnb-ceka{width:15px;height:15px;flex:none;border-radius:50%;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;animation:mnbTocSe .8s linear infinite}
 @keyframes mnbTocSe{to{transform:rotate(360deg)}
 }
@@ -439,7 +442,7 @@ to{opacity:1;transform:none}
 .map-near-btn:active{transform:translateY(1px)}
 .map-near-btn .mnb-pin{width:var(--ik-xs);height:var(--ik-xs);stroke:currentColor;fill:none;stroke-width:var(--ik-xs-tah);stroke-linecap:round;stroke-linejoin:round;flex:none}
 .map-near-btn.on{background:var(--plocha-zapustena);color:var(--znacka-svetla);border-color:var(--znacka-svetla);box-shadow:none}
-.filter-chip{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;padding:8px 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);transition:var(--prechod)}
+.filter-chip{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;padding:8px 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-jemna);color:var(--text);transition:var(--prechod)}
 .filter-chip .fc-ik{width:var(--ik-xs);height:var(--ik-xs);flex:none;fill:none;stroke:currentColor;stroke-width:var(--ik-xs-tah);stroke-linecap:round;stroke-linejoin:round}
 .filter-chip>*:not(.fc-ik):not(.chip-n){flex:1 1 auto;min-width:0;line-height:1.2}
 .filter-chip:hover{border-color:var(--znacka);background:var(--plocha-zapustena)}
@@ -1074,9 +1077,8 @@ to{opacity:1;transform:none}
 .map-side .opp-list>.opp-skel{margin-bottom:0}
 }
 .map-side{padding-left:var(--okraj-stranky);padding-right:var(--okraj-stranky)}
-.map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 8px;padding:8px var(--okraj-stranky);grid-template-columns:minmax(220px,520px) auto auto minmax(0,1fr);grid-template-areas:"hledani okoli ." "filtry filtry filtry" "akce akce akce"}
+.map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 8px;padding:8px var(--okraj-stranky);grid-template-columns:minmax(220px,520px) auto auto minmax(0,1fr);grid-template-areas:"hledani . ." "filtry filtry filtry" "akce akce akce"}
 .map-controls-panel>.map-search{grid-area:hledani}
-.map-controls-panel .map-okoli{grid-area:okoli}
 .map-controls-panel .mc-rada{grid-area:filtry}
 .map-controls-panel .mcf-akce{grid-area:akce;margin-top:8px;padding:0;border-top:0;justify-content:flex-start}
 .map-controls-panel .mcf-hotovo{flex:0 0 auto;min-width:220px}
