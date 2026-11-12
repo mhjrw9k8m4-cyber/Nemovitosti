@@ -461,8 +461,9 @@ to{opacity:1;transform:none}
 .filter-chip>*:not(.fc-ik):not(.chip-n){flex:1 1 auto;min-width:0;line-height:1.2}
 .filter-chip:hover{border-color:var(--znacka);background:var(--plocha-zapustena)}
 .filter-chip.active{background:var(--plocha-znacka);border-color:var(--plocha-znacka);color:#fff}
-.mc-rada{position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.mc-rada>*{flex:none}
+.mc-rada{position:relative;margin-top:12px}
+.mc-rada-pas{display:flex;flex-wrap:wrap;gap:8px}
+.mc-rada-pas>*{flex:none}
 .mf-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-jemna);color:var(--text,#12241A);font-family:var(--font-ui);font-size:14px;font-weight:600;line-height:1;white-space:nowrap;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;user-select:none;transition:var(--prechod)}
 .mf-btn::-webkit-details-marker{display:none}
 .mf-btn:hover{border-color:var(--znacka-svetla)}
@@ -1126,7 +1127,7 @@ to{opacity:1;transform:none}
 .map-controls-panel .ms-chipy>*{flex:none}
 .mf{position:relative}
 .mf-panel{left:0;right:auto;width:min(420px,92vw)}
-.mc-rada>.mf:last-of-type .mf-panel{left:auto;right:0}
+.mc-rada .mf:last-of-type .mf-panel{left:auto;right:0}
 .mf-panel.map-controls{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px 20px}
 .map-side .opp-media{aspect-ratio:auto;height:150px}
 .map-controls .mcv-rada,.map-controls .mcv-rada.mcv-sloupec,.map-controls .mc-toggles{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
@@ -1139,6 +1140,9 @@ to{opacity:1;transform:none}
 .hero-map .map-wide{margin-top:0}
 .map-controls-panel{order:0;border-right:0;border-bottom:0;background-color:var(--plocha-karta)}
 .map-app{border-top:0}
+.mc-rada-pas{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.mc-rada-pas::-webkit-scrollbar{display:none}
+.mc-rada-pas .mf-btn{position:relative}
 .map-side{order:2;border-right:0;max-height:none}
 .map-holder{order:3;margin-top:16px;height:74vh;height:74dvh;max-height:640px;min-height:460px}
 .map-canvas{flex:1;min-height:0}

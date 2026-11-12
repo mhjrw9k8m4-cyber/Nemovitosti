@@ -2207,6 +2207,108 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     `měření jen ${mereno}`);
 }
 
+/* ----------------------------------------------------------------------
+   PRUH ROZVRŽENÍ NESMÍ UJET DO STRANY
+   ----------------------------------------------------------------------
+   NAMĚŘENÁ VADA, KTERÁ TUHLE MEZ VYNUTILA (12. 11.). Řádek filtrů nad
+   výpisem dostal vodorovné rolování na vnitřním pásu. V každém jeho
+   otvírači je `<span class="visually-hidden">` a .visually-hidden je
+   `position:absolute`; jeho nejbližší pozicovaný předek byl .mc-rada,
+   tedy PŘEDEK pásu, takže ho pás nezastříhl a u pátého otvírače skončil
+   82 px za pravou hranou. Tím přetekla .mc-rada (scrollWidth 440 proti
+   clientWidth 358) a vodorovně rolovatelnými se staly i
+   .map-controls-panel a .map-app (456 proti 390). Na telefonu to
+   znamenalo, že zaměření klávesnicí na pátý otvírač odrolovalo celý
+   výpis o 66 px do strany a panel filtru se otevřel levou hranou na
+   −50 px. Žádný hlídač to neviděl: měřily se rozměry a překryvy prvků,
+   ne to, jestli se dá obsahem hýbat do strany.
+   PROČ SE NEMĚŘÍ scrollWidth DOKUMENTU. Změřeno: nezmění se. Celá
+   stránka má vodorovný přetok zastřižený výš, takže se ujetí nikdy
+   neprojeví na `document.scrollingElement` — projeví se na tom bloku,
+   ve kterém vada vznikla. Měří se proto každý blok.
+   PROČ SE NEMĚŘÍ JEN scrollWidth > clientWidth. Taky změřeno: na 320 px
+   to na úvodní stránce našlo 22 nálezů a všechny byly nevinné —
+   .visually-hidden je 1 px široký blok s `overflow:hidden` a dlouhým
+   textem, takže „přetéká" o 260 px, a stejně tak usekávané nápisy
+   (.skip-link, .nav-typ, .hu-out). Měří se proto SKUTEČNÉ UJETÍ:
+   scrollLeft se nastaví na konec, přečte a vrátí zpátky.
+   PROČ SE MĚŘÍ JEN ŠIROKÉ BLOKY. Štítek široký 1 px, který ujede, nikoho
+   neposune. Co bolí, je pruh rozvržení: ten pod prstem ujede celý
+   i s obsahem. Hranice je 60 % šířky okna — .map-app z té vady měl
+   plných 100 %, kdežto nevinné nálezy výš 0,3 až 33 %.
+   `overflow-x: auto` a `scroll` se vynechávají: to jsou ZAMÝŠLENÉ pásy
+   (řádek filtrů, rozpoznané odznaky, tabulka na porovnani.html).
+   Mez je 1 px, ne 0: prohlížeč zaokrouhluje zlomky pixelů u zaoblení
+   a obrysů a půl pixelu nikdo neodroluje. */
+{
+  /* Měří se v prohlížeči, a týmž kódem i po sabotáži — jinak by sabotáž
+     prokazovala jinou kontrolu, než jaká web hlídá. */
+  const MERENI = () => {
+    const out = [];
+    for (const e of document.querySelectorAll('body *')) {
+      const cw = e.clientWidth;
+      if (!cw || cw < innerWidth * 0.6) continue;
+      if (e.scrollWidth - cw <= 1) continue;
+      const ox = getComputedStyle(e).overflowX;
+      if (ox === 'auto' || ox === 'scroll') continue;
+      const puv = e.scrollLeft;
+      e.scrollLeft = 99999;
+      const ujelo = Math.round(e.scrollLeft);
+      e.scrollLeft = puv;
+      if (ujelo <= 1) continue;
+      out.push({ t: (e.id ? '#' + e.id : '.' + (String(e.className).trim().split(/\s+/)[0] || e.tagName)),
+        ujelo, sirka: cw, obsah: e.scrollWidth, ox });
+    }
+    return out.slice(0, 6);
+  };
+  const STRANKY = ['index.html', 'pozemky-okres-kolin.html', 'data.html',
+    'porovnani.html', 'cena-pozemku.html', 'hlidani.html'];
+  let mereno = 0;
+  const ujely = [];
+  for (const sirka of [320, 390]) {
+    for (const soubor of STRANKY) {
+      const { ctx, p } = await otevri(soubor, sirka, 844);
+      await domUtichlo(p, 350);
+      const v = await p.evaluate(MERENI);
+      mereno++;
+      for (const x of v) {
+        ujely.push(`${sirka}px ${soubor}: ${x.t} ujede o ${x.ujelo} px `
+          + `(široký ${x.sirka}, obsah ${x.obsah}, overflow-x:${x.ox})`);
+      }
+      await ctx.close();
+    }
+  }
+  pravda(`žádný pruh rozvržení neujede do strany (${mereno} měření)`, ujely.length === 0,
+    ujely.slice(0, 8).join('\n      '));
+
+  /* A MEZ JE ŽIVÁ — PROKÁZÁNO SABOTÁŽÍ.
+     Do řádku filtrů se vloží týž tvar vady, jaká se 12. 11. opravovala:
+     absolutně umístěný prvek ukotvený na .mc-rada (tedy MIMO rolovací
+     pás), posazený za pravou hranu. Táž kontrola to musí poznat. Pak se
+     sabotáž zruší a měří se znovu: kdyby stránka zůstala špinavá,
+     neznamenalo by „zabrala" nic. */
+  const { ctx, p } = await otevri('index.html', 390, 844);
+  await domUtichlo(p, 350);
+  const sabot = await p.evaluate((kod) => {
+    const merit = new Function('return (' + kod + ')()');
+    const rada = document.getElementById('mc-rada');
+    if (!rada) return { chyba: 'řádek filtrů se nenašel' };
+    const pred = merit().length;
+    const z = document.createElement('span');
+    z.id = 'sabot-pretok';
+    z.style.cssText = 'position:absolute;left:100%;top:0;width:80px;height:1px;';
+    rada.appendChild(z);
+    const pri = merit();
+    z.remove();
+    const po = merit().length;
+    return { pred, pri: pri.length, kdo: pri.map((x) => x.t + ' o ' + x.ujelo + ' px'), po };
+  }, MERENI.toString());
+  await ctx.close();
+  pravda('a mez je živá: prvek 80 px za hranou řádku filtrů ji shodí',
+    !sabot.chyba && sabot.pred === 0 && sabot.pri > 0 && sabot.po === 0,
+    JSON.stringify(sabot));
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

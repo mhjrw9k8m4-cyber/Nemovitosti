@@ -2981,8 +2981,15 @@ h1 em{ color:var(--znacka-svetla);
    Zalomení stojí na telefonu o jednu až dvě výšky ovladače víc; ta
    cena je proti uříznutému panelu malá a jiná cesta by znamenala
    panel na `position:fixed` a dopočítávat mu polohu skriptem. */
-.mc-rada{position:relative; display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
-.mc-rada > *{flex:none;}
+/* ŘÁDEK FILTRŮ MÁ DVĚ VRSTVY: UKOTVENÍ A PÁS.
+   .mc-rada nese jen position:relative, aby se na něj na telefonu
+   věsily panely skupin přes celou šířku řádku. Samu řadu otvíračů
+   dělá .mc-rada-pas uvnitř — a jen ten se na telefonu roluje, takže
+   si panely neuřízne. Proč to tak musí být, je vypsané u pásu
+   v index.html a v pravidle pro telefon níž. */
+.mc-rada{position:relative; margin-top:12px;}
+.mc-rada-pas{display:flex; flex-wrap:wrap; gap:8px;}
+.mc-rada-pas > *{flex:none;}
 /* Otvírač je týž ovladač jako ostatní bílé ovladače nad výpisem:
    44 px na prst, --r-ovladani, obrys --line-ui.
    Barva se ZÁLOŽNÍ hodnotou. Kdyby proměnná u tohohle prvku z jakéhokoli
@@ -5622,7 +5629,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   .mf-panel{left:0; right:auto; width:min(420px, 92vw);}
   /* Poslední otvírač stojí u pravého okraje, takže jeho panel se musí
      zarovnat vpravo, aby nevytekl z lišty. */
-  .mc-rada > .mf:last-of-type .mf-panel{left:auto; right:0;}
+  .mc-rada .mf:last-of-type .mf-panel{left:auto; right:0;}
   /* „Další filtry" nesou dvě skupiny vedle sebe, ne pod sebou. */
   .mf-panel.map-controls{grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px 20px;}
   /* NÁHLED V POSTRANNÍM SLOUPCI JE NIŽŠÍ. Karta měla 420 px (náhled 208,
@@ -5718,6 +5725,39 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Místo nich je řádek otvíračů (.mc-rada), který se vodorovně roluje
      a bere si JEDNU výšku ovladače; panely jednotlivých skupin visí
      nad obsahem, takže výpis neodsouvají vůbec. */
+  /* A TEN KOMENTÁŘ VÝŠ BYL DO 12. 11. NEPRAVDA.
+     Řádek se neroloval: .mc-rada mělo flex-wrap:wrap, takže se pět
+     otvíračů na telefonu zalomilo na DVA řádky. Naměřeno na 390 px:
+     řádek filtrů 241–337 px (96 px místo 44) a první nabídka na
+     636 px. Záměr z 10. 11. je tím teprve dodělaný.
+     Roluje se vnitřní pás, ne .mc-rada: panely skupin se na telefonu
+     věší na .mc-rada (position:relative, left/right:0, top:100%+6px),
+     takže overflow-x na něm by si uřízlo vlastní panely. Absolutně
+     umístěný prvek, jehož ukotvení je PŘEDEK rolovacího boxu, se jeho
+     overflow nezastříhává — a .mc-rada je předek pásu. Panel se proto
+     pořád kreslí přes celou šířku řádku; rolují se jen otvírače.
+     Posuvník se nekreslí, protože na dotykové obrazovce zabírá řádek
+     navíc a nic neřekne — je to týž recept jako u rozpoznaných
+     odznaků (.ms-chipy v bloku od 1041 px). */
+  .mc-rada-pas{flex-wrap:nowrap; overflow-x:auto;
+    scrollbar-width:none; -ms-overflow-style:none;}
+  .mc-rada-pas::-webkit-scrollbar{display:none;}
+  /* SKRYTÝ POPISEK SE MUSÍ UKOTVIT KE SVÉMU TLAČÍTKU, JINAK PÁSU UNIKNE.
+     NAMĚŘENÁ VADA, kterou vyrobil pás sám (12. 11.): v každém otvírači
+     je `<span class="visually-hidden" data-mf-slovo>` a .visually-hidden
+     je `position:absolute`. Nejbližší pozicovaný předek byl .mc-rada,
+     tedy PŘEDEK rolovacího pásu — takže ten span pás nezastříhl stejně,
+     jako nezastříhne panely, a u pátého otvírače skončil 82 px za pravou
+     hranou. Tím .mc-rada přeteklo (scrollWidth 440 proti 358) a vodorovný
+     scroller z toho udělal i .map-controls-panel a .map-app (456 proti
+     390). Důsledek na telefonu: zaměření klávesnicí na pátý otvírač
+     odrolovalo celý výpis o 66 px do strany a panel se otevřel levou
+     hranou na −50 px.
+     Ukotvení na samotném tlačítku to zavírá: span se váže k summary,
+     které v pásu leží, a pás ho zastříhne. Panel to nepostihne — ten je
+     SOUROZENEC summary, ne jeho potomek, takže se dál věší na .mc-rada
+     a kreslí se přes celou šířku řádku. */
+  .mc-rada-pas .mf-btn{position:relative;}
   .map-side{order:2; border-right:0; max-height:none;}
   /* STEJNÁ ÚROVEŇ JAKO VÝPIS (31. 10.). V seznamu začíná první
      ovladač 16 px pod pásem s hledáním, mapa začínala rovnou na něm —

@@ -120,6 +120,12 @@ try {
       const ik = (s) => { const e = document.querySelector(s); if (!e) return null;
         const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; };
       const plocha = (s) => { const e = document.querySelector(s); return e ? getComputedStyle(e).backgroundColor : null; };
+      /* Obrys ovladače: šířka a barva dohromady. Po ztišení ovládání
+         (12. 11.) nese znamení „jsem ovladač" obrys, ne výplň — viz
+         oddíl 2 níž. */
+      const obrys = (s) => { const e = document.querySelector(s); if (!e) return null;
+        const c = getComputedStyle(e);
+        return { sirka: Math.round(parseFloat(c.borderTopWidth) * 100) / 100, barva: c.borderTopColor }; };
       const inp = document.getElementById('map-search');
       let napis = 0, vnitrni = 0;
       if (inp) {
@@ -139,6 +145,7 @@ try {
           'Stáhnout výběr': ik('#mc-vyvoz .mcn-ic svg'),
         },
         plochy: { rychly: plocha('#mc-rychly'), vyvoz: plocha('#mc-vyvoz'), ulozene: plocha('#map-fav') },
+      obrysy: { rychly: obrys('#mc-rychly'), vyvoz: obrys('#mc-vyvoz'), ulozene: obrys('#map-fav') },
         napis, vnitrni,
       };
     });
@@ -355,10 +362,29 @@ try {
     pravda(`${sirka} px: ovladače výpisu mají jednu plochu`,
       !!z.plochy.rychly && z.plochy.rychly === z.plochy.vyvoz && z.plochy.rychly === z.plochy.ulozene,
       `rychlý ${z.plochy.rychly}, vývoz ${z.plochy.vyvoz}, uložené ${z.plochy.ulozene}`);
-    /* Plná plocha, ne průhledná — průhledné pozadí by se „shodovalo"
-       taky, a přitom by nebylo vidět vůbec nic. */
-    const plny = /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(z.plochy.rychly || '');
-    pravda(`${sirka} px: a ta plocha je plná barva, ne průhledno`, plny, 'plocha: ' + z.plochy.rychly);
+    /* A TA SESTAVA MUSÍ BÝT VIDĚT — jen už ne výplní.
+       ZMĚNA ROZHODNUTÍ, NE POVOLENÁ MEZ. Do 12. 11. se tu žádala
+       „plná barva, ne průhledno", a důvod byl správný: průhledné
+       pozadí se shoduje s průhledným pozadím, takže kontrola „všechny
+       tři mají tutéž plochu" by prošla i tehdy, kdyby nebylo vidět
+       vůbec nic. Pak přišlo majitelovo zadání („náš web má všude
+       extrémně moc oddělení"), ovládání nad výpisem přišlo o desky,
+       přelivy i stíny a plochu dostalo --plocha-jemna, tedy
+       rgba(16,21,19,0.05) — a hlídač spadl na vlastním receptu.
+       Znamení „jsem ovladač" ale nezmizelo, jen se přesunulo: nese ho
+       OBRYS. Měří se proto obrys, ne výplň: musí mít nenulovou šířku
+       a nesmí být průhledný. Že má proti ploše pod sebou aspoň 3 : 1,
+       jak žádá WCAG 1.4.11, hlídá test-okraje — tady by to byla druhá
+       kopie téhož měření. Právě ta mez v test-okraje je taky důvod,
+       proč se obrys nedá nahradit světlou výplní: --plocha-jemna má
+       na bílé 1,11 : 1. */
+    for (const [jm, o] of [['Procházet po jednom', z.obrysy.rychly],
+      ['Stáhnout výběr', z.obrysy.vyvoz], ['Uložené', z.obrysy.ulozene]]) {
+      pravda(`${sirka} px: „${jm}" je vidět — má obrys`,
+        !!o && o.sirka > 0 && !/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0\s*\)/.test(o.barva)
+          && o.barva !== 'transparent',
+        o ? `obrys ${o.sirka} px ${o.barva}` : 'ovladač se nenašel');
+    }
 
     /* 3. NÁPIS V POLI HLEDÁNÍ. */
     pravda(`${sirka} px: nápis v poli hledání se vejde celý`, z.napis > 0 && z.napis <= z.vnitrni,
@@ -441,16 +467,19 @@ try {
       !!prep && prep.poScroll === prep.predScroll && prep.zpetScroll === prep.predScroll,
       prep ? `před ${prep.predScroll}, na mapě ${prep.poScroll}, zpět ${prep.zpetScroll}` : '');
 
-    const prelivy = await p.evaluate(() => ['.mc-rychly'].map((sel) => {
-      const e = document.querySelector(sel);
-      return { sel, je: !!e, obraz: e ? (getComputedStyle(e).backgroundImage || 'none') : 'nenašel se' };
-    }));
-    for (const x of prelivy) {
-      pravda(`${sirka} px: přeliv na „${x.sel}" se opravdu vykresluje`,
-        x.je && /gradient\(/.test(x.obraz),
-        x.je ? `background-image je „${x.obraz.slice(0, 60)}" — přebila ho zkratka background někde níž v souboru`
-             : 'prvek se na stránce nenašel');
-    }
+    /* KONTROLA PŘELIVU NA „.mc-rychly" TU STÁLA DO 12. 11.
+       Žádala `gradient(` v background-image a hlásila „přebila ho
+       zkratka background někde níž v souboru". Vznikla pro §180
+       („ovládání nad výpisem oživit: přelivy, stíny a barva jako na
+       kartách") a zdůvodnění jí zaniklo celé: majitel na snímku
+       ukázal, že oddělení je na webu příliš, a ovládání nad výpisem
+       přelivy, stíny ani desky od té doby nemá — stejně jako zanikla
+       položka pro tyhle ovladače v registru PRELIVY v test-soustava.
+       Hlídač, který žádá vzhled, jaký web nemá, není mez, ale past.
+       Co dávala navíc technicky — že pozdější zkratka `background`
+       nepřebije dřívější `background-image` — měří pro celý stylopis
+       test-mrtve-styly, a to na všech pravidlech, ne jen na tomhle
+       jednom. */
     const pasBily = await p.evaluate(() => {
       const e = document.querySelector('.map-controls-panel'); if (!e) return null;
       const s = getComputedStyle(e);

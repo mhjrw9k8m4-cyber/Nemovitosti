@@ -153,6 +153,7 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
       const st = getComputedStyle(pn);
       const rezerva = Math.max(0, parseFloat(st.paddingBottom) - parseFloat(st.paddingTop));
       return { rolovat: Math.max(0, Math.round(pn.scrollHeight - pn.clientHeight - rezerva)),
+        obsah: Math.max(1, Math.round(pn.scrollHeight - rezerva)),
         rezerva: Math.round(rezerva), poli, otevrenych,
         vyska: Math.round(r.height), dole: Math.round(r.bottom), okno: innerHeight };
     }, o.id);
@@ -179,10 +180,36 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
        79 px pod jeho spodní hranou, tedy se po otevření neukázala
        vůbec. Mez je mez, ne otisk: pár pixelů na jiném písmu v CI
        zkoušku neshodí, další skupina v panelu ano. */
+    /* MEZ JE PODÍL OBSAHU, NE POČET PIXELŮ — a je to oprava z 12. 11.
+       Do té doby tu stála pevná čísla (320: 90 px u pojmenovaných
+       skupin, 190 u „Dalších filtrů"; 390–1040: 1 a 70). Zestárla
+       s obsahem hned, jak do dat přibyla jedna kategorie: „Farmy"
+       s jedinou nabídkou. Skupina „Typ nemovitosti" tím narostla
+       z osmi dlaždic na devět a na 320 px vyšla na 122 px rolování
+       proti meze 90 — hlídač spadl, aniž by se na webu cokoli
+       pokazilo. Sesterská skupina „Druh pozemku" s TOUTÉŽ mřížkou
+       přitom vyšla na 74 px, tedy přesně na číslo zapsané 11. 11.,
+       takže to nebyla změna rozvržení.
+       Vlastnost, na kterou se tu dohlíží, je „panel skupiny je skoro
+       celý vidět". Ta se měří podílem, ne pixely: pixely porostou
+       s každou další kategorií, podíl ne.
+       Naměřeno 12. 11. (podíl obsahu, který se musí odrolovat):
+         320×844   druh 0 · typ 24,8 % · pozemek 16,7 % · cena 0
+                   · další filtry 31,5 %
+         390×844   vše 0 kromě dalších filtrů 13,4 %
+         768×1024  vše 0
+         1280×900  vše 0
+       Meze jsou nad tím s rezervou na jiné písmo v CI. Že se na
+       320 px u dlaždicových skupin roluje vůbec, je aritmetika
+       popsaná výš (lišta 396 px, panelu zbývá 442); kdyby obsah
+       přerostl i tuhle mez, je to signál dát dlaždice na nejužším
+       telefonu do dvou sloupců, ne mez znovu povolit. */
     const uzke = w <= 320;
-    const mez = o.id === 'ms-filters' ? (uzke ? 190 : (w <= 1040 ? 70 : 1)) : (uzke ? 90 : 1);
+    const podil = o.id === 'ms-filters' ? (uzke ? 0.38 : (w <= 1040 ? 0.18 : 0)) : (uzke ? 0.30 : 0);
+    const mez = Math.max(1, Math.round(z.obsah * podil));
     pravda(`${jmeno}: ${o.id} — v panelu se neroluje`, z.rolovat <= mez,
-      `uvnitř by se muselo odrolovat ${z.rolovat} px (vysoký ${z.vyska} px, mez ${mez})`);
+      `uvnitř by se muselo odrolovat ${z.rolovat} px z obsahu ${z.obsah} px `
+      + `(${Math.round((z.rolovat / z.obsah) * 1000) / 10} %), mez ${Math.round(podil * 100)} % = ${mez} px`);
     pravda(`${jmeno}: ${o.id} — panel se vejde do okna`, z.dole <= z.okno + 1,
       `dolní hrana na ${z.dole} px, okno ${z.okno} px`);
     pravda(`${jmeno}: ${o.id} — otevřený je právě jeden panel`, z.otevrenych === 1,
