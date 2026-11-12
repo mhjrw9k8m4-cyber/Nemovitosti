@@ -798,13 +798,19 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
       JSON.stringify(v));
     pravda(`${jm}: a po jeho stisku zaměření nespadne na body (${v.poZruseni})`,
       v.poZruseni !== 'body', JSON.stringify(v));
-    /* Sabotáž má smysl jen tam, kde lišta po stisku mizí — tedy na
-       telefonu. Na monitoru zůstává soused, takže by neprokázala nic
-       a měří se místo toho, že se tam opravdu nic nerozbilo. */
-    if (telefon) {
-      pravda(`${jm}: a mez je živá — bez tabindexu na hlavičce výpisu zaměření spadne (${v.sabotKdo})`,
-        v.sabotKdo === 'body', JSON.stringify(v));
-    } else {
+    /* SABOTÁŽ TU DO 12. 11. PROKAZOVALA ŽIVOST A DNES UŽ NEMŮŽE.
+       Stavěla na tom, že lišta akcí po stisku na telefonu MIZÍ: bez
+       `tabindex` na hlavičce výpisu tedy zaměření nemělo kam padnout
+       než na body. Majitel to mizení odpoledne zrušil („vrať to jak
+       to bylo původně"), takže po stisku zůstane vedle soused
+       (#mcf-hotovo) a zaměření drží i bez náhradníka — na telefonu
+       stejně jako na monitoru.
+       Kontrola proto na obou šířkách měří totéž a říká pravdu: i bez
+       náhradníka zaměření nespadne na body, protože lišta zůstává.
+       Náhradník (`tabindex="-1"` na #map-count) se tím nestal
+       zbytečným — platí dál pro případ, kdy je soused vypnutý nebo
+       skrytý, což je stav, který JS umí vyrobit. */
+    {
       pravda(`${jm}: lišta po stisku zůstává, takže zaměření drží i bez náhradníka (${v.sabotKdo})`,
         v.sabotKdo !== 'body', JSON.stringify(v));
     }

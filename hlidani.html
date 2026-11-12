@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=82e8edbf">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=1b767d4b">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -257,8 +257,7 @@
     .hl-rychle{font:inherit; font-size:14px; font-weight:600; cursor:pointer;
       display:inline-flex; align-items:center; gap:8px;
       min-height:44px; padding:4px 12px; border-radius:var(--r-ovladani);
-      /* Tichá výplň, ne bílá — viz .filter-chip ve stylopisu. */
-      border:1px solid var(--line-ui); background:var(--plocha-jemna); color:var(--text);
+      border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--znacka-svetla);}
     .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
@@ -369,7 +368,7 @@
        (1,5 px proti 1) a plochou. */
     /* Týž recept jako .hl-rychle výš, a ze stejného důvodu — viz
        poznámka u ní o změně z pilulky na dlaždici. */
-    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 12px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-jemna);}
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 12px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-karta);}
     .hl-chip.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12); color:var(--znacka-svetla); font-weight:700;}
     /* Seznam hledání
        ------------------------------------------------------------------

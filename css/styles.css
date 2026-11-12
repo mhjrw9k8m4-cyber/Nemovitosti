@@ -2665,26 +2665,10 @@ h1 em{ color:var(--znacka-svetla);
 /* Panel skupiny je bílá karta — text v ní se nesmí nakazit barvou,
    kterou deska dává svým potomkům. */
 .map-controls-panel .mf-panel{color:var(--text);}
-/* „BÍLÉ JAKO ČIPY VEDLE" PLATILO DO 12. 11., PAK SE OBRÁTILO.
-   Pravidlo `.map-controls-panel .map-okoli button{background:
-   var(--plocha-karta)}` vzniklo 29. 10.: čipy tehdy zbělely a tlačítko
-   „Nabídky v okolí" by vedle nich zůstalo jako jediné šedé.
-   Jenže 11. a 12. 11. se ovládání nad výpisem na majitelovo zadání
-   ztišilo — čipy i otvírače filtrů mají dnes tichou výplň
-   --plocha-jemna a obrys. Pravidlo tím přestalo sjednocovat a začalo
-   rozdělovat: jakmile „Okolí" stanulo v řádku filtrů jako první
-   otvírač, svítilo bílou proti šedým sousedům. Přesně to, čemu mělo
-   zabránit.
-   JE TO TAKY ODPOVĚĎ NA VČEREJŠÍ ZÁHADU. 11. 11. jsem si do stylopisu
-   zapsal „NEDOŘEŠENO": .map-near-btn počítalo rgb(255,255,255),
-   přestože mu základ dává --plocha-jemna, a žádné pravidlo se nenašlo.
-   Hledal jsem podle `.map-near-btn` a `#map-near` — jenže selektor
-   míří na `button` uvnitř `.map-okoli`, takže se v žádném z těch
-   hledání neukázal. Dvě tehdejší domněnkové záplaty (silnější selektor,
-   `background-color` místo zkratky) proto neudělaly nic a byly
-   vráceny; vada nebyla v síle pravidla, ale v tom, kde se hledalo.
-   Zbytek (obrys a barva textu) zůstává: ten je týž jako u otvíračů. */
-.map-controls-panel .map-okoli button{
+/* Bílé jako čipy vedle: tlačítko „Nabídky v okolí" stojí v pásu mezi
+   nimi a nemá být jediné šedé. Hlídá scripts/test-hledani-vzhled.mjs
+   („tutéž plochu jako ovladač nad nimi"). */
+.map-controls-panel .map-okoli button{background:var(--plocha-karta);
   border-color:var(--obrys-tlacitka); color:var(--text);}
 .map-controls-panel .map-okoli button svg,
 .map-controls-panel .mf-ic{color:var(--pas-akcent);}
@@ -2871,24 +2855,6 @@ h1 em{ color:var(--znacka-svetla);
    druhá cesta nemá co nabídnout. */
 .map-okoli{display:flex; flex-direction:column; align-items:center;}
 .map-okoli .map-near-btn{width:100%;}
-/* „OKOLÍ" JE PRVNÍ OTVÍRAČ V ŘÁDKU FILTRŮ (12. 11.).
-   Do té doby mělo vlastní řádek přes celou šířku — na telefonu 390 px
-   z toho bylo 52 px hned pod přepínačem Seznam/Mapa, a vypadalo to
-   jako třetí velké tlačítko v řadě stejných obdélníků pod sebou.
-   Je to přitom filtr podle MÍSTA: vybírá okruh, ve kterém se hledá.
-   Patří tedy mezi ostatní otvírače a mluví jejich řečí — týž obrys,
-   táž výplň, táž výška 44 px a týž tvar jako .mf-btn, jen místo
-   šipky dolů nese špendlík. Stojí první, protože místo je první
-   otázka, kterou si člověk u pozemku klade.
-   Pravidlo přebíjí `width:100%` a `margin-top:8px` ze základu —
-   v řadě si bere jen tolik místa, kolik má nápis. */
-.mc-rada-pas .map-okoli{display:block;}
-.mc-rada-pas .map-near-btn{width:auto; margin-top:0; min-height:44px;
-  padding:0 12px; gap:8px; font-size:14px; font-weight:600; line-height:1;
-  white-space:nowrap; border-radius:var(--r-ovladani);
-  border:1px solid var(--line-ui); background:var(--plocha-jemna);
-  color:var(--text);}
-.mc-rada-pas .map-near-btn:hover{border-color:var(--znacka-svetla);}
 .mnb-ceka{width:15px; height:15px; flex:none; border-radius:50%;
   border:2px solid rgba(255,255,255,0.4); border-top-color:#fff;
   animation:mnbTocSe .8s linear infinite;}
@@ -2925,7 +2891,7 @@ h1 em{ color:var(--znacka-svetla);
      rozdíl zapnuto/vypnuto se tím nestírá; obrys --line-ui zůstává,
      protože tichá výplň má na bílé jen 1,11 : 1 a ovladač se musí od
      pozadí odlišit (WCAG 1.4.11, hlídá test-okraje). */
-  border:1px solid var(--line-ui); background:var(--plocha-jemna); color:var(--text);
+  border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
   /* Jediné `transition:all` na webu bylo tady — a mělo následek: animoval
      se i OBRYS, takže prstenec po stisku tabulátoru nenaskočil, ale
      dojížděl. Kdo prochází web klávesnicí rychle, nevidí, kde stojí.
@@ -2970,15 +2936,14 @@ h1 em{ color:var(--znacka-svetla);
    Zalomení stojí na telefonu o jednu až dvě výšky ovladače víc; ta
    cena je proti uříznutému panelu malá a jiná cesta by znamenala
    panel na `position:fixed` a dopočítávat mu polohu skriptem. */
-/* ŘÁDEK FILTRŮ MÁ DVĚ VRSTVY: UKOTVENÍ A PÁS.
-   .mc-rada nese jen position:relative, aby se na něj na telefonu
-   věsily panely skupin přes celou šířku řádku. Samu řadu otvíračů
-   dělá .mc-rada-pas uvnitř — a jen ten se na telefonu roluje, takže
-   si panely neuřízne. Proč to tak musí být, je vypsané u pásu
-   v index.html a v pravidle pro telefon níž. */
-.mc-rada{position:relative; margin-top:12px;}
-.mc-rada-pas{display:flex; flex-wrap:wrap; gap:8px;}
-.mc-rada-pas > *{flex:none;}
+/* NÁVRAT DO PŮVODNÍHO STAVU (12. 11.). Majitel nad snímkem ovládání
+   nad výpisem: „celé jsi to dojebal, vrať to jak to bylo původně."
+   Vrací se tím práce z 11. a 12. 11.: rolovací pás řádku filtrů,
+   „Okolí" přesunuté mezi otvírače, mizející lišta akcí a ztišení
+   výplní. Co si majitel vyžádal zvlášť (řazení, rozbalovátka, menu,
+   texty hlídání), zůstává. */
+.mc-rada{position:relative; display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+.mc-rada > *{flex:none;}
 /* Otvírač je týž ovladač jako ostatní bílé ovladače nad výpisem:
    44 px na prst, --r-ovladani, obrys --line-ui.
    Barva se ZÁLOŽNÍ hodnotou. Kdyby proměnná u tohohle prvku z jakéhokoli
@@ -3350,7 +3315,7 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
 .mcv-btn, .mc-toggles .mc-prep, .hl-dlazdice-b, .hl-prep, .chip-check{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
   font:inherit; font-size:14px; font-weight:600;
   cursor:pointer; min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
-  border:1px solid var(--line-ui); background:var(--plocha-jemna); color:var(--text);
+  border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
   box-sizing:border-box; transition:var(--prechod);}
 .mcv-btn:hover, .mc-toggles .mc-prep:hover, .hl-dlazdice-b:hover, .hl-prep:hover, .chip-check:hover{border-color:var(--znacka); background:var(--plocha-zapustena);}
 .mcv-btn.on, .mc-toggles .mc-prep.on, .hl-dlazdice-b.on, .hl-prep.on,
@@ -5610,10 +5575,11 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
        ho mřížka nerozmisťuje; druhý sloupec prvního řádku je teď
        prázdný stejně jako třetí. */
     grid-template-areas:
-      "hledani . ."
+      "hledani okoli ."
       "filtry filtry filtry"
       "akce akce akce";}
   .map-controls-panel > .map-search{grid-area:hledani;}
+  .map-controls-panel .map-okoli{grid-area:okoli;}
   .map-controls-panel .mc-rada{grid-area:filtry;}
   .map-controls-panel .mcf-akce{grid-area:akce; margin-top:8px; padding:0;
     border-top:0; justify-content:flex-start;}
@@ -5660,7 +5626,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   .mf-panel{left:0; right:auto; width:min(420px, 92vw);}
   /* Poslední otvírač stojí u pravého okraje, takže jeho panel se musí
      zarovnat vpravo, aby nevytekl z lišty. */
-  .mc-rada .mf:last-of-type .mf-panel{left:auto; right:0;}
+  .mc-rada > .mf:last-of-type .mf-panel{left:auto; right:0;}
   /* „Další filtry" nesou dvě skupiny vedle sebe, ne pod sebou. */
   .mf-panel.map-controls{grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px 20px;}
   /* NÁHLED V POSTRANNÍM SLOUPCI JE NIŽŠÍ. Karta měla 420 px (náhled 208,
@@ -5756,75 +5722,10 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Místo nich je řádek otvíračů (.mc-rada), který se vodorovně roluje
      a bere si JEDNU výšku ovladače; panely jednotlivých skupin visí
      nad obsahem, takže výpis neodsouvají vůbec. */
-  /* A TEN KOMENTÁŘ VÝŠ BYL DO 12. 11. NEPRAVDA.
-     Řádek se neroloval: .mc-rada mělo flex-wrap:wrap, takže se pět
-     otvíračů na telefonu zalomilo na DVA řádky. Naměřeno na 390 px:
-     řádek filtrů 241–337 px (96 px místo 44) a první nabídka na
-     636 px. Záměr z 10. 11. je tím teprve dodělaný.
-     Roluje se vnitřní pás, ne .mc-rada: panely skupin se na telefonu
-     věší na .mc-rada (position:relative, left/right:0, top:100%+6px),
-     takže overflow-x na něm by si uřízlo vlastní panely. Absolutně
-     umístěný prvek, jehož ukotvení je PŘEDEK rolovacího boxu, se jeho
-     overflow nezastříhává — a .mc-rada je předek pásu. Panel se proto
-     pořád kreslí přes celou šířku řádku; rolují se jen otvírače.
-     Posuvník se nekreslí, protože na dotykové obrazovce zabírá řádek
-     navíc a nic neřekne — je to týž recept jako u rozpoznaných
-     odznaků (.ms-chipy v bloku od 1041 px). */
-  .mc-rada-pas{flex-wrap:nowrap; overflow-x:auto;
-    scrollbar-width:none; -ms-overflow-style:none;}
-  .mc-rada-pas::-webkit-scrollbar{display:none;}
-  /* SKRYTÝ POPISEK SE MUSÍ UKOTVIT KE SVÉMU TLAČÍTKU, JINAK PÁSU UNIKNE.
-     NAMĚŘENÁ VADA, kterou vyrobil pás sám (12. 11.): v každém otvírači
-     je `<span class="visually-hidden" data-mf-slovo>` a .visually-hidden
-     je `position:absolute`. Nejbližší pozicovaný předek byl .mc-rada,
-     tedy PŘEDEK rolovacího pásu — takže ten span pás nezastříhl stejně,
-     jako nezastříhne panely, a u pátého otvírače skončil 82 px za pravou
-     hranou. Tím .mc-rada přeteklo (scrollWidth 440 proti 358) a vodorovný
-     scroller z toho udělal i .map-controls-panel a .map-app (456 proti
-     390). Důsledek na telefonu: zaměření klávesnicí na pátý otvírač
-     odrolovalo celý výpis o 66 px do strany a panel se otevřel levou
-     hranou na −50 px.
-     Ukotvení na samotném tlačítku to zavírá: span se váže k summary,
-     které v pásu leží, a pás ho zastříhne. Panel to nepostihne — ten je
-     SOUROZENEC summary, ne jeho potomek, takže se dál věší na .mc-rada
-     a kreslí se přes celou šířku řádku. */
-  .mc-rada-pas .mf-btn{position:relative;}
-  /* LIŠTA AKCÍ V KLIDU NENÍ — a je to rozhodnutí o vzhledu, ne úklid.
-     Majitel poslal snímek ovládání nad výpisem se slovy, že „se to
-     bohužel nedá pozerat". Na telefonu stálo nad prvním inzerátem pět
-     řádků ovladačů a nejhlasitější z nich byla plná zelená plocha
-     „Zobrazit 3 993 nemovitostí" přes celou šířku (46 px, lišta
-     s odstupy 61 px) — která opakuje TÝŽ POČET, jaký o 230 px níž
-     nese hlavička výpisu („3 993 nemovitostí"), a na telefonu
-     v klidovém stavu nemá co dělat: filtry se použijí hned, jak se
-     naklikají, a výpis je rovnou pod ní.
-     Vlastní zdůvodnění toho tlačítka to potvrzuje. Vzniklo 10. 11.,
-     aby se o něm dozvěděl ten, kdo si naklikal filtry v otevřeném
-     panelu (do té doby bylo na dně panelu, 1 459 px od jeho začátku).
-     Tedy: má smysl, dokud je panel otevřený. Pak ne.
-     ZŮSTÁVÁ VE DVOU STAVECH, a oba nesou informaci, kterou jinde
-     nevidět není:
-       1. otevřený panel skupiny — tam je to potvrzení volby a lišta
-          se navíc přilepí ke spodní hraně obrazovky (pravidlo výš);
-       2. zapnutý filtr — pak v liště svítí „Zrušit filtry" (#mcf-zrusit
-          odkládá `hidden` JS podle jeNecoZapnute()) a celkový odznak
-          #msf-badge s počtem zapnutých filtrů.
-     Na monitoru od 1041 px lišta zůstává vždy: tam stojí v mřížce
-     vedle filtrů, ne jako vlastní řádek nad výpisem, a 46 px ve
-     třetím řádku mřížky nikomu neodsouvá první nabídku.
-     Měřeno na 390 px: lišta akcí y 297–358, první nabídka 584 px. */
-  .map-controls-panel:not(:has(details.mf[open]))
-    .mcf-akce:not(:has(.mcf-zrusit:not([hidden]))){display:none;}
-  /* A SE ZAPNUTÝM FILTREM ZBYDE JEN „ZRUŠIT FILTRY".
-     Lišta se v tom stavu vrátit MUSÍ (nese odznak s počtem zapnutých
-     filtrů a jediné tlačítko, kterým se dají zrušit), ale „Zobrazit N
-     nemovitostí" v ní pořád opakuje počet z hlavičky výpisu o dva
-     řádky níž — a navíc nemá co zobrazovat, protože zapnutý filtr se
-     na výpisu projevil hned.
-     Naměřeno na 390 px: se zapnutým filtrem a zavřeným panelem měla
-     lišta 141 px (dvě tlačítka pod sebou, column-reverse), bez
-     „Zobrazit N" zbyde jedno. */
-  .map-controls-panel:not(:has(details.mf[open])) .mcf-hotovo{display:none;}
+  /* ROLOVACÍ PÁS, SKRYTÝ POPISEK A MIZEJÍCÍ LIŠTA AKCÍ TU BYLY
+     OD 11. DO 12. 11. a jsou pryč — majitel nad snímkem ovládání:
+     „celé jsi to dojebal, vrať to jak to bylo původně." Řádek
+     filtrů se tedy zase zalamuje a lišta akcí je vidět pořád. */
   .map-side{order:2; border-right:0; max-height:none;}
   /* STEJNÁ ÚROVEŇ JAKO VÝPIS (31. 10.). V seznamu začíná první
      ovladač 16 px pod pásem s hledáním, mapa začínala rovnou na něm —

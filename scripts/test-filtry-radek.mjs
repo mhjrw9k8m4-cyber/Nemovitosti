@@ -274,25 +274,18 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
 }
 
 /* ----------------------------------------------------------------------
-   LIŠTA AKCÍ MÁ NA TELEFONU TŘI STAVY
+   LIŠTA AKCÍ JE VIDĚT VE VŠECH STAVECH
    ----------------------------------------------------------------------
-   ROZHODNUTÍ Z 12. 11., ne mez na čísla. Majitel poslal snímek ovládání
-   nad výpisem se slovy, že „se to bohužel nedá pozerat". Nejhlasitější
-   prvek v něm byla plná zelená plocha „Zobrazit 3 993 nemovitostí" přes
-   celou šířku — a ta opakuje TÝŽ POČET, jaký o dva řádky níž nese
-   hlavička výpisu, přičemž filtry se použijí hned, jak se naklikají.
-   Lišta proto na telefonu v klidu není. Vrací se jen tam, kde nese
-   informaci, která jinde vidět není:
-     klid bez filtru  → lišta skrytá;
-     otevřený panel   → lišta i „Zobrazit N" (potvrzení volby);
-     zapnutý filtr    → lišta a „Zrušit filtry", ale „Zobrazit N" ne.
-   Na monitoru lišta zůstává vždy: stojí v mřížce vedle filtrů, ne jako
-   vlastní řádek nad výpisem.
-   Naměřeno na 390 px: první nabídka začínala na 636 px, po rolovacím
-   řádku filtrů na 584 a po skrytí lišty na 511. Se zapnutým filtrem
-   měla lišta 141 px, bez „Zobrazit N" 87.
-   Kontrola je sama sobě důkazem živosti: kdyby pravidlo přestalo
-   platit, lišta by byla vidět i v klidu a první kontrola spadne. */
+   MEZI 12. 11. RÁNEM A ODPOLEDNEM TU STÁLO NĚCO JINÉHO. Lišta se na
+   telefonu v klidu schovávala a tahle zkouška to vyžadovala ve třech
+   stavech (klid / otevřený panel / zapnutý filtr). Majitel to odpoledne
+   nad snímkem ovládání zrušil: „celé jsi to dojebal, vrať to jak to
+   bylo původně." Lišta je tedy zase vidět pokaždé a zkouška měří to,
+   co platí: ve všech třech stavech stojí a nese „Zobrazit N", na
+   telefonu i na monitoru.
+   Měřená čísla z té doby ať zůstanou zapsaná, protože o ceně toho
+   rozhodnutí něco říkají: se skrytou lištou začínala první nabídka na
+   telefonu na 511 px, s viditelnou na 584. */
 {
   for (const [sirka, telefon] of [[390, true], [1280, false]]) {
     const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
@@ -319,18 +312,14 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
       return out;
     });
     const jm = telefon ? `telefon ${sirka}` : `stolní ${sirka}`;
-    if (telefon) {
-      pravda(`${jm}: lišta akcí v klidu není`, v.klid <= 2, JSON.stringify(v));
-      pravda(`${jm}: s otevřeným panelem je i s „Zobrazit N"`,
-        v.panel > 40 && v.panelHotovo > 40, JSON.stringify(v));
-      pravda(`${jm}: se zapnutým filtrem zbyde „Zrušit filtry" bez „Zobrazit N"`,
-        v.filtr > 40 && v.filtrZrusit > 40 && v.filtrHotovo <= 2, JSON.stringify(v));
-    } else {
-      pravda(`${jm}: lišta akcí je vidět ve všech třech stavech`,
-        v.klid > 40 && v.panel > 40 && v.filtr > 40, JSON.stringify(v));
-      pravda(`${jm}: a „Zobrazit N" v ní zůstává taky`,
-        v.klidHotovo > 40 && v.panelHotovo > 40 && v.filtrHotovo > 40, JSON.stringify(v));
-    }
+    pravda(`${jm}: lišta akcí je vidět ve všech třech stavech`,
+      v.klid > 40 && v.panel > 40 && v.filtr > 40, JSON.stringify(v));
+    pravda(`${jm}: a „Zobrazit N" v ní zůstává taky`,
+      v.klidHotovo > 40 && v.panelHotovo > 40 && v.filtrHotovo > 40, JSON.stringify(v));
+    /* „Zrušit filtry" se zapnutým filtrem je stav, který jinde vidět
+       není — ten se hlídá dál, ať je lišta schovaná, nebo ne. */
+    pravda(`${jm}: se zapnutým filtrem je v liště „Zrušit filtry"`,
+      v.filtrZrusit > 40, JSON.stringify(v));
     await ctx.close();
   }
 }
