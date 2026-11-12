@@ -3,7 +3,10 @@
   ready(function () {
     var opened = null, poradiPanelu = 0;
 
-    var IKONY = { razeni: '#i-razeni', 'sipka-dolu': '#i-sipka-dolu' };
+    var IKONY = { razeni: '#i-razeni', 'sipka-dolu': '#i-sipka-dolu',
+      okoli: '#i-okoli', vrstvy: '#i-vrstvy', cena: '#i-cena', druh: '#i-druh',
+      kalendar: '#i-kalendar', obalka: '#i-obalka', prijezd: '#i-prijezd',
+      vystraha: '#i-vystraha', vymera: '#i-vymera', dum: '#i-dum' };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
@@ -33,7 +36,17 @@
     }, true);
     window.addEventListener('resize', function () { if (opened) close(); });
 
-    Array.prototype.forEach.call(document.querySelectorAll('select.map-select'), enhance);
+    window.cddVylepsi = vylepsiVse;
+    vylepsiVse();
+    function vylepsiVse() {
+    Array.prototype.forEach.call(document.querySelectorAll('select'), function (sel) {
+      if (sel.hasAttribute('data-bez-cdd')) return;
+      if (sel.getAttribute('aria-hidden') === 'true') return;
+      if (sel.hasAttribute('hidden') || sel.multiple || sel.size > 1) return;
+      if (sel.classList.contains('cdd-native')) return;
+      enhance(sel);
+    });
+    }
 
     function place(btn, panel) {
       var r = btn.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, MAXH = 280;

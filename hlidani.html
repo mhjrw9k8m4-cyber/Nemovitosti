@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-u0L5WQ8uM1q3bj0Vs/s7cr2IMSGJopJeHQCiVD3XQJ4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-FFuxvxeeE7OJXZyD0tWgvxgc+RtTnbbgEceYWl6j5lA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=a9798962">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=c1bf729b">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -257,7 +257,8 @@
     .hl-rychle{font:inherit; font-size:14px; font-weight:600; cursor:pointer;
       display:inline-flex; align-items:center; gap:8px;
       min-height:44px; padding:4px 12px; border-radius:var(--r-ovladani);
-      border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
+      /* Tichá výplň, ne bílá — viz .filter-chip ve stylopisu. */
+      border:1px solid var(--line-ui); background:var(--plocha-jemna); color:var(--text);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--znacka-svetla);}
     .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
@@ -368,7 +369,7 @@
        (1,5 px proti 1) a plochou. */
     /* Týž recept jako .hl-rychle výš, a ze stejného důvodu — viz
        poznámka u ní o změně z pilulky na dlaždici. */
-    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 12px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-karta);}
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 12px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-jemna);}
     .hl-chip.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12); color:var(--znacka-svetla); font-weight:700;}
     /* Seznam hledání
        ------------------------------------------------------------------
@@ -515,7 +516,7 @@
   </style>
 </head>
 <body>
-<svg class="ik-sada" width="0" height="0" aria-hidden="true" focusable="false"><symbol id="i-spendlik" viewBox="0 0 24 24"><path d="M12 20.5c4.3-5.1 6.5-8.7 6.5-11A6.5 6.5 0 0 0 5.5 9.5c0 2.3 2.2 5.9 6.5 11zM12 6.6 14.9 9.5 12 12.4 9.1 9.5z"/></symbol><symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4 3.5 6.2v13.3L9 17.3l6 2.2 5.5-2.2V6.2L15 8.4zM9 4v13.3M15 8.4v11.1M12 9.5 14 11.5 12 13.5 10 11.5z"/></symbol><symbol id="i-vymera" viewBox="0 0 24 24"><path d="M3.5 8.5v-5h5M20.5 8.5v-5h-5M3.5 15.5v5h5M20.5 15.5v5h-5M8.5 8.5h7v7h-7z"/></symbol><symbol id="i-cena" viewBox="0 0 24 24"><path d="M20 13.9 13.9 20a2.2 2.2 0 0 1-3.1 0L4 13.2V4h9.2l6.8 6.8a2.2 2.2 0 0 1 0 3.1zM8 8h.01"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-zavrit" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></symbol><symbol id="i-kos" viewBox="0 0 24 24"><path d="M4 7.5h16M9.5 7.5v-2h5v2M6.5 7.5 8 20h8l1.5-12.5"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-sipka-vlevo" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol><symbol id="i-nahoru" viewBox="0 0 24 24"><path d="M12 19.5V5M6 11l6-6 6 6"/></symbol><symbol id="i-fotky" viewBox="0 0 24 24"><path d="M3.5 4.5h17v15h-17zM8 9.5h.01M20.5 15.5 15 10 6.5 18.5"/></symbol><symbol id="i-seznam" viewBox="0 0 24 24"><path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12M4 6.5h.01M4 12h.01M4 17.5h.01"/></symbol><symbol id="i-pozadavky" viewBox="0 0 24 24"><path d="M3.5 8 5.5 10 9 6.5M3.5 16.5l2 2 3.5-3.5M12.5 8h8M12.5 17h8"/></symbol><symbol id="i-zvonek" viewBox="0 0 24 24"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4.5 2 6.5 2 6.5H4.5s2-2 2-6.5zM10.2 19.5a2 2 0 0 0 3.6 0"/></symbol><symbol id="i-obalka" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17zM3.5 7.5 12 13.5l8.5-6"/></symbol><symbol id="i-uzivatel" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 20.5a8 8 0 0 1 16 0"/></symbol></svg>
+<svg class="ik-sada" width="0" height="0" aria-hidden="true" focusable="false"><symbol id="i-spendlik" viewBox="0 0 24 24"><path d="M12 20.5c4.3-5.1 6.5-8.7 6.5-11A6.5 6.5 0 0 0 5.5 9.5c0 2.3 2.2 5.9 6.5 11zM12 6.6 14.9 9.5 12 12.4 9.1 9.5z"/></symbol><symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4 3.5 6.2v13.3L9 17.3l6 2.2 5.5-2.2V6.2L15 8.4zM9 4v13.3M15 8.4v11.1M12 9.5 14 11.5 12 13.5 10 11.5z"/></symbol><symbol id="i-okoli" viewBox="0 0 24 24"><path d="M12 16.5c2.7-3.3 4-5.6 4-7a4 4 0 0 0-8 0c0 1.4 1.3 3.7 4 7zM12 7.9 13.6 9.5 12 11.1 10.4 9.5zM5.6 15.5a8 8 0 0 1 0-11.3M18.4 4.2a8 8 0 0 1 0 11.3M8.5 20.5h7"/></symbol><symbol id="i-vrstvy" viewBox="0 0 24 24"><path d="M12 3.5 3.5 8 12 12.5 20.5 8zM3.5 12.5 12 17l8.5-4.5M3.5 17 12 21.5l8.5-4.5"/></symbol><symbol id="i-vymera" viewBox="0 0 24 24"><path d="M3.5 8.5v-5h5M20.5 8.5v-5h-5M3.5 15.5v5h5M20.5 15.5v5h-5M8.5 8.5h7v7h-7z"/></symbol><symbol id="i-druh" viewBox="0 0 24 24"><path d="M12 3.5 6.5 13h4l-3.5 5.5h10L13.5 13h4zM12 16.5V20M3.5 20h17"/></symbol><symbol id="i-cena" viewBox="0 0 24 24"><path d="M20 13.9 13.9 20a2.2 2.2 0 0 1-3.1 0L4 13.2V4h9.2l6.8 6.8a2.2 2.2 0 0 1 0 3.1zM8 8h.01"/></symbol><symbol id="i-kalendar" viewBox="0 0 24 24"><path d="M4 6.5h16v14H4zM8.5 3.5v5M15.5 3.5v5M4 11.5h16"/></symbol><symbol id="i-dum" viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v10h12V10M10 20v-6h4v6M3.5 20h17"/></symbol><symbol id="i-prijezd" viewBox="0 0 24 24"><path d="M9 20 11 4M15 20 13 4M12 7.5v1.5M12 12v1.5M12 16.5V18M3.5 20h17"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-zavrit" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></symbol><symbol id="i-kos" viewBox="0 0 24 24"><path d="M4 7.5h16M9.5 7.5v-2h5v2M6.5 7.5 8 20h8l1.5-12.5"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-sipka-vlevo" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol><symbol id="i-sipka-dolu" viewBox="0 0 24 24"><path d="M5.5 9.5 12 16l6.5-6.5"/></symbol><symbol id="i-nahoru" viewBox="0 0 24 24"><path d="M12 19.5V5M6 11l6-6 6 6"/></symbol><symbol id="i-fotky" viewBox="0 0 24 24"><path d="M3.5 4.5h17v15h-17zM8 9.5h.01M20.5 15.5 15 10 6.5 18.5"/></symbol><symbol id="i-seznam" viewBox="0 0 24 24"><path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12M4 6.5h.01M4 12h.01M4 17.5h.01"/></symbol><symbol id="i-pozadavky" viewBox="0 0 24 24"><path d="M3.5 8 5.5 10 9 6.5M3.5 16.5l2 2 3.5-3.5M12.5 8h8M12.5 17h8"/></symbol><symbol id="i-razeni" viewBox="0 0 24 24"><path d="M6 4.5v15M3 16l3 3.5 3-3.5M12 6.5h8.5M12 12h6M12 17.5h3.5"/></symbol><symbol id="i-vystraha" viewBox="0 0 24 24"><path d="M12 3.5 3.5 20.5h17zM12 9.5V14M12 17.3h.01"/></symbol><symbol id="i-zvonek" viewBox="0 0 24 24"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4.5 2 6.5 2 6.5H4.5s2-2 2-6.5zM10.2 19.5a2 2 0 0 0 3.6 0"/></symbol><symbol id="i-obalka" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17zM3.5 7.5 12 13.5l8.5-6"/></symbol><symbol id="i-uzivatel" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 20.5a8 8 0 0 1 16 0"/></symbol></svg>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
 
@@ -1065,7 +1066,7 @@
              dojede za hodinu, hledá okolí, ne správní jednotku. */
           '<div class="hl-okruh">' +
             '<label class="hl-lbl" for="ns-okruh">Místo hranic okresu hlídat okolí</label>' +
-            '<select class="hl-sel" id="ns-okruh">' +
+            '<select class="hl-sel" id="ns-okruh" data-ikona="okoli" data-popisek="Okolí" data-sipka="sipka-dolu">' +
               '<option value="">— celý okres (jak to bylo)</option>' +
               '<option value="10">do 10 km od místa</option>' +
               '<option value="25">do 25 km od místa</option>' +
@@ -1074,7 +1075,7 @@
             '</select>' +
             '<p class="hl-napoveda" id="ns-okruh-pozn"></p>' +
           '</div>' +
-          '<div><label class="hl-lbl" for="ns-druh">Druh nabídky</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
+          '<div><label class="hl-lbl" for="ns-druh">Druh nabídky</label><select class="hl-sel" id="ns-druh" data-ikona="vrstvy" data-popisek="Druh" data-sipka="sipka-dolu">' + druhOpts + '</select></div>' +
           /* TYP NABÍDKY JE ŘADA DLAŽDIC, NE ROZBALOVÁTKO (1. 11.).
              Majitel: „to hledání vizuálně potřebuje brutálně překopat,
              udělej to podobné našemu vyhledávání, které mám na hlavní
@@ -1181,6 +1182,15 @@
       '</div>';
   }
   function wireNewSearch(afterSave) {
+    /* ROZBALOVAČE DOSTANOU TÝŽ VZHLED JAKO ŘAZENÍ NAD VÝPISEM.
+       Formulář „Nové hlídání" se skládá v JS až po startu stránky,
+       takže js/min/dropdown.js, který běží při načtení, jeho <select>
+       nezastihne — a ty dva by zůstaly v podobě, jakou kreslí
+       prohlížeč sám (jiná výška, jiné písmo, jiná šipka na každém
+       systému). Tohle je první místo po vykreslení, kde už ve stránce
+       jsou. Volá se opatrně: na stránce bez toho skriptu funkce není
+       a formulář musí fungovat i tak. */
+    if (typeof window.cddVylepsi === 'function') window.cddVylepsi();
     var chips = root.querySelectorAll('.hl-chip');
     var msg = document.getElementById('ns-msg');
     var souhrn = document.getElementById('ns-souhrn');
@@ -1795,5 +1805,6 @@
 </script>
 <script src="js/min/offline.js?v=3759e5ca" defer></script>
 <script src="js/min/mereni.js?v=72436fa9" defer></script>
+<script src="js/min/dropdown.js?v=638d5046" defer></script>
 </body>
 </html>

@@ -3392,10 +3392,20 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    Majitel 9. 11.: „chci, aby to bylo identické vizuálně i na hlídání,
    přidávání inzerátu a všude." Deklarace je proto jedna a jmenuje
    všechny tři. */
+/* TICHÁ VÝPLŇ, NE BÍLÁ DESKA (12. 11.) — týž důvod jako u .filter-chip
+   o kus výš. Při ztišení ovládání 11. a 12. 11. zbyla tahle rodina
+   jediná bílá a nesrovnalost se obrátila: majitel na ni ukázal slovy
+   „ať všechny funkce, kde se dělá řazení nebo vyhledávání, vypadají
+   jako původní řazení v menu". Původní řazení nad výpisem je
+   --plocha-jemna, ne bílá; proto sem. Zapnutý stav má dál sytou zeleň
+   (pravidlo .on níž), takže rozdíl zapnuto/vypnuto se nestírá, a obrys
+   --line-ui zůstává, protože tichá výplň má na bílé jen 1,11 : 1
+   a ovladač se musí od pozadí odlišit (WCAG 1.4.11, hlídá
+   test-okraje). Hlídá scripts/test-hlidani-jako-hledani.mjs. */
 .mcv-btn, .mc-toggles .mc-prep, .hl-dlazdice-b, .hl-prep, .chip-check{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
   font:inherit; font-size:14px; font-weight:600;
   cursor:pointer; min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
-  border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
+  border:1px solid var(--line-ui); background:var(--plocha-jemna); color:var(--text);
   box-sizing:border-box; transition:var(--prechod);}
 .mcv-btn:hover, .mc-toggles .mc-prep:hover, .hl-dlazdice-b:hover, .hl-prep:hover, .chip-check:hover{border-color:var(--znacka); background:var(--plocha-zapustena);}
 .mcv-btn.on, .mc-toggles .mc-prep.on, .hl-dlazdice-b.on, .hl-prep.on,
@@ -3675,6 +3685,36 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    pointer-events zrušil, byla by přes ovládání neviditelná vrstva.
    Tahle věta je specifičtější než obě a drží to na 1×1. */
 .cdd > select.cdd-native{width:1px; height:1px; min-width:0; max-width:none; min-height:0; flex:none; padding:0;}
+/* ===== JEDEN ROZBALOVAČ PRO CELÝ WEB ===============================
+   MAJITELŮV POKYN 12. 11.: „všechny funkce, kde se dělá řazení nebo
+   vyhledávání, ať vypadají jako původní řazení v menu — stejná
+   stylizace."
+   Do té doby to platilo pro JEDINÝ ovladač z třinácti: js/dropdown.js
+   vylepšoval jen `select.map-select` a načítal se jen na úvodní
+   stránce, takže řazení nad výpisem mělo ikonu, popisek, hodnotu
+   a šipku, kdežto rozbalovače v „Novém hlídání", v „Přidat
+   nemovitost", v kontaktu i jinde zůstaly tím, co nakreslí prohlížeč
+   sám — jiná výška, jiné písmo, jiná šipka na každém systému.
+   Vzhled se proto stěhuje sem, do obecného `.cdd`: tlačítko, ikona,
+   popisek, hodnota, šipka. Varianta nad výpisem (.ms-vysledky > .cdd)
+   zůstává o tři třídy silnější, ale už jen kvůli šířce a odsazení —
+   barvy, písmo i najetí má shodné, protože ONA JE TA PŘEDLOHA.
+   NAPOPRVÉ JSEM TO NAPSAL BÍLÉ A BYLA TO CHYBA: řazení nad výpisem má
+   tichou výplň (--plocha-jemna) a řez 700, takže nové rozbalovače
+   v hlídání a v inzerátu by vedle své vlastní předlohy svítily bíle
+   a o stupeň lehčeji. Právě na tenhle rozdíl majitel ukazoval. */
+.cdd > .cdd-btn{width:100%; min-height:44px; padding:0 12px;
+  border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+  background:var(--plocha-jemna); color:var(--text); cursor:pointer;
+  font:inherit; font-size:16px; font-weight:700; letter-spacing:-0.01em;
+  -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+.cdd > .cdd-btn:hover{border-color:var(--znacka); background:var(--plocha-tlumena);}
+.cdd > .cdd-btn:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
+.cdd > .cdd-btn .mcn-ic{display:inline-flex; flex:none; color:var(--znacka-svetla);}
+.cdd > .cdd-btn .mcn-ic .ik{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
+.cdd > .cdd-btn .cdd-k{flex:none; font-size:14px; font-weight:500; color:var(--muted);}
+.cdd > .cdd-btn .cdd-sip{display:inline-flex; flex:none; color:var(--muted); margin-left:auto;}
+.cdd > .cdd-btn .cdd-sip .ik{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah);}
 .cdd-btn{display:flex; align-items:center; gap:8px; text-align:left;}
 /* Rozbalovátko si značku bere z data-ikona na <select> (js/dropdown.js).
    Šipka vpravo zůstává tou samou šipkou jako u .map-select — značka

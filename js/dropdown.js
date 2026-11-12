@@ -21,7 +21,16 @@
        řádek, musí stát u pravého kraje a mluvit tiše (--muted).
        Kreslí se proto stejnou rukou jako ostatní značky, a kdo ji
        chce, řekne si o ni atributem data-sipka na <select>. */
-    var IKONY = { razeni: '#i-razeni', 'sipka-dolu': '#i-sipka-dolu' };
+    /* REGISTR, NE SKLÁDÁNÍ JMÉNA. Ikona se bere podle jména ze sady
+       (scripts/ikony.mjs), ale jen z tohohle seznamu — kdyby se
+       `#i-` + cokoli skládalo rovnou z atributu, překlep by vyrobil
+       <use> na neexistující symbol a ikona by mlčky zmizela.
+       Rozšířeno 12. 11., když vzhled rozbalovače dostaly všechny
+       ovladače na webu, ne jen řazení nad výpisem. */
+    var IKONY = { razeni: '#i-razeni', 'sipka-dolu': '#i-sipka-dolu',
+      okoli: '#i-okoli', vrstvy: '#i-vrstvy', cena: '#i-cena', druh: '#i-druh',
+      kalendar: '#i-kalendar', obalka: '#i-obalka', prijezd: '#i-prijezd',
+      vystraha: '#i-vystraha', vymera: '#i-vymera', dum: '#i-dum' };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
@@ -81,7 +90,32 @@
     }, true);
     window.addEventListener('resize', function () { if (opened) close(); });
 
-    Array.prototype.forEach.call(document.querySelectorAll('select.map-select'), enhance);
+    /* KAŽDÝ ROZBALOVAČ NA STRÁNCE, NE JEN `.map-select` (12. 11.).
+       Majitel: „všechny funkce, kde se dělá řazení nebo vyhledávání,
+       ať vypadají jako původní řazení v menu." Výběr proto bere
+       všechny <select> a vynechává jen ty, které vzhled mít nemají:
+         [data-bez-cdd]  — vědomá výjimka zapsaná ve značce,
+         [aria-hidden]   — pomocný prvek, který nese stav pro jiný
+                           ovladač (třeba #ns-type v hlídání),
+         [hidden], [multiple], [size>1] — prohlížeč je kreslí jinak
+                           než rozbalovač a tlačítko by lhalo o tom,
+                           co ovladač umí,
+         .cdd-native     — už vylepšený (pojistka proti dvojímu běhu). */
+    /* VYLEPŠIT SE MUSÍ DÁT I POZDĚJI. Formulář „Nové hlídání" si své
+       rozbalovače skládá v JS až po startu, takže by je tenhle běh
+       nezastihl a zůstaly by v podobě, jakou kreslí prohlížeč sám.
+       Stránka proto po vykreslení zavolá window.cddVylepsi(). */
+    window.cddVylepsi = vylepsiVse;
+    vylepsiVse();
+    function vylepsiVse() {
+    Array.prototype.forEach.call(document.querySelectorAll('select'), function (sel) {
+      if (sel.hasAttribute('data-bez-cdd')) return;
+      if (sel.getAttribute('aria-hidden') === 'true') return;
+      if (sel.hasAttribute('hidden') || sel.multiple || sel.size > 1) return;
+      if (sel.classList.contains('cdd-native')) return;
+      enhance(sel);
+    });
+    }
 
     function place(btn, panel) {
       var r = btn.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, MAXH = 280;

@@ -44,7 +44,15 @@ function je(popis, vyslo, cekano) {
 {
   const html = cti('pridat.html');
   pravda('formulář má výběr typu nemovitosti', /id="p-kat"/.test(html));
-  pravda('a je povinný', /<select id="p-kat" required>/.test(html));
+  /* ATRIBUTY SE ČTOU Z CELÉ ZNAČKY, NE Z JEJÍHO DOSLOVNÉHO ZNĚNÍ.
+     Do 12. 11. tu stál vzor `<select id="p-kat" required>` a spadl
+     v okamžiku, kdy značka dostala `data-ikona`, `data-popisek`
+     a `data-sipka` (vylepšení rozbalovátek). Povinnost pole se tím
+     nezměnila ani o písmeno — rozešel se jen zápis. Hledá se proto
+     celá otevírací značka a v ní slovo `required`, takže další atribut
+     už zkoušku nerozbije. */
+  const znacka = /<select id="p-kat"[^>]*>/.exec(html);
+  pravda('a je povinný', !!znacka && /\brequired\b/.test(znacka[0]));
   /* SEZNAM VE STRÁNCE NENÍ. Kdyby tam byl, byla by to druhá kopie
      js/kategorie.js — a ta se rozejde tiše. */
   const vyber = /<select id="p-kat"[^>]*>([\s\S]*?)<\/select>/.exec(html);
