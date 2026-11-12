@@ -114,6 +114,7 @@ await ctx.route('**/*', (r) => {
 const p = await ctx.newPage();
 const desky = new Map();
 const karty = new Map();
+const kartyNabidky = new Map();
 /* ZELENÁ PLOCHA MÁ PŘELIV ZNAČKY — sbírá se při témž průchodu.
    Majitel 1. 11.: „všechny zelené věci jako má naše ikonka ten přechod,
    udělej to na všech tlačítkách." Naměřeno tehdy 17 druhů zelených
@@ -207,6 +208,35 @@ for (const s of STRANKY) {
     }
     return out;
   }).catch(() => [])) if (!karty.has(x.jm)) karty.set(x.jm, { ...x, kde: s });
+
+  /* KARTA NABÍDKY SE OD 12. 11. SBÍRÁ ZVLÁŠŤ A PODLE JMÉNA.
+     Sběr výš se ptá na recept DESKOVÉ PLOCHY (plný rám a neprůhledná
+     výplň) — a karta nabídky ani karta tipu už deska nejsou: majitel
+     poslal snímek Sreality se zadáním „všude extrémně moc oddělení
+     a orámování", takže rám, stín i bílou plochu nesou obě karty
+     pryč a zaoblení drží fotka. Pro sběr výš tím přestaly existovat
+     a obě kontroly o kus níž spadly na „není k nalezení" — ne proto,
+     že by se web rozešel, ale proto, že měřítko zestárlo s ním.
+     Hledají se proto podle svých jmen a čte se z nich to, co je dnes
+     dělá stejnými: že ani jedna nemá desku (plocha, rám, stín) a že
+     zaoblení nesou obě na fotce. */
+  for (const x of await p.evaluate(() => {
+    const out = [];
+    for (const [jm, sel] of [['opp-item', '#opp-list .opp-item'], ['deal-card', '.deal-card']]) {
+      const e = document.querySelector(sel);
+      if (!e) continue;
+      const cs = getComputedStyle(e);
+      const f = e.querySelector('.opp-media');
+      const fs = f ? getComputedStyle(f) : null;
+      out.push({ jm,
+        plocha: cs.backgroundColor,
+        ramSila: Math.round(parseFloat(cs.borderTopWidth) || 0),
+        stin: (cs.boxShadow && cs.boxShadow !== 'none') ? cs.boxShadow : 'bez',
+        zFotky: fs ? Math.round(parseFloat(fs.borderTopLeftRadius) || 0) : -1,
+        stinFotky: fs && fs.boxShadow && fs.boxShadow !== 'none' ? fs.boxShadow : 'bez' });
+    }
+    return out;
+  }).catch(() => [])) if (!kartyNabidky.has(x.jm)) kartyNabidky.set(x.jm, { ...x, kde: s });
 }
 await prohlizec.close();
 
@@ -310,17 +340,25 @@ pravda('klidové stíny jsou nejvýš dva (deska na stránce a deska nad obsahem
    .pz-sour, .md-radek, .por-tab-obal, .dt-tab-obal). Takové pravidlo
    by nehlídalo vzhled, ale přemalovalo šest míst — a to je rozhodnutí
    o vzhledu, ne hlídač. */
-const model = karty.get('opp-item');
+const model = kartyNabidky.get('opp-item');
 pravda('karta výpisu (.opp-item) je k nalezení — je podle čeho měřit',
   !!model, 'bez .opp-item nemá oddíl 5 model a tvrzení o kartě tipu by bylo prázdné');
-const tip = karty.get('deal-card');
+const tip = kartyNabidky.get('deal-card');
 pravda('karta tipu (.deal-card) je k nalezení — tipy se opravdu vykreslily',
   !!tip, 'bez karty tipu by kontrola níž prošla o prázdnu');
+/* ANTI-PRÁZDNO: srovnání níž je rovnost, a rovnost dvou nul projde
+   i tehdy, když by se karta nevykreslila vůbec nebo kdyby fotka
+   přišla o zaoblení. Model proto musí napřed prokázat, že zaoblení
+   NA FOTCE opravdu je — to je ta vlastnost, která po zrušení desky
+   drží tvar nabídky pohromadě. */
+if (model) pravda(`a zaoblení nese fotka (${model.zFotky} px), ne deska`,
+  model.zFotky >= 8, `fotka karty má zaoblení ${model.zFotky} px — nabídka pak není jeden tvar`);
 if (model && tip) {
-  const recept = (d) => `plocha ${d.plocha}, zaoblení ${d.z}, rám ${d.ramSila}px ${d.ram}, stín ${d.stin}`;
-  for (const [co, klic] of [['tutéž plochu', 'plocha'], ['totéž zaoblení', 'z'],
-    ['tutéž sílu rámu', 'ramSila'], ['tutéž barvu rámu', 'ram'],
-    ['tentýž klidový stín', 'stin']]) {
+  const recept = (d) => `plocha ${d.plocha}, rám ${d.ramSila}px, stín ${d.stin}, `
+    + `fotka: zaoblení ${d.zFotky} px, stín ${d.stinFotky}`;
+  for (const [co, klic] of [['tutéž plochu', 'plocha'], ['tutéž sílu rámu', 'ramSila'],
+    ['tentýž klidový stín', 'stin'], ['totéž zaoblení fotky', 'zFotky'],
+    ['tentýž klidový stín fotky', 'stinFotky']]) {
     pravda(`karta tipu má ${co} jako karta ve výpisu`,
       String(tip[klic]) === String(model[klic]),
       `výpis: ${recept(model)}\n      tip:   ${recept(tip)}`);

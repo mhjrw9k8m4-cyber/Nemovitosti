@@ -603,7 +603,6 @@
   --plocha-tmava-rgb:18,36,26;
   --accent-warm-bright-rgb:224,184,120;
   --text-ondeep-mute-rgb:201,210,203;
-  --plocha-znacka-rgb:23,90,64;
   --surface-2:#EEF6F1;
   /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
      což je #E4F0E7 — téměř bílá barva z odstraněného tmavého režimu.
@@ -3800,14 +3799,21 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    .opp-nadpis, .opp-druh, .opp-meta, .opp-cenarad), takže typografii
    i rozvržení dědí a nemá se kde rozejít. Zbývá tady jen plocha
    a to jediné, co má tip navíc: věta, proč je to tip. */
-.deal-card{display:block; text-align:left; font:inherit; cursor:pointer; padding:0; overflow:hidden;
-  border:1px solid var(--line); border-radius:var(--r-plocha);
-  background:var(--plocha-karta); box-shadow:var(--e1);
+/* Deska odchází i tady, a nemá to být rozhodnutí dvakrát: tip JE
+   karta ve výpisu, jen s větou navíc (hlídá scripts/test-deska.mjs,
+   který obě srovnává na pěti vlastnostech). Kdyby si tip desku nechal,
+   byly by na úvodní stránce dvě různé karty vedle sebe. */
+/* `border:0` TU MUSÍ STÁT VÝSLOVNĚ. Když jsem rám jen vymazal,
+   naskočil prohlížečový výchozí rám tlačítka — a měření ho našlo
+   na všech čtyřech kartách tipů. U <div> by stačilo nic nepsat,
+   u <button> ne. */
+.deal-card{display:block; text-align:left; font:inherit; cursor:pointer; padding:0;
+  border:0; background:none;
   transition:var(--prechod);}
 /* Zvednutí stínem, ne posunem. Karta ve výpisu dělá při najetí totéž
    a translateY tu byl navíc — dvě karty vedle sebe se při najetí
    chovaly každá jinak. */
-.deal-card:hover{box-shadow:var(--e2);}
+.deal-card:hover .opp-media{box-shadow:var(--e2);}
 .deal-card:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
 
 /* PROČ JE TO TIP. Zůstává zelený (je to dobrá zpráva), ale jen textem
@@ -3815,13 +3821,17 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    a nemá být nejhlasitější plochou v oddílu.
    Stojí POD cenou — důkaz až pod tvrzením. Dokud byl nad jménem obce,
    četla se karta odzadu: nejdřív křik, pak teprve co to je a za kolik. */
-.deal-verdikt{margin-top:8px; font-size:12px; font-weight:600; line-height:1.4;
-  color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.08);
-  border:1px solid rgba(var(--brand-live-rgb),0.22); border-radius:var(--r-sm);
+/* VĚTA, NE TABULKA. Důvod tipu stál v orámovaném poli s výplní —
+   jediný rámeček uvnitř karty, která už žádný nemá. Je to věta
+   a vysází se jako věta; že patří nám a ne zdroji, nese barva. */
+.deal-verdikt{margin-top:8px; font-size:13px; font-weight:600; line-height:1.4;
+  color:var(--znacka-svetla);
   /* 4 px, ne 3: trojka by byla jediná v celé úvodní stránce a slovník
      odstupů má strop 22 hodnot (test-jazyk). Čtyřku už používá odznak
-     na kartě výpisu, takže se nic nepřidává. */
-  padding:4px 8px;}
+     na kartě výpisu, takže se nic nepřidává.
+     OD 12. 11. ODSTUP NENÍ ŽÁDNÝ: bez výplně a bez rámu není od čeho
+     odsazovat, text lícuje se zbytkem karty. */
+  padding:0;}
 
 /* Naposledy prohlédnuté — vodorovný pásek pro rychlý návrat k parcelám */
 /* NAPOSLEDY PROHLÉDNUTÉ. Pruh neměl vlastní plochu a nadpis byl 12 px
@@ -3985,23 +3995,40 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    na odznaku slovem.
    Zdvih pod myší zůstává (hlídá test-zdvih), jen se nehýbe rám, ale
    celá karta. */
-/* KARTA JE KARTA, NE ODSTAVEC NA POZADÍ.
+/* KARTA BEZ DESKY — A PROČ TO TENTOKRÁT NENÍ „SUŠE A ROBOTICKY".
    ------------------------------------------------------------------
-   Stálo tu `padding:0; border:0; background:none; box-shadow:none`:
-   zaoblení a stín měla JEN fotka a text ležel volně na pozadí stránky.
-   Výpis proto nepůsobil jako inzeráty, ale jako seznam záznamů —
-   jedna nabídka přecházela do druhé bez hranice a mezi fotkou
-   a písmem nebyl žádný vztah. Přesně to majitel webu popsal slovy
-   „vypadá to strašně suše a roboticky".
-   Teď má každá nabídka vlastní plochu: bílá deska, vlasová linka,
-   měkký stín a vzduch kolem textu. Fotka sedí v jejím horním rohu,
-   ne na vlastním ostrůvku. Tak to má každý velký realitní web. */
-.opp-item{position:relative; display:block; padding:0; overflow:hidden;
-  border:1px solid var(--line); border-radius:var(--r-plocha);
-  background:var(--plocha-karta); box-shadow:var(--e1);
-  margin-bottom:16px; cursor:pointer;
+   TOHLE UŽ JEDNOU BYLO A NEVYŠLO. Karta ležela bez rámu a bez bílé
+   plochy, zaoblení a stín měla jen fotka — a majitel to shrnul:
+   „vypadá to strašně suše a roboticky". Deska se proto zavedla.
+   TEĎ JI RUŠÍ TÝŽ ČLOVĚK A S PŘEDLOHOU V RUCE: poslal snímek
+   Sreality na iPhonu se zadáním „náš web má všude extrémně moc
+   oddělení a orámování, zkus to udělat jako oni, ale líp". Na té
+   předloze je inzerát zaoblená fotka, pod ní tři řádky textu na
+   podkladu stránky — a suše nepůsobí.
+   CO TEDY BYLO ŠPATNĚ POPRVÉ. Ne chybějící deska, ale to, co ji
+   nahradilo: mezera mezi kartami byla skoro stejná jako odsazení
+   uvnitř karty, takže nešlo poznat, kde jedna nabídka končí; fotka
+   měla ostřejší roh než ostatní plochy webu; a pod cenou stálo
+   několik orámovaných pilulek, které si braly pozornost dřív než
+   cena. Trojí náprava, a každá je vidět:
+     • MEZERA MEZI KARTAMI 28 px proti 10 px uvnitř karty. Hranici
+       nedělá čára, ale prázdno — a prázdno musí být zřetelně větší
+       než rozestupy uvnitř, jinak nic neodděluje. (Bylo 16 px vedle
+       12px vnitřního odsazení, tedy poměr 1,3 : 1; teď 2,8 : 1.)
+     • FOTKA NESE ZAOBLENÍ CELÉ PLOCHY (--r-plocha, 14 px), takže
+       nabídka je jeden tvar, ne obdélník s textem pod ním.
+     • ODZNAKY POD CENOU JSOU TEXT, NE PILULKY (viz .opp-chips níž).
+   CO ZŮSTÁVÁ PROTI PŘEDLOZE NAVÍC: odznak druhu na fotce („Dražba",
+   „Exekuce"), cena za metr vedle ceny a verdikt „−47 % proti okolí".
+   To jsou věci, které Sreality na kartě nemá, a jsou to přesně ty,
+   kvůli kterým na tenhle web člověk chodí. Vzhled se bere od
+   předlohy, obsah ne. */
+.opp-item{position:relative; display:block; padding:0;
+  margin-bottom:28px; cursor:pointer;
   transition:var(--prechod);}
-.opp-item:hover{box-shadow:var(--e2);}
+/* Zdvih pod myší nese FOTKA, ne karta: stín kolem průhledného textu
+   by obkresloval obdélník, který na stránce není vidět. */
+.opp-item:hover .opp-media{box-shadow:var(--e2);}
 /* OBTAŽENÍ PODLE DRUHU: ZVÁŽENO, NEUDĚLÁNO.
    ------------------------------------------------------------------
    Tenhle komentář tu patnáct řádků popisoval v přítomném čase barevný
@@ -4037,7 +4064,9 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    dvě kopie jedné barvy se jednou rozejdou. Je to plátno mapy, ne
    deska — proto tmavá, viz §216. */
 .opp-map-pod{fill:var(--plocha-tmava);}
-.opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; border-radius:0; background:var(--plocha-tlumena) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%);}
+.opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden;
+  /* Zaoblení nese fotka, protože deska kolem karty už není. */
+  border-radius:var(--r-plocha); background:var(--plocha-tlumena) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%);}
 /* Vrstvy náhledu nechytají klik — ťuknutí projde na celou kartu (jinak na iOS obrázek „spolkne" klik) */
 /* Záložní plán parcely (prosvítá, když se nenačte satelit) */
 
@@ -4079,7 +4108,13 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
 /* TEXT POD FOTKOU V POŘADÍ SREALITY: co to je → kde to je → za kolik.
    Odsazení je nulové, protože karta nemá plochu, do které by se dalo
    odsazovat — text stojí přesně pod levým krajem fotky. */
-.opp-body{padding:12px 12px 12px;}
+/* Text lícuje s fotkou na doraz, protože deska, od jejíhož okraje se
+   odsazoval, už není. Napoprvé tu stálo `10px 2px 0` — dvojka jako
+   optické dorovnání kulatého rohu, desítka od oka. Obojí je mimo
+   stupnici odstupů a našel to scripts/test-odstupy.mjs; stupnicová
+   osmička nahoře vypadá stejně a dvojka po straně se při zaoblení
+   14 px neprojeví. */
+.opp-body{padding:8px 0 0;}
 /* Sloupec s výpisem i pruh pod hlavičkou dostaly týž podklad, ať na
    sebe navazují a mezi hlavičkou a aplikací nevzniká bílý schod. */
 .map-side{background:var(--plocha-vypis);}
@@ -4436,7 +4471,29 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    číslo nese jen <b>: v nadpisu psaném 700 už není kam přidat, a dva
    odstíny v jedné větě by z nadpisu udělaly dva nadpisy. */
 
-.opp-chips{display:flex; flex-wrap:wrap; gap:4px;}
+/* ODZNAKY JSOU TEXT, NE PILULKY — ZMĚNA 12. 11.
+   Pod cenou stávalo až šest orámovaných pilulek („Dražba zítra",
+   „−47 % proti okolí", „Doporučujeme", „podíl 1/2"…). Každá měla
+   výplň, obrys a zaoblení, takže řádek pod cenou nesl šest tvarů
+   a oko šlo po nich dřív než po ceně — a hlavně: na jedné kartě to
+   dělalo víc orámování než na celé předloze (Sreality) dohromady.
+   Majitel 12. 11.: „náš web má všude extrémně moc oddělení
+   a orámování".
+   Obsah zůstává do písmene týž, mizí jen tvar: význam dál nese
+   BARVA PÍSMA (zelená u slevy, červená u blízkého termínu, šedá
+   u neutrálních) a jednotlivé údaje odděluje tečka, jak se to dělá
+   ve větě. Výjimka je .opp-feat (placené zvýraznění) — plný odznak
+   je tam to, co si inzerent zaplatil, a musí se od textu lišit. */
+.opp-chips{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 16px;}
+/* A NAKONEC ANI TEČKA. Odznaky jsem nejdřív oddělil tečkou — jenže
+   tečka je taky oddělovač a zadání znělo opačně. Navíc se při
+   zalomení chovala špatně: jako `::before` dalšího údaje začínala
+   řádek („· Doporučujeme" na vlastní řádce, naměřeno na 390 px),
+   jako `::after` předchozího zase visela na konci řádku bez ničeho
+   za sebou. Odděluje tedy mezera — 16 px vodorovně proti 4 px mezi
+   zalomenými řádky, tedy čtyřnásobek, takže je poznat, co je vedle
+   sebe a co pod sebou. Na barvě to nic nemění: slevu pozná člověk
+   podle zelené, blízký termín podle červené. */
 /* MOJE POZNÁMKA NA KARTĚ VE VÝPISU.
    ------------------------------------------------------------------
    Majitel 29. 10.: „když napíšu poznámku, chci, aby mi šla vidět,
@@ -4479,30 +4536,29 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    z různých webů — přesně ta „nesjednocenost", na kterou majitel
    webu ukázal.
    Tvar je teď jeden a jednotlivé odznaky už určují JEN barvu. */
-.opp-chips > *{display:inline-block; font-size:12px; font-weight:600;
-  letter-spacing:0; padding:2px 8px; border-radius:var(--r-pill);
-  border:1px solid transparent; white-space:nowrap;}
+.opp-chips > *{display:inline-block; font-size:13px; font-weight:600;
+  letter-spacing:0; padding:0; border:0; background:none;
+  border-radius:0; white-space:nowrap;}
 .opp-price + .opp-chips{margin-top:8px;}
 /* Odznaky jsou poznámka pod inzerátem, ne řada tlačítek: pilulka
    místo obdélníku, tenčí linka, menší písmo. */
-.opp-hot{color:var(--popisek); background:var(--plocha-jemna); border-color:var(--line);}
+.opp-hot{color:var(--popisek);}
 /* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
    tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
-.opp-deal{color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12);
-  border-color:rgba(var(--c-ok-ink-rgb),0.3);}
+.opp-deal{color:var(--c-ok-ink);}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
 .opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
 /* Zvýrazněný inzerát pozná člověk podle odznaku .opp-feat, ne podle
    rámečku: rámeček karta po vzoru Sreality nemá. */
 /* Odpočet do termínu dražby (reálné datum) */
-.opp-cd{background:var(--plocha-jemna); border-color:var(--line); color:var(--muted);}
+.opp-cd{color:var(--muted);}
 /* Odpočet do termínu. Světlé odstíny tu zbyly z doby, kdy byly karty tmavé —
    na bílé kartě z nich bylo 1,6 : 1, tedy nečitelné. Textové varianty (-ink)
    jsou na to v paletě přesně pro tenhle případ. */
 /* Termín: podbarvení ze stejné rodiny jako u slevy, aby odznaky vedle
    sebe byly jeden útvar ve dvou barvách, ne obrys vedle výplně. */
-.opp-cd.soon{color:var(--c-drazba-ink); background:rgba(var(--c-drazba-rgb),0.10); border-color:rgba(var(--c-drazba-rgb),0.3);}
-.opp-cd.urg{color:var(--c-exekuce-ink); background:rgba(var(--c-nalehave-rgb),0.10); border-color:rgba(var(--c-nalehave-rgb),0.3);}
+.opp-cd.soon{color:var(--c-drazba-ink);}
+.opp-cd.urg{color:var(--c-exekuce-ink);}
 /* NEJVÝŠ JEDNA BARVA V ŘADĚ ODZNAKŮ.
    ------------------------------------------------------------------
    Majitel 29. 10. o řadě pod cenou: „udělej to profesionálněji, ale
@@ -4526,8 +4582,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    tohle pravidlo.
    Útulnost z toho nezmizí: plocha zůstává měkká (--plocha-jemna),
    tvar pilulka a písmo 13 px. Ubyla jen křiklavost. */
-.opp-chips > .opp-tich{background:var(--plocha-jemna); border-color:var(--line);
-  color:var(--popisek);}
+.opp-chips > .opp-tich{color:var(--popisek);}
 /* Počet nabídek na filtračních tlačítkách */
 /* POČET JAKO U OSTATNÍCH DLAŽDIC. Byl to odznak s vlastní plochou
    a zaoblením uprostřed řádky; u druhu pozemku i u sítí přitom počet
@@ -4944,9 +4999,20 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    Recept je TÝŽ, jaký už web má o patro níž u hesel slovníčku
    a u častých dotazů („+", které se otočí): nový rozbalovač by byl
    druhý způsob na tutéž práci. */
-.dobre-vedet-list{display:grid; gap:8px;}
-.dv{border:1px solid var(--line); border-radius:var(--r-md); background:var(--plocha-karta);
-  box-shadow:var(--e1); overflow:hidden;}
+/* ČTYŘI ROZBALOVAČE, NE ČTYŘI KRABICE.
+   Každý oddíl („Časté dotazy", „Stavy nabídek", „Jak to funguje",
+   „Slovníček") byl vlastní deska s rámem, zaoblením, výplní a stínem
+   — tedy osm viditelných oddělení na čtyři řádky. Uvnitř nich přitom
+   jednotlivé otázky a hesla oddělují pouhé vlasové čáry
+   (.faq-item, .gl-item). Dvě různé síly oddělení na tutéž práci,
+   a ta silnější je navíc kolem toho, co je jen rozcestník.
+   Zůstává ta slabší: řádky pod sebou oddělené čárou. Souvisí to
+   se zadáním majitele z 12. 11. („všude extrémně moc oddělení
+   a orámování"), ale platilo by to i bez něj — web má mít na jednu
+   práci jeden způsob. */
+.dobre-vedet-list{display:grid; gap:0;}
+.dv{border-bottom:1px solid var(--line);}
+.dv:last-child{border-bottom:0;}
 .dv-s{cursor:pointer; list-style:none; display:flex; align-items:center; gap:12px;
   min-height:56px; padding:12px 20px;}
 .dv-s::-webkit-details-marker{display:none;}
@@ -5920,7 +5986,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      38 px, samotné slovo v něm 36 px). */
   .opp-item .opp-fav{min-height:38px; top:10px; right:10px;}
   .opp-item .opp-fav svg{width:var(--ik-s); height:var(--ik-s); stroke-width:var(--ik-s-tah);}
-  .opp-body{padding:12px 12px 12px;}
+  .opp-body{padding:8px 0 0;}
   .opp-chips{gap:4px;}
   .opp-chips > span{font-size:13px; padding:4px 8px;}
   .opp-figures{gap:4px 8px;}
@@ -9655,7 +9721,7 @@ body > footer{flex:none;}
    Kdo prochází dvě stě nabídek, potřebuje vidět, co je nové, a odškrtnout
    si, co ho nezajímá. Všechno běží v prohlížeči, bez účtu.
    ------------------------------------------------------------------ */
-.opp-nove{background:var(--accent-warm-soft); color:var(--accent-warm); border-color:rgba(var(--accent-warm-rgb),0.3);}
+.opp-nove{color:var(--accent-warm);}
 /* Odznak .opp-pozn (jen slovo „Poznámka") je od 29. 10. pryč i se
    svým pravidlem: na kartě stojí rovnou TEXT poznámky, hledej
    „MOJE POZNÁMKA NA KARTĚ VE VÝPISU" výš. Mrtvá pravidla hlídá
@@ -9979,12 +10045,20 @@ body > footer{flex:none;}
      tedy pod mezí 3 : 1 (WCAG 1.4.11) — tlačítko se nad světlým
      snímkem ztrácelo. Naměřila to zkouška test-okraje; --line-ui je
      táž čára, jakou mají pilulky nářadí nad výpisem. */
-  background:var(--plocha-plovouci); border:1px solid var(--line-ui);
-  color:var(--text); font:inherit; font-size:13px; font-weight:600; line-height:1; cursor:pointer;
+  /* JEDNA RODINA MÍSTO DVOU. Tlačítko bylo bílá pilulka s obrysem,
+     vedle něj „Uložit" tmavý průsvit bez obrysu — dva různé tvary na
+     jedné fotce, a ten obrys byl na kartě po odchodu desky jediná
+     čára. Teď je obojí týž tmavý průsvit s bílým písmem.
+     OBRYS TÍM NECHYBÍ: byl tu kvůli kontrastu výplně proti světlé
+     fotce (WCAG 1.4.11, naměřeno 1,87 : 1). Tmavý průsvit má proti
+     fotce kontrast sám a bílé písmo na něm 9,6 : 1, takže hranici
+     tlačítka nese plocha, ne linka. */
+  background:rgba(var(--text-rgb),0.74); border:0;
+  color:#fff; font:inherit; font-size:13px; font-weight:600; line-height:1; cursor:pointer;
   opacity:0; transition:var(--prechod);}
 .opp-skryt .os-ic{font-size:12px; line-height:1;}
 .opp-item:hover .opp-skryt, .opp-item:focus-within .opp-skryt{opacity:1;}
-.opp-skryt:hover{color:var(--c-exekuce-ink); border-color:var(--c-exekuce-ink);}
+.opp-skryt:hover{background:var(--c-exekuce-ink);}
 .opp-skryt:focus-visible{opacity:1; outline:2px solid var(--znacka-svetla); outline-offset:2px;}
 /* PRST NENÍ MYŠ. Na dotykovém zařízení se obě tlačítka nad fotkou zvětší
    na 44×44 px a dostanou mezi sebe mezeru.
@@ -10048,7 +10122,7 @@ body > footer{flex:none;}
 /* Skrytý pozemek, když si ho člověk nechá zobrazit: ztlumený, ať je jasné,
    že do seznamu normálně nepatří. */
 .opp-item.je-skryty{opacity:0.55;}
-.opp-item.je-skryty .opp-skryt{opacity:1; color:var(--accent-warm); border-color:var(--accent-warm);}
+.opp-item.je-skryty .opp-skryt{opacity:1; background:var(--accent-warm); color:#fff;}
 
 /* =====================================================================
    STAŽENÍ VÝBĚRU — okno s volbou, co a v jakém tvaru
@@ -10165,14 +10239,15 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
    (dvanáct), takže tatáž věc křičela na dvou místech různě. Počítadla
    (.msf-badge, .chip-n) zůstávají na 700 — tam je to číslo, ne slovo,
    a při 12 px se tenčí číslice hůř čtou. */
-.opp-overit{display:inline-block; font-size:12px; font-weight:600; color:#7C5105;
-  background:rgba(var(--accent-warm-bright-rgb),0.16); border:1px solid rgba(var(--accent-warm-rgb),0.3);
+.opp-overit{display:inline-block; font-size:13px; font-weight:600; color:#7C5105;
   /* ZAOBLENÍ TU NESTOJÍ, a je to totéž poučení jako o pár řádků níž
      u .opp-podil a .opp-urad: třída žije jen uvnitř .opp-chips, kde
      tvar dává společné pravidlo rodiny (pilulka). Tohle pravidlo je
      v souboru ZA ním a stejně specifické, takže svých 10 px prosadilo
-     a „cena k ověření" byla obdélníček mezi pilulkami. */
-  padding:2px 8px; white-space:nowrap;}
+     a „cena k ověření" byla obdélníček mezi pilulkami.
+     OD 12. 11. NENÍ PILULKA ANI JEDNA (viz .opp-chips): celá řada je
+     text a význam nese barva písma. Jantar tedy zůstává, ploška ne. */
+  white-space:nowrap;}
 
 /* Nápověda pod vyhledávacím políčkem. Drobná — je to pobídka, ne
    pokyn — ale příklad musí být poznat, že se do něj dá klepnout. */
@@ -10184,15 +10259,16 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
    ne varování, ne výhoda — fakt o tom, za co se prodává. Proto tentýž
    neutrální styl, ne jantar jako u „ceny k ověření". */
 .opp-podil,
-.opp-urad{display:inline-block; font-size:12px; font-weight:600;
-  color:var(--muted); background:rgba(var(--plocha-znacka-rgb),0.08);
-  border:1px solid rgba(var(--plocha-znacka-rgb),0.22);
+.opp-urad{display:inline-block; font-size:13px; font-weight:600;
+  color:var(--muted);
   /* ZAOBLENÍ TU UŽ NESTOJÍ. Obě třídy žijí jen uvnitř .opp-chips
      (ověřeno grepem: dvě místa v js/main.js a nikde jinde), takže
      tvar jim dává společné pravidlo rodiny — pilulka. Tahle dvě
      pravidla stojí v souboru ZA ním, takže svých 10 px prosadila
-     a „podíl 1/2" byl jediný obdélníček mezi šesti pilulkami. */
-  padding:2px 8px; white-space:nowrap;}
+     a „podíl 1/2" byl jediný obdélníček mezi šesti pilulkami.
+     OD 12. 11. UŽ NENÍ PILULKA ANI JEDEN: celá řada je text (viz
+     .opp-chips), takže tady nezůstává ani výplň, ani obrys. */
+  white-space:nowrap;}
 
 /* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
    tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
@@ -10247,9 +10323,7 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
 
 /* Dražba po termínu. Tlumeně a šedě — je to fakt, ne varování; nemá
    přetahovat pozornost od živých nabídek, ale musí být vidět. */
-.opp-cd.opp-proběhlo{
-  background:var(--plocha-tlumena); color:var(--muted);
-  border:1px solid var(--line-strong); font-weight:600;}
+.opp-cd.opp-proběhlo{color:var(--muted); font-weight:600;}
 .opp-item:has(.opp-proběhlo) .opp-price{color:var(--muted);}
 
 /* Hlášení o výpadku dat. Musí být vidět na první pohled — proto nad
