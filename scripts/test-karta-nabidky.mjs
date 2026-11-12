@@ -68,7 +68,78 @@ const RECEPT = (sel) => `(() => {
   return Math.round(parseFloat(c.fontSize)) + '/' + c.fontWeight;
 })()`;
 
+/* NIC Z KARTY NESMÍ VYČNÍVAT (#301).
+   Majitel našel na snímku z telefonu kartu s nápisem uříznutým hranou
+   a jinde pilulky ležící 65 px MIMO stránku — a ani jeden z hlídačů
+   vzhledu to neviděl, protože všichni měřili RECEPT (písmo, barvu,
+   obrys), ne polohu. Recept přitom může být dokonalý a obsah stejně
+   leze ven.
+   CO SE MĚŘÍ. U každého viditelného potomka karty se porovná jeho
+   vodorovná krabice s krabicí karty, a karta sama s šířkou okna.
+   Tolerance je 1 px na zaokrouhlení prohlížeče; stín a obrys se do
+   getBoundingClientRect nepočítají, takže měřit se smí natvrdo.
+   PROČ JEN VODOROVNĚ. Svisle karta roste s obsahem a „vyčnívat" dolů
+   je normální stav rozvržení. Vada, kterou majitel našel, je vždycky
+   vodorovná: na telefonu není kam uhnout.
+   CO SE VYJÍMÁ A PROČ. Prvky, které mají vyčnívat z podstaty: odznak
+   přes roh snímku (.opp-odznak), skrytý text pro odečítače
+   (.visually-hidden, 1 px s overflow:hidden) a cokoli, co si samo
+   nastaví position:fixed — to z karty vystupuje záměrně.
+   A HLAVNĚ: CO NĚKDO NAD TÍM OŘEZÁVÁ, TO VIDĚT NENÍ. Napoprvé tahle
+   kontrola našla na úvodu osm nálezů a všechny byly nevinné: jsou to
+   dlaždice <image> uvnitř náhledové mapy, které z ní čouhají o 58 až
+   207 px — jenže mapa má `overflow:hidden`, takže je ořeže a na
+   obrazovce po nich není ani čárka. Tak mapa funguje a vada to není.
+   Nález se proto počítá, jen když mezi prvkem a kartou (kartu
+   včetně) NIKDO neořezává. Pro vadu, kterou majitel našel, to platí:
+   tam nic neořezávalo a nápis opravdu ležel mimo. */
+const VYCNIVA = `(() => {
+  const k = document.querySelector('.opp-item, .okr-item');
+  if (!k) return null;
+  const K = k.getBoundingClientRect();
+  if (!K.width) return null;
+  const ven = [];
+  for (const e of k.querySelectorAll('*')) {
+    if (!e.getClientRects().length) continue;
+    const c = getComputedStyle(e);
+    if (c.position === 'fixed') continue;
+    if (e.classList.contains('visually-hidden')) continue;
+    if (e.closest('.opp-odznak')) continue;
+    let orezano = false;
+    for (let o = e.parentElement; o && o !== k; o = o.parentElement) {
+      const oc = getComputedStyle(o);
+      if (oc.overflowX !== 'visible' || oc.overflowY !== 'visible') { orezano = true; break; }
+    }
+    if (orezano) continue;
+    const r = e.getBoundingClientRect();
+    const vlevo = Math.round(K.left - r.left);
+    const vpravo = Math.round(r.right - K.right);
+    if (vlevo > 1 || vpravo > 1) {
+      /* SVG má className jako SVGAnimatedString, ne řetězec — jméno se
+         proto skládá z tagu a atributu, aby hlášení dávalo smysl. */
+      const jm = e.tagName.toLowerCase()
+        + (e.id ? '#' + e.id : '')
+        + (e.getAttribute('class') ? '.' + e.getAttribute('class').trim().split(/\s+/).join('.') : '');
+      ven.push(jm + ' ' +
+        (vlevo > 1 ? 'vlevo o ' + vlevo + ' px' : '') +
+        (vpravo > 1 ? (vlevo > 1 ? ', ' : '') + 'vpravo o ' + vpravo + ' px' : ''));
+    }
+  }
+  return { ven: ven.slice(0, 6), pocet: ven.length,
+    kartaVen: Math.round(Math.max(0 - K.left, K.right - innerWidth)),
+    /* Náhled nesmí být prázdná barevná plocha: buď v něm leží obrázek,
+       nebo aspoň něco vidět (text, kresba). „Bílá díra" z majitelova
+       snímku byla právě tohle — deska bez obsahu. */
+    nahledPrazdny: (() => {
+      const n = k.querySelector('.opp-foto, .okr-foto, .opp-nahled');
+      if (!n) return false;
+      if (n.querySelector('img, svg, picture')) return false;
+      return (n.textContent || '').trim() === '';
+    })() };
+})()`;
+
 const naLezeno = { nadpis: {}, cena: {} };
+const vycnivani = [];
 
 for (const [w, h, jm] of [[390, 844, 'telefon'], [1280, 900, 'monitor']]) {
   const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
@@ -99,6 +170,8 @@ for (const [w, h, jm] of [[390, 844, 'telefon'], [1280, 900, 'monitor']]) {
     const klic = jm + ' · ' + s;
     if (v[0]) (naLezeno.nadpis[v[0]] = naLezeno.nadpis[v[0]] || []).push(klic);
     if (v[1]) (naLezeno.cena[v[1]] = naLezeno.cena[v[1]] || []).push(klic);
+    const vy = await p.evaluate(VYCNIVA);
+    if (vy) vycnivani.push(Object.assign({ kde: klic }, vy));
     await p.close();
   }
   await ctx.close();
@@ -129,6 +202,19 @@ for (const sirka of ['telefon', 'monitor']) {
 const ceny = Object.keys(naLezeno.cena);
 pravda(`cena na kartě má jeden recept na celém webu (${ceny.join(', ')})`,
   ceny.length === 1, 'nalezeno: ' + vypis(naLezeno.cena));
+
+/* --- NIC NEVYČNÍVÁ ------------------------------------------------ */
+pravda(`je co měřit — karta se našla na ${vycnivani.length} místech`,
+  vycnivani.length >= STRANKY.length,
+  'karta se našla jen ' + vycnivani.length + '× — měřilo by se prázdno');
+for (const v of vycnivani) {
+  pravda(`${v.kde}: nic z karty nevyčnívá do stran`,
+    v.pocet === 0, v.ven.join(' · '));
+  pravda(`${v.kde}: a karta sama se vejde do okna`,
+    v.kartaVen <= 1, 'přesahuje o ' + v.kartaVen + ' px');
+  pravda(`${v.kde}: náhled není prázdná plocha`, v.nahledPrazdny === false,
+    'náhled nemá ani obrázek, ani text');
+}
 
 console.log('\nKarta nabídky: jedno písmo na všech typech stránek');
 console.log(zpravy.join('\n'));

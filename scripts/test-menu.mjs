@@ -158,7 +158,44 @@ try {
         const k = n.scrollTop; n.scrollTop = p;
         return k > 0 || n.scrollHeight <= n.clientHeight + 1; })(),
       radku: new Set(a.map((x) => x.v && x.x >= 0 ? Math.round(x.v) : 0)).size,
-      ySad: new Set(a.map((x) => Math.round(x.v))).size, a };
+      ySad: new Set(a.map((x) => Math.round(x.v))).size,
+      /* NIC ZE ŠUPLÍKU NESMÍ VYČNÍVAT DO STRAN (#301).
+         Majitel vyfotil šuplík, ve kterém štítky druhů nemovitostí
+         ležely 65 px MIMO stránku a tři z nich měly levou hranu na
+         −49 px, tedy uříznuté oknem. Žádný hlídač to neviděl: všichni
+         měřili výšku, počet položek a recept, nikdo polohu do stran.
+         Měří se vodorovně proti krabici šuplíku, s tolerancí 1 px na
+         zaokrouhlení, a NEPOČÍTÁ se, co někdo nad tím ořezává
+         (`overflow` jiný než visible) — to vidět není. */
+      vycniva: (() => {
+        const N = n.getBoundingClientRect();
+        const ven = [];
+        for (const e of n.querySelectorAll('*')) {
+          if (!e.getClientRects().length) continue;
+          const c = getComputedStyle(e);
+          if (c.position === 'fixed') continue;
+          if (e.classList.contains('visually-hidden')) continue;
+          let orezano = false;
+          for (let o = e.parentElement; o && o !== n; o = o.parentElement) {
+            const oc = getComputedStyle(o);
+            if (oc.overflowX !== 'visible' || oc.overflowY !== 'visible') { orezano = true; break; }
+          }
+          if (orezano) continue;
+          const r = e.getBoundingClientRect();
+          const vl = Math.round(N.left - r.left), vp = Math.round(r.right - N.right);
+          if (vl > 1 || vp > 1) {
+            const jm = e.tagName.toLowerCase()
+              + (e.getAttribute('class') ? '.' + e.getAttribute('class').trim().split(/\s+/)[0] : '');
+            ven.push(jm + (vl > 1 ? ' vlevo o ' + vl : '') + (vp > 1 ? ' vpravo o ' + vp : '') + ' px');
+          }
+        }
+        return ven.slice(0, 6);
+      })(),
+      /* A šuplík sám se musí vejít do okna — kdyby vyjel ven on,
+         vyjelo by s ním všechno uvnitř a kontrola výš by mlčela. */
+      suplikVen: Math.round(Math.max(0 - n.getBoundingClientRect().left,
+        n.getBoundingClientRect().right - innerWidth)),
+      a };
   });
 
   /* NABÍDKA JE VYSOUVACÍ PANEL, NE PÁS V HLAVIČCE.
@@ -268,6 +305,10 @@ try {
   pravda('a co se nevejde, se dá odrolovat',
     l.podHranou === 0 || l.rolovatelny === true,
     `za spodní hranou ${l.podHranou} px, overflow-y: ${l.overflowY}`);
+  pravda(`nic ze šuplíku nevyčnívá do stran (${l.vycniva.length} nálezů)`,
+    l.vycniva.length === 0, l.vycniva.join(' · '));
+  pravda('a šuplík sám se vejde do okna',
+    l.suplikVen <= 1, 'přesahuje o ' + l.suplikVen + ' px');
   /* Mez 44 px si web klade sám (hlídá ji test-rozvrzeni i test-dotyk);
      v panelu je místa na víc, takže se čeká 52. */
   pravda('a dá se trefit prstem (52 px na výšku)', l.a.every((x) => x.v >= 52),
@@ -325,6 +366,60 @@ try {
     l.a.every((x) => d.vsechny.some((h) => h === x.kam)),
     `na počítači chybí: ${l.a.filter((x) => !d.vsechny.some((h) => h === x.kam)).map((x) => x.kam).join(', ')}`);
   await ctxD.close();
+
+  /* ---- 3b) a totéž na majitelově telefonu (308 px) ------------- */
+  /* PROČ ZROVNA 308. Majitelův iPhone má 308 CSS px na šířku (snímek
+     923×1920 při DPR 3) — a vada, kterou poslal, se na 390 px
+     neukázala vůbec: štítky se tam vešly a usekávaly se až v užším
+     okně. Hlídač, který měří jen 390, by ji tedy nikdy nenašel.
+     Měří se tu TÁŽ věc jako výš, jen v okně, ve kterém se to stalo. */
+  {
+    const ctxU = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+      viewport: { width: 308, height: 640 }, hasTouch: true, isMobile: true });
+    await ctxU.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+      body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    const pu = await ctxU.newPage();
+    await pu.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await pu.waitForTimeout(900);
+    await pu.click('.nav-burger');
+    await pu.waitForTimeout(500);
+    const u = await pu.evaluate(() => {
+      const n = document.getElementById('nav');
+      if (!n) return null;
+      const N = n.getBoundingClientRect();
+      const ven = [];
+      for (const e of n.querySelectorAll('*')) {
+        if (!e.getClientRects().length) continue;
+        const c = getComputedStyle(e);
+        if (c.position === 'fixed') continue;
+        if (e.classList.contains('visually-hidden')) continue;
+        let orezano = false;
+        for (let o = e.parentElement; o; o = o.parentElement) {
+          const oc = getComputedStyle(o);
+          if (oc.overflowX !== 'visible' || oc.overflowY !== 'visible') { orezano = true; break; }
+          if (o === n) break;
+        }
+        if (orezano) continue;
+        const r = e.getBoundingClientRect();
+        const vl = Math.round(N.left - r.left), vp = Math.round(r.right - N.right);
+        if (vl > 1 || vp > 1) {
+          const jm = e.tagName.toLowerCase()
+            + (e.getAttribute('class') ? '.' + e.getAttribute('class').trim().split(/\s+/)[0] : '');
+          ven.push(jm + (vl > 1 ? ' vlevo o ' + vl : '') + (vp > 1 ? ' vpravo o ' + vp : '') + ' px');
+        }
+      }
+      return { ven: ven.slice(0, 6), pocet: ven.length,
+        suplikVen: Math.round(Math.max(0 - N.left, N.right - innerWidth)),
+        polozek: [...n.querySelectorAll('a')].filter((a) => a.getClientRects().length).length };
+    });
+    pravda('308 px: šuplík se vůbec otevřel', !!u && u.polozek > 0,
+      'v šuplíku není ani jeden viditelný odkaz — měřilo by se prázdno');
+    pravda(`308 px: nic ze šuplíku nevyčnívá do stran (${u ? u.pocet : '—'} nálezů)`,
+      !!u && u.pocet === 0, u ? u.ven.join(' · ') : 'nezměřeno');
+    pravda('308 px: a šuplík sám se vejde do okna',
+      !!u && u.suplikVen <= 1, u ? 'přesahuje o ' + u.suplikVen + ' px' : 'nezměřeno');
+    await ctxU.close();
+  }
 
   /* ---- 4) lišta ví, na které stránce jsem --------------------- */
   const ctxS = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
