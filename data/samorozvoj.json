@@ -39,6 +39,11 @@
    "prokazanych": 17,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-12": {
+   "prokazanych": 19,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1342,19 +1347,17 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-kontrola-databaze.mjs": {
-   "kdy": "2026-11-07",
+   "kdy": "2026-11-12",
    "hlidá": 1,
-   "chytila": 4,
-   "nechytila": 1,
+   "chytila": 5,
+   "nechytila": 0,
    "rovnocenne": [],
    "slepa": [],
-   "mlcela": [
-    "zahozená pojistka (if … continue) v scripts/kontrola-databaze.mjs"
-   ],
+   "mlcela": [],
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "a6d2becbf0ef",
+   "otisk": "9d7e6ea24794",
    "poznamka": ""
   },
   "test-kontrola-e2e.mjs": {
@@ -1523,7 +1526,7 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-kategorie.mjs": {
-   "kdy": "2026-11-08",
+   "kdy": "2026-11-12",
    "hlidá": 9,
    "chytila": 3,
    "nechytila": 3,
@@ -1537,7 +1540,7 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "7ab1fe111c56",
+   "otisk": "2fd038d853bc",
    "poznamka": ""
   },
   "test-line-dlazdice.mjs": {
@@ -1617,7 +1620,7 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-karta-odkaz.mjs": {
-   "kdy": "2026-11-07",
+   "kdy": "2026-11-12",
    "hlidá": 0,
    "chytila": 0,
    "nechytila": 0,
@@ -1627,12 +1630,12 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "5f2afb2e3dec",
+   "otisk": "35bf9af935b8",
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-bezrealitky.mjs": {
-   "kdy": "2026-11-08",
-   "hlidá": 1,
+   "kdy": "2026-11-12",
+   "hlidá": 2,
    "chytila": 0,
    "nechytila": 6,
    "rovnocenne": [],
@@ -1648,7 +1651,7 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "126308d073bc",
+   "otisk": "04711c415b19",
    "poznamka": ""
   },
   "test-mapa-tazeni.mjs": {
@@ -1687,7 +1690,7 @@
    "poznamka": ""
   },
   "test-mapa.mjs": {
-   "kdy": "2026-11-08",
+   "kdy": "2026-11-12",
    "hlidá": 2,
    "chytila": 0,
    "nechytila": 0,
@@ -1697,11 +1700,11 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "b3ad3e287e94",
+   "otisk": "ab4f43e54478",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-11",
+ "updated": "2026-11-12",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
@@ -1840,7 +1843,7 @@
      "test-kategorie.mjs",
      "test-bezrealitky.mjs"
     ],
-    "hlidacu": 28
+    "hlidacu": 31
    },
    "obrácené porovnání (<= na <)": {
     "chytily": [],
@@ -1853,7 +1856,7 @@
      "test-kategorie.mjs",
      "test-bezrealitky.mjs"
     ],
-    "hlidacu": 28
+    "hlidacu": 31
    },
    "obrácená rovnost (=== na !==)": {
     "chytily": [],
@@ -1866,7 +1869,7 @@
      "test-kategorie.mjs",
      "test-bezrealitky.mjs"
     ],
-    "hlidacu": 28
+    "hlidacu": 31
    },
    "zahozená pojistka (if … continue)": {
     "chytily": [],
@@ -1877,7 +1880,7 @@
      "test-hlidac-zdroju.mjs",
      "test-bezrealitky.mjs"
     ],
-    "hlidacu": 28
+    "hlidacu": 31
    },
    "zahozený filter(Boolean)": {
     "chytily": [],
@@ -1888,7 +1891,7 @@
      "test-hlidac-zdroju.mjs",
      "test-bezrealitky.mjs"
     ],
-    "hlidacu": 28
+    "hlidacu": 31
    },
    "a místo nebo (&& na ||)": {
     "chytily": [],
@@ -1899,7 +1902,7 @@
      "test-hlidac-zdroju.mjs",
      "test-bezrealitky.mjs"
     ],
-    "hlidacu": 28
+    "hlidacu": 31
    }
   },
   "scripts/sazba.mjs": {
@@ -2477,9 +2480,10 @@
     "hlidacu": 2
    },
    "zahozená pojistka (if … continue)": {
-    "chytily": [],
+    "chytily": [
+     "test-kontrola-databaze.mjs"
+    ],
     "mlcely": [
-     "test-kontrola-databaze.mjs",
      "test-inzerat-token.mjs"
     ],
     "hlidacu": 2
