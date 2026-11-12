@@ -114,7 +114,8 @@
       }
       function syncLabel() {
         var o = sel.options[sel.selectedIndex];
-        lbl.textContent = o ? o.textContent : '';
+
+        lbl.textContent = o ? (o.getAttribute('data-kratky') || o.textContent) : '';
         Array.prototype.forEach.call(panel.children, function (it) {
           var on = it.getAttribute('data-value') === sel.value;
           it.classList.toggle('sel', on); it.setAttribute('aria-selected', on ? 'true' : 'false');

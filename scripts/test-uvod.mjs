@@ -913,7 +913,10 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     };
     return { cislo: zmer('#map-count .mc-cislo'), razeni: zmer('#map-sort'),
       ulozene: zmer('#map-fav'), rychly: zmer('#mc-rychly'),
-      cely: (document.querySelector('#map-count') || {}).innerText || '' };
+      cely: (document.querySelector('#map-count') || {}).innerText || '',
+      /* textContent, NE innerText: právě na něm stojí vzory těch
+         patnácti zkoušek, a ten o vizuální zalomení nezavadí. */
+      celyText: (document.querySelector('#map-count') || {}).textContent || '' };
   });
   pravda('počet nad výpisem má vlastní značku a něco v ní je (kontrola měřidla)',
     !!(m.cislo && /\d/.test(m.cislo.text)), JSON.stringify(m.cislo));
@@ -930,13 +933,29 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       `počet ${m.cislo.barva}, „Uložené" ${m.ulozene.barva}`);
     pravda('a je tučný', m.cislo.tuk >= 700, `tloušťka ${m.cislo.tuk}`);
   }
-  /* A TOHLE JE TA DRUHÁ POLOVINA. Patnáct zkoušek čte počet z innerText
-     tohohle prvku a hledá v něm „N na mapě". Kdyby se číslo odstěhovalo
-     do vlastní značky tak, že se mezi ně dostane zalomení, přestaly by
-     ho najít všechny naráz — a vypadalo by to jako patnáct různých vad. */
-  pravda('a v textu prvku pořád stojí „N na mapě" na jednom řádku',
-    /\d[\s\u00a0]*\d*\s*na mapě/.test(m.cely.split('\n')[0]),
-    `první řádek: „${m.cely.split('\n')[0]}"`);
+  /* A TOHLE JE TA DRUHÁ POLOVINA. Patnáct zkoušek čte počet z tohohle
+     prvku a hledá v něm „N na mapě". Kdyby se číslo odstěhovalo do
+     vlastní značky tak, že se mezi ně dostane něco, co jejich vzor
+     nepřečte, přestaly by ho najít všechny naráz — a vypadalo by to
+     jako patnáct různých vad.
+     MĚŘÍ SE TO, CO ČTOU ONY, NE PRVNÍ ŘÁDEK (opraveno 12. 11.).
+     Do té doby se tu bral `innerText.split('\n')[0]`, tedy „číslo
+     a přípisek musí být na jednom VIZUÁLNÍM řádku". To byla přísnější
+     podmínka, než jakou kdo z nich potřebuje: jejich vzory mají tvar
+     `([\d\s\u00a0]+)\s*na mapě` nad `textContent`, a ten vizuální
+     zalomení vůbec neobsahuje; ta jediná, co čte `innerText`, si z něj
+     napřed vyhodí všechny bílé znaky. Kontrola tak padla ve chvíli,
+     kdy počet dostal nad výpisem dvě šestiny řádku vedle řazení
+     a číslo se postavilo nad přípisek — tedy na změně, která žádnou
+     z těch patnácti zkoušek nerozbila.
+     Teď se čte jedním vzorem obojí: textContent (co čtou ony) i
+     innerText se zalomeními (aby se nedalo projít tím, že se mezi
+     číslo a přípisek dostane prázdný prvek). */
+  const vzorPoctu = /\d[\d\s\u00a0]*\s*na mapě/;
+  pravda('a v textu prvku pořád stojí „N na mapě" tak, jak ho čtou ostatní zkoušky',
+    vzorPoctu.test(m.celyText) && vzorPoctu.test(m.cely),
+    `textContent: „${(m.celyText || '').replace(/\s+/g, ' ').trim().slice(0, 40)}", `
+    + `innerText: „${(m.cely || '').replace(/\n/g, '⏎').slice(0, 40)}"`);
   await ctxP.close();
 }
 

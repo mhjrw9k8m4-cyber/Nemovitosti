@@ -208,13 +208,27 @@ try {
     pravda(`${sirka} px: řazení („Doporučené") je úplně dole`,
       v.razeni.y > v.ulozene.y && v.razeni.y > v.vyvoz.y,
       `řazení ${v.razeni.y} px, dvojice na ${v.ulozene.y} px`);
-    /* Majitel 30. 10.: „to řazení udělej stejně velké jako pozemky po
-       jednom." Jsou to dva terče přes celý řádek na opačných koncích
-       toho bloku; kdyby se jeden z nich zúžil, přestal by ten blok
-       držet pohromadě. */
-    pravda(`${sirka} px: a je stejně velké jako „Procházet po jednom"`,
-      stejne(v.razeni, v.rychly) && Math.abs(v.razeni.h - v.rychly.h) <= 1,
+    /* MAJITEL 30. 10.: „to řazení udělej stejně velké jako pozemky po
+       jednom." Do 12. 11. se z toho měřila ŠÍŘKA i výška: obojí byl
+       terč přes celý řádek.
+       OD 12. 11. UŽ NE ŠÍŘKA, A PŘIZNÁVÁM, PROČ. Řazení stojí nově
+       vedle počtu na jednom řádku — to je tvar, jaký má nad výpisem
+       každý velký realitní web, a majitelův vlastní nákres z 30. 10.
+       má „řazení a počet" jako JEDNU položku pořadí, tedy jednu věc
+       dole; že z ní byly dva řádky, bylo moje provedení. Na telefonu
+       390 px to ušetřilo 46 px z cesty k první nabídce.
+       Co z té věty zůstává, je MÍRA PRO PRST: stejná výška (44 px)
+       a terč, který se dá trefit. Naměřeno po změně: řazení 236×44 px
+       na 390 px a 189×44 px na 320 px, tedy čtyři šestiny řádku.
+       Mez na šířku je proto spodní, ne rovnost — řazení nesmí
+       sklouznout na drobnou zkratku v rohu: musí mít aspoň polovinu
+       toho, co „Procházet po jednom". */
+    pravda(`${sirka} px: a je stejně vysoké jako „Procházet po jednom"`,
+      Math.abs(v.razeni.h - v.rychly.h) <= 1,
       `řazení ${v.razeni.w}×${v.razeni.h} px, procházet ${v.rychly.w}×${v.rychly.h} px`);
+    pravda(`${sirka} px: a zabírá aspoň polovinu jeho šířky`,
+      v.razeni.w >= v.rychly.w / 2,
+      `řazení ${v.razeni.w} px, procházet ${v.rychly.w} px`);
 
     /* Nápis se nesmí vysypat z rámečku — to byl důvod, proč se pod
        360 px skládá do jednoho sloupce. */

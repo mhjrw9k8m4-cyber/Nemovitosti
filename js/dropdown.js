@@ -188,7 +188,17 @@
       }
       function syncLabel() {
         var o = sel.options[sel.selectedIndex];
-        lbl.textContent = o ? o.textContent : '';
+        /* KRÁTKÉ JMÉNO PRO ZAVŘENÉ TLAČÍTKO (12. 11.).
+           Zavřený rozbalovač má jen tolik místa, kolik mu nechá řádek;
+           řazení nad výpisem stojí od 12. 11. vedle počtu, tedy na
+           půlce. Naměřeno na 390 px: „Největší sleva proti okolí"
+           přeteklo o 81 px a usekávalo se bez upozornění, na 320 px
+           o 116. Volba proto smí nést `data-kratky` — co se ukáže
+           v zavřeném tlačítku. V OTEVŘENÉM SEZNAMU zůstává plný text,
+           takže se vybírá podle celé věty; zkracuje se jen ohlášení
+           toho, co už je vybrané. Je to týž recept, jakým mají
+           otvírače filtrů krátká jména (.mf-jm-k v index.html). */
+        lbl.textContent = o ? (o.getAttribute('data-kratky') || o.textContent) : '';
         Array.prototype.forEach.call(panel.children, function (it) {
           var on = it.getAttribute('data-value') === sel.value;
           it.classList.toggle('sel', on); it.setAttribute('aria-selected', on ? 'true' : 'false');
