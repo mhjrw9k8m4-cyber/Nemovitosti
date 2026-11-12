@@ -6941,7 +6941,11 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
    sloupec má 662, ne 440). Napodruhé jsem středil jen kartu — a nadpis,
    úvod i záložky zůstaly vlevo, takže stránka vypadala rozpůlená.
    Středí se proto celý sloupec, viz `.section.app-section` níž. */
-.auth-card{position:relative; z-index:1; max-width:var(--m-karta); margin:0; background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-plocha); padding:32px 28px 24px; box-shadow:var(--shadow-lg);}
+/* Přihlašovací deska: zůstává plocha, odchází rám i velký stín. Je to
+   jediný prvek na stránce, takže ji oddělí barva proti podkladu; obrys
+   kolem ní byl navíc a stín --shadow-lg byl na webu, kde se nic
+   nevznáší, nejsilnější oddělení ze všech. */
+.auth-card{position:relative; z-index:1; max-width:var(--m-karta); margin:0; background:var(--plocha-karta); border-radius:var(--r-plocha); padding:32px 28px 24px;}
 .auth-tabs{display:flex; gap:4px; padding:4px; background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:20px;}
 /* JEDNA VÝŠKA V CELÉ KARTĚ. Naměřeno na telefonu: záložky 46 px,
    pole 50 px a hlavní tlačítko 48 px — tři výšky ve čtyřech ovladačích
@@ -7060,7 +7064,9 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
   display:inline-flex; align-items:center; min-height:44px;}
 .acx-vse:hover{color:var(--znacka-svetla);}
 .add-cross{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
-  margin-top:28px; padding:16px; background:var(--plocha-tlumena); border:1px solid var(--line); border-radius:var(--r-plocha);}
+  /* Tlumená plocha odliší odbočku od textu sama; rám k ní byl druhé
+     oddělení na tutéž práci (9 stránek). */
+  margin-top:28px; padding:16px; background:var(--plocha-tlumena); border-radius:var(--r-plocha);}
 /* ÚROVEŇ URČUJE OSNOVA STRÁNKY, NE VZHLED. Nadpis v tomhle bloku byl
    vždycky h3 — i na stránkách, kde blok stojí hned za h1 a žádné h2
    nad ním není. Osnova tam pak šla h1 → h3 → h2, tedy přeskočená
@@ -7091,8 +7097,12 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
    Zelená vlasovka padá úplně. Nad nadpisem v téže kartě stojí měděná
    čárka (.rules-sect > h2::before), která oddíl značí — dvě značky na
    jedné kartě si konkurují a ta přes celou hranu navíc nic neznačí. */
+/* BEZ STÍNU. Deska nese obsah stránky (formulář, oddíly rádce), ne
+   něco, co by nad ní mělo plavat — a stín je oddělení navíc tam, kde
+   plochu oddělí už její barva. Změřeno 12. 11.: 18 takových desek
+   na šesti typech stránek. */
 .add-card{position:relative; background:var(--plocha-karta);
-  border-radius:var(--r-plocha); padding:16px; box-shadow:var(--e1);}
+  border-radius:var(--r-plocha); padding:16px;}
 .add-aside{display:flex; flex-direction:column; gap:16px; position:sticky; top:96px;}
 .aside-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-md); padding:16px;}
 .aside-card > h3{font-size:14px; margin-bottom:16px; letter-spacing:0.01em;}
@@ -7587,7 +7597,16 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
 .okr-item .okr-src{position:relative; z-index:1;}
 /* Klikací řádek musí být poznat, jinak je z toho past: pod kurzorem se
    podloží a jméno se podtrhne naplno. */
-.okr-item:hover{background:var(--plocha-tlumena); cursor:pointer;}
+/* Najetí zvedne SNÍMEK, ne desku: podbarvení by kreslilo obdélník,
+   který na stránce není vidět (totéž jako u .opp-item). */
+/* `cursor` ZŮSTÁVÁ POD NAJETÍM, A NENÍ TO KOSMETIKA. Napsal jsem ho
+   napevno na kartu a shodil tím test-rozvrzeni: ukazováček se dědí na
+   všechny potomky, takže deset stránek najednou hlásilo prvky, které
+   vypadají klepatelně, ale klávesnicí se k nim nedá (jméno obce,
+   cena, výměra…). Klepatelný je odkaz přes celou kartu
+   (a.okr-place::after), a ten klávesnici obsluhuje sám. */
+.okr-item:hover{cursor:pointer;}
+.okr-item:hover .okr-foto{box-shadow:var(--e2);}
 .okr-item:hover a.okr-place{text-decoration-color:currentColor;}
 /* Aby podložení nekopírovalo tvar řádku na pixel k okrajům textu. */
 .okr-list .okr-item{border-radius:var(--r-plocha);}
@@ -7762,8 +7781,12 @@ body:not(:has(.clanek)) .add-hero:not(:has(~ .section .add-aside)):has(+ .sectio
     grid-template-rows:auto auto auto auto auto auto;
     grid-template-areas:"foto" "misto" "meta" "cena" "extra" "zdroj";
     column-gap:0; row-gap:2px;}
+  /* ZAOBLENÍ NESE SNÍMEK, ne deska. Stála tu nula, protože roh kreslila
+     karta (overflow:hidden) — a ta od 12. 11. není. Čtrnáctka je táž
+     hodnota, jakou má snímek na kartě ve výpisu (--r-plocha), takže
+     obě karty webu vypadají na telefonu stejně. */
   .okr-item .okr-foto{width:100%; aspect-ratio:16/10; margin-bottom:8px;
-    border-radius:0;}
+    border-radius:var(--r-plocha);}
   .okr-item .okr-cena{justify-self:start; text-align:left; padding-top:4px;}
   .okr-item .okr-src{justify-self:start; padding-top:8px;}
   .okr-item .okr-extra{padding-top:4px;}
@@ -8850,15 +8873,23 @@ a.rz-okres:hover{color:var(--znacka-svetla);}
    Karta je tedy tatáž. Rozdíl zůstává jediný a je to rozdíl zařízení,
    ne stránky: na širokém displeji má snímek vlevo (řádková karta, jako
    má Rightmove ve výsledcích), na telefonu nahoře přes celou šířku. */
-.okr-list{gap:12px;}
-.okr-item{background:var(--plocha-karta); border:1px solid var(--line);
-  border-radius:var(--r-plocha); box-shadow:var(--e1); overflow:hidden;
-  padding:0 0 12px;}
-/* Text se odsazuje po dílcích, ne kartou: snímek musí jít od kraje ke
-   kraji, jinak je z karty zase jen obrázek v rámečku. */
-.okr-item > :not(.okr-foto){padding-left:12px; padding-right:12px;}
-.okr-item .okr-place, .okr-item .okr-cena{padding-top:12px;}
-.okr-item:first-child{border-top:1px solid var(--line);}
+/* DESKA ODCHÁZÍ I TADY — A NENÍ TO DRUHÉ ROZHODNUTÍ.
+   Karta na okresních, krajských a druhových stránkách si podle §112
+   a §277 bere podobu od karty ve výpisu („jedna karta nabídky pro
+   výpis, tipy i hlídání"). Když tedy 12. 11. přišla karta ve výpisu
+   o bílou desku, rám a stín, musí o ně přijít i tahle — jinak má web
+   zase dvě různé karty, což je právě ta vada, kvůli které se §112
+   dělalo.
+   A je to zdaleka největší kus celého úklidu: změřeno na 23 typech
+   stránek, tahle jediná třída nesla 560 orámovaných desek z 1 155
+   kolem obsahu. Jedna stránka okresu jich má přes sto.
+   Mezera mezi kartami je 28 px, stejně jako ve výpisu, a zaoblení
+   nese snímek. */
+.okr-list{gap:28px;}
+.okr-item{padding:0;}
+/* Text lícuje se snímkem, protože deska, od jejíhož okraje se
+   odsazoval, už není — totéž jako .opp-body ve výpisu. */
+.okr-item .okr-place, .okr-item .okr-cena{padding-top:8px;}
 /* Jméno obce je nadpis karty, ne odkaz v textu — podtržení patří do
    věty, ne na nadpis. Celá karta je klikatelná (.okr-place::after). */
 .okr-item a.okr-place{text-decoration:none;}
@@ -11226,9 +11257,12 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 @media (max-width:679px){
   .pz-klice > .pz-klic:last-child:nth-child(odd){grid-column:1 / -1;}
 }
+/* DLAŽDICE BEZ RÁMU A BEZ STÍNU. Čtyři klíčové údaje stály každý ve
+   vlastním orámovaném poli se stínem — na stránce, kde už žádná jiná
+   deska rám nemá. Oddělí je plocha a mezera; rám byl třetí oddělení
+   na tutéž práci. (Úklid 12. 11., viz .opp-item.) */
 .pz-klic{position:relative; display:flex; flex-direction:column; gap:4px; padding:12px 16px;
-  background:var(--plocha-karta); border:1px solid var(--line-strong);
-  border-radius:var(--r-plocha); box-shadow:var(--e1);}
+  background:var(--plocha-karta); border-radius:var(--r-plocha);}
 /* ZNAČKA V ROHU, NE PŘED ČÍSLEM. Dlaždice se čte odshora: velké číslo,
    pod ním co to je. Ikona před číslem by se do té cesty postavila a
    ještě by ukrojila z místa, kde stojí „1 630 m²". V rohu dělá to, co
@@ -11519,8 +11553,10 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   margin:0; max-width:var(--m-text);}
 
 /* --- karta: jedna úroveň, jeden stín, jeden poloměr ----------------- */
+/* Bez stínu, ze stejného důvodu jako .add-card: je to plocha pod
+   obsahem, ne plovoucí prvek. */
 .st-karta{background:var(--plocha-karta); border-radius:var(--r-plocha);
-  padding:16px; margin:0 0 var(--mezera-bloku); box-shadow:var(--e1);}
+  padding:16px; margin:0 0 var(--mezera-bloku);}
 .st-karta > :last-child{margin-bottom:0;}
 .st-nadpis{font-family:var(--font-popisek); font-size:12px;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase;

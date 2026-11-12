@@ -379,7 +379,7 @@ to{opacity:1;transform:none}
 .acx-akce{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .acx-vse{font-size:14px;font-weight:600;color:var(--znacka);text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px}
 .acx-vse:hover{color:var(--znacka-svetla)}
-.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
+.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border-radius:var(--r-plocha)}
 .add-cross .acx-copy :is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--muted);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
@@ -388,7 +388,7 @@ to{opacity:1;transform:none}
 }
 .add-hero{position:relative;overflow:hidden}
 .add-hero .wrap{position:relative;z-index:1}
-.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;box-shadow:var(--e1)}
+.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px}
 @keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(var(--znacka-hluboka-rgb),0.55)}
 70%{box-shadow:0 0 0 13px rgba(var(--znacka-hluboka-rgb),0)}
 100%{box-shadow:0 0 0 0 rgba(var(--znacka-hluboka-rgb),0)}
@@ -457,7 +457,8 @@ to{opacity:1;transform:none}
 .okr-item{position:relative}
 .okr-item a.okr-place::after{content:"";position:absolute;inset:0;z-index:0}
 .okr-item .okr-src{position:relative;z-index:1}
-.okr-item:hover{background:var(--plocha-tlumena);cursor:pointer}
+.okr-item:hover{cursor:pointer}
+.okr-item:hover .okr-foto{box-shadow:var(--e2)}
 .okr-item:hover a.okr-place{text-decoration-color:currentColor}
 .okr-list .okr-item{border-radius:var(--r-plocha)}
 .okr-item .okr-badge{font-size:12px;font-weight:600;letter-spacing:var(--odznak-proklad);text-transform:uppercase;padding:2px 8px;border-radius:var(--r-pill);border:1px solid currentColor}
@@ -503,7 +504,7 @@ to{opacity:1;transform:none}
 .okr-item .okr-src{justify-self:start}
 }
 @media (max-width:560px){.okr-item{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto auto auto;grid-template-areas:"foto" "misto" "meta" "cena" "extra" "zdroj";column-gap:0;row-gap:2px}
-.okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:8px;border-radius:0}
+.okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:8px;border-radius:var(--r-plocha)}
 .okr-item .okr-cena{justify-self:start;text-align:left;padding-top:4px}
 .okr-item .okr-src{justify-self:start;padding-top:8px}
 .okr-item .okr-extra{padding-top:4px}
@@ -586,11 +587,9 @@ main .okr-hero + .section{padding-top:16px}
 
 .okr-blok{margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
 .okr-blok .rules-sect h2{font-size:24px}
-.okr-list{gap:12px}
-.okr-item{background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e1);overflow:hidden;padding:0 0 12px}
-.okr-item>:not(.okr-foto){padding-left:12px;padding-right:12px}
-.okr-item .okr-place,.okr-item .okr-cena{padding-top:12px}
-.okr-item:first-child{border-top:1px solid var(--line)}
+.okr-list{gap:28px}
+.okr-item{padding:0}
+.okr-item .okr-place,.okr-item .okr-cena{padding-top:8px}
 .okr-item a.okr-place{text-decoration:none}
 .okr-item .okr-place{font-size:16px;font-weight:600;letter-spacing:-0.01em}
 .okr-item .okr-cena b{font-size:24px;letter-spacing:-0.02em;line-height:1.1}

@@ -1344,7 +1344,7 @@ body:not(:has(.clanek)) .section.app-section:not(:has(.add-aside))>.add-wrap,bod
 .add-field.err input,.add-field.err select,.add-field.err textarea{border-color:var(--c-exekuce)}
 .add-field.err label{color:var(--c-exekuce-ink)}
 .add-check.err{color:var(--c-exekuce-ink)}
-.auth-card{position:relative;z-index:1;max-width:var(--m-karta);margin:0;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-plocha);padding:32px 28px 24px;box-shadow:var(--shadow-lg)}
+.auth-card{position:relative;z-index:1;max-width:var(--m-karta);margin:0;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:32px 28px 24px}
 .auth-tabs{display:flex;gap:4px;padding:4px;background:var(--plocha-zapustena);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:20px}
 .auth-tab{flex:1;min-height:48px;padding:8px 8px;border:0;border-radius:var(--r-ovladani);background:none;color:var(--muted);font:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:var(--prechod)}
 .auth-tab.active{background:var(--plocha-znacka);color:#fff}
@@ -1406,7 +1406,7 @@ to{opacity:1;transform:none}
 .acx-akce{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .acx-vse{font-size:14px;font-weight:600;color:var(--znacka);text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px}
 .acx-vse:hover{color:var(--znacka-svetla)}
-.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
+.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border-radius:var(--r-plocha)}
 .add-cross .acx-copy :is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--muted);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
@@ -1418,7 +1418,7 @@ to{opacity:1;transform:none}
 .add-hero{position:relative;overflow:hidden}
 .add-hero .wrap{position:relative;z-index:1}
 .add-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:32px;align-items:start}
-.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;box-shadow:var(--e1)}
+.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px}
 .add-aside{display:flex;flex-direction:column;gap:16px;position:sticky;top:96px}
 .aside-card{background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-md);padding:16px}
 .aside-card>h3{font-size:14px;margin-bottom:16px;letter-spacing:0.01em}
@@ -1597,7 +1597,8 @@ to{opacity:1;transform:none}
 .okr-item{position:relative}
 .okr-item a.okr-place::after{content:"";position:absolute;inset:0;z-index:0}
 .okr-item .okr-src{position:relative;z-index:1}
-.okr-item:hover{background:var(--plocha-tlumena);cursor:pointer}
+.okr-item:hover{cursor:pointer}
+.okr-item:hover .okr-foto{box-shadow:var(--e2)}
 .okr-item:hover a.okr-place{text-decoration-color:currentColor}
 .okr-list .okr-item{border-radius:var(--r-plocha)}
 .okr-item .okr-badge{font-size:12px;font-weight:600;letter-spacing:var(--odznak-proklad);text-transform:uppercase;padding:2px 8px;border-radius:var(--r-pill);border:1px solid currentColor}
@@ -1644,7 +1645,7 @@ to{opacity:1;transform:none}
 .okr-item .okr-src{justify-self:start}
 }
 @media (max-width:560px){.okr-item{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto auto auto;grid-template-areas:"foto" "misto" "meta" "cena" "extra" "zdroj";column-gap:0;row-gap:2px}
-.okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:8px;border-radius:0}
+.okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:8px;border-radius:var(--r-plocha)}
 .okr-item .okr-cena{justify-self:start;text-align:left;padding-top:4px}
 .okr-item .okr-src{justify-self:start;padding-top:8px}
 .okr-item .okr-extra{padding-top:4px}
@@ -1913,11 +1914,9 @@ a.rz-okres:hover{color:var(--znacka-svetla)}
 .drh-pasmo{grid-area:pasmo;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .okr-blok{margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
 .okr-blok .rules-sect h2{font-size:24px}
-.okr-list{gap:12px}
-.okr-item{background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e1);overflow:hidden;padding:0 0 12px}
-.okr-item>:not(.okr-foto){padding-left:12px;padding-right:12px}
-.okr-item .okr-place,.okr-item .okr-cena{padding-top:12px}
-.okr-item:first-child{border-top:1px solid var(--line)}
+.okr-list{gap:28px}
+.okr-item{padding:0}
+.okr-item .okr-place,.okr-item .okr-cena{padding-top:8px}
 .okr-item a.okr-place{text-decoration:none}
 .okr-item .okr-place{font-size:16px;font-weight:600;letter-spacing:-0.01em}
 .okr-item .okr-cena b{font-size:24px;letter-spacing:-0.02em;line-height:1.1}
@@ -2515,7 +2514,7 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 }
 @media (max-width:679px){.pz-klice>.pz-klic:last-child:nth-child(odd){grid-column:1 / -1}
 }
-.pz-klic{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px 16px;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.pz-klic{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px 16px;background:var(--plocha-karta);border-radius:var(--r-plocha)}
 .pz-head-radek{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
 .pz-head-radek>.pz-okres{margin:0;min-width:0}
 .pz-pozn-skok{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;margin-top:8px;border:1px solid var(--line-strong);border-radius:var(--r-ovladani);background:var(--plocha-zapustena);color:var(--text);cursor:pointer;font:inherit;font-size:14px;font-weight:600;line-height:1.2;transition:var(--prechod)}
@@ -2568,7 +2567,7 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 .okr-band .eyebrow .live-dot,.add-hero .eyebrow .live-dot{width:6px;height:6px;flex:none;border-radius:var(--r-pill);background:var(--pas-akcent);animation:none}
 .st-hlava h1,.st-h1{font-size:var(--h1-nastroj);line-height:1.2;letter-spacing:-0.03em;font-weight:600;margin:12px 0 4px;color:var(--pas-text)}
 .st-meta{font-size:14px;line-height:1.5;color:var(--pas-text-mute);margin:0;max-width:var(--m-text)}
-.st-karta{background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;margin:0 0 var(--mezera-bloku);box-shadow:var(--e1)}
+.st-karta{background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;margin:0 0 var(--mezera-bloku)}
 .st-karta>:last-child{margin-bottom:0}
 .st-nadpis{font-family:var(--font-popisek);font-size:12px;letter-spacing:var(--popisek-proklad);text-transform:uppercase;font-weight:600;color:var(--popisek);margin:0 0 16px}
 .st-text{font-size:16px;line-height:1.6;margin:0 0 16px;color:var(--text)}

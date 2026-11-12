@@ -548,7 +548,7 @@ body:not(:has(.clanek)) .section.app-section:not(:has(.add-aside))>.add-wrap,bod
 .add-field.err input,.add-field.err select,.add-field.err textarea{border-color:var(--c-exekuce)}
 .add-field.err label{color:var(--c-exekuce-ink)}
 .add-check.err{color:var(--c-exekuce-ink)}
-.auth-card{position:relative;z-index:1;max-width:var(--m-karta);margin:0;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-plocha);padding:32px 28px 24px;box-shadow:var(--shadow-lg)}
+.auth-card{position:relative;z-index:1;max-width:var(--m-karta);margin:0;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:32px 28px 24px}
 .auth-tabs{display:flex;gap:4px;padding:4px;background:var(--plocha-zapustena);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:20px}
 .auth-tab{flex:1;min-height:48px;padding:8px 8px;border:0;border-radius:var(--r-ovladani);background:none;color:var(--muted);font:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:var(--prechod)}
 .auth-tab.active{background:var(--plocha-znacka);color:#fff}
@@ -607,7 +607,7 @@ to{opacity:1;transform:none}
 .add-jak-sum .aj-kolik{color:var(--pas-text-mute);font-weight:500}
 .add-jak-sum::after{content:"";width:9px;height:9px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);transition:var(--prechod)}
 .add-jak[open] .add-jak-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
-.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
+.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border-radius:var(--r-plocha)}
 .add-cross .acx-copy :is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--muted);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
@@ -618,7 +618,7 @@ to{opacity:1;transform:none}
 .add-hero{position:relative;overflow:hidden}
 .add-hero .wrap{position:relative;z-index:1}
 .add-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:32px;align-items:start}
-.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;box-shadow:var(--e1)}
+.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px}
 .add-aside{display:flex;flex-direction:column;gap:16px;position:sticky;top:96px}
 .aside-card{background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-md);padding:16px}
 .aside-card>h3{font-size:14px;margin-bottom:16px;letter-spacing:0.01em}
@@ -981,7 +981,7 @@ a.rz-okres:hover{color:var(--znacka-svetla)}
 .drh-pas{grid-area:pas;position:relative;display:block;height:8px;border-radius:var(--r-pill);background:var(--plocha-jemna);box-shadow:inset 0 0 0 1px var(--line)}
 .drh-pas>i{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-pill);background:var(--plocha-znacka);opacity:0.55}
 .drh-pasmo{grid-area:pasmo;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.okr-list{gap:12px}
+.okr-list{gap:28px}
 
 @media (min-width:1200px){.okr-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
 .okr-list::after{grid-column:1 / -1}
@@ -1318,7 +1318,7 @@ body:has(.dt-telo) .st-hlava .st-wrap>*{grid-column:2;min-width:0}
 .okr-band .eyebrow .live-dot,.add-hero .eyebrow .live-dot{width:6px;height:6px;flex:none;border-radius:var(--r-pill);background:var(--pas-akcent);animation:none}
 .st-hlava h1,.st-h1{font-size:var(--h1-nastroj);line-height:1.2;letter-spacing:-0.03em;font-weight:600;margin:12px 0 4px;color:var(--pas-text)}
 .st-meta{font-size:14px;line-height:1.5;color:var(--pas-text-mute);margin:0;max-width:var(--m-text)}
-.st-karta{background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;margin:0 0 var(--mezera-bloku);box-shadow:var(--e1)}
+.st-karta{background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;margin:0 0 var(--mezera-bloku)}
 .st-karta>:last-child{margin-bottom:0}
 .st-nadpis{font-family:var(--font-popisek);font-size:12px;letter-spacing:var(--popisek-proklad);text-transform:uppercase;font-weight:600;color:var(--popisek);margin:0 0 16px}
 .st-text{font-size:16px;line-height:1.6;margin:0 0 16px;color:var(--text)}

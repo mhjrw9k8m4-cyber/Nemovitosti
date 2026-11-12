@@ -421,7 +421,7 @@ body:not(:has(.clanek)) .section.app-section:not(:has(.add-aside))>.add-wrap,bod
 to{opacity:1;transform:none}
 }
 
-.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
+.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border-radius:var(--r-plocha)}
 .add-cross .acx-copy :is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--muted);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
@@ -430,7 +430,7 @@ to{opacity:1;transform:none}
 }
 .add-hero{position:relative;overflow:hidden}
 .add-hero .wrap{position:relative;z-index:1}
-.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;box-shadow:var(--e1)}
+.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px}
 @keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(var(--znacka-hluboka-rgb),0.55)}
 70%{box-shadow:0 0 0 13px rgba(var(--znacka-hluboka-rgb),0)}
 100%{box-shadow:0 0 0 0 rgba(var(--znacka-hluboka-rgb),0)}
@@ -744,7 +744,7 @@ to{opacity:1;transform:none}
 }
 @media (max-width:679px){.pz-klice>.pz-klic:last-child:nth-child(odd){grid-column:1 / -1}
 }
-.pz-klic{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px 16px;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.pz-klic{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px 16px;background:var(--plocha-karta);border-radius:var(--r-plocha)}
 .pz-head-radek{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
 .pz-head-radek>.pz-okres{margin:0;min-width:0}
 .pz-pozn-skok{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;margin-top:8px;border:1px solid var(--line-strong);border-radius:var(--r-ovladani);background:var(--plocha-zapustena);color:var(--text);cursor:pointer;font:inherit;font-size:14px;font-weight:600;line-height:1.2;transition:var(--prechod)}
