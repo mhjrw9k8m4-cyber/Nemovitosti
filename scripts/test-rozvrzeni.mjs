@@ -820,7 +820,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     const prek = (a, c) => Math.max(0, Math.min(a.right, c.right) - Math.max(a.left, c.left))
       * Math.max(0, Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top));
     const out = { karet: 0, bezKrizku: 0, naOdznaku: [], naSrdcku: [], blizkoStredu: [],
-      horsiNezDriv: [], stredVTlacitku: [], odstupy: [] };
+      sabotNezabrala: [], stredVTlacitku: [], odstupy: [] };
     document.querySelectorAll('.opp-item').forEach((li, i) => {
       out.karet++;
       const sk = li.querySelector('.opp-skryt');
@@ -838,26 +838,37 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
         return Math.round(Math.sqrt(dx * dx + dy * dy));
       };
       const d = odstup(rs);
-      /* ZÁMĚRNÁ SABOTÁŽ: tatáž karta s křížkem tam, kde ležel předtím,
-         než se opravil. Bez toho by se nepoznalo, jestli kontrola něco
-         hlídá, nebo jestli jen prošla. Styl se hned vrací.
-         MÍSTO SABOTÁŽE SE 10. 11. ZMĚNILO, a kdyby se nezměnilo, byla
-         by to vycpávka: tlačítko bylo do té doby dítětem NÁHLEDU
-         a `right:0` znamenalo pravý okraj fotky. Teď je dítětem karty,
-         takže totéž `right:0` padne na pravý okraj KARTY — tedy
-         nejdál od středu náhledu, co jde, a sabotáž by vycházela lépe
-         než skutečnost (naměřeno 256 proti 212 px). Sabotuje se proto
-         tím, co byla skutečná vada: levý horní roh náhledu, kde
-         křížek na ploché kartě ležel 4 px od jeho středu. */
+      /* ZÁMĚRNÁ SABOTÁŽ: týž křížek položený PŘÍMO DO STŘEDU FOTKY,
+         tedy tam, kam míří prst. Mez 25 px pod tím musí spadnout na
+         každé kartě — jinak nehlídá nic a jen prochází. Styl se hned
+         vrací.
+         MÍSTO SABOTÁŽE SE MĚNÍ UŽ DRUHÉ. Do 10. 11. bylo tlačítko
+         dítětem NÁHLEDU, takže `right:0` znamenalo pravý okraj fotky;
+         pak se stalo dítětem karty a totéž `right:0` padlo na pravý
+         okraj KARTY, tedy dál od středu fotky než skutečnost (256
+         proti 212 px) — sabotáž by vycházela lépe než web. Nahradil
+         ji levý horní roh náhledu, kde křížek na PLOCHÉ kartě ležel
+         4 px od středu její 70px fotky. Plochá karta ale 11. 11.
+         skončila (inzeráty se zmenšovat nemají) a na vrácené svislé
+         kartě je levý horní roh náhledu právě to místo, kde křížek
+         OPRAVDU je: sabotáž ho posunula sama na sebe a vyšlo 108 px
+         proti 108 px, tedy přesná rovnost — kontrola spadla, aniž by
+         na webu byla vada. To je ta vycpávka, před kterou komentář
+         varoval, jen o kartu později.
+         Střed fotky žádnou takovou vazbu na tvar karty nemá: je to
+         bod, od kterého se mez měří, a položit na něj tlačítko musí
+         mez shodit vždy. Čísla starého místa (fotka 116 px, křížek
+         14 px od jejího středu) se tu proto už neuvádějí — patřila
+         vodorovné kartě s miniaturou, která na webu není. */
       const puvodni = sk.getAttribute('style') || '';
-      const rmS = md.getBoundingClientRect();
-      sk.style.cssText = puvodni + ';position:fixed;left:' + (rmS.left + 8) + 'px;top:'
-        + (rmS.top + 8) + 'px;right:auto;bottom:auto;';
+      const rsP = sk.getBoundingClientRect();
+      sk.style.cssText = puvodni + ';position:fixed;left:' + (sx - rsP.width / 2) + 'px;top:'
+        + (sy - rsP.height / 2) + 'px;right:auto;bottom:auto;';
       const dSabot = odstup(sk.getBoundingClientRect());
       if (puvodni) sk.setAttribute('style', puvodni); else sk.removeAttribute('style');
       out.odstupy.push(d);
       if (d < 25) out.blizkoStredu.push(`karta ${i}: ${d} px od středu fotky`);
-      if (d <= dSabot) out.horsiNezDriv.push(`karta ${i}: ${d} px, na starém místě ${dSabot} px`);
+      if (dSabot >= 25) out.sabotNezabrala.push(`karta ${i}: sabotovaný křížek ${dSabot} px od středu`);
       if (sx >= rs.left && sx <= rs.right && sy >= rs.top && sy <= rs.bottom)
         out.stredVTlacitku.push(i);
     });
@@ -880,10 +891,11 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      skutečných). Na starém místě to bylo 14 px. */
   pravda(`a je aspoň 25 px od středu fotky (nejblíž ${kriz.odstupy.length ? Math.min(...kriz.odstupy) : '?'} px)`,
     kriz.blizkoStredu.length === 0, kriz.blizkoStredu.slice(0, 3).join('; '));
-  /* A hlavně: na každé kartě musí být DÁL než na místě, kde stál dřív.
-     Kdyby se tam vrátil, tahle kontrola spadne jako první. */
-  pravda('a na každé kartě je od toho středu dál než na svém starém místě',
-    kriz.horsiNezDriv.length === 0, kriz.horsiNezDriv.slice(0, 3).join('; '));
+  /* A hlavně: ta mez musí být živá na KAŽDÉ kartě. Prokazuje se tím,
+     že týž křížek položený do středu fotky ji shodí — kdyby ne,
+     kontrola výš by jen procházela. */
+  pravda('a mez 25 px je živá: křížek ve středu fotky ji na každé kartě shodí',
+    kriz.sabotNezabrala.length === 0, kriz.sabotNezabrala.slice(0, 3).join('; '));
 
   /* DVĚ TLAČÍTKA NESMÍ SDÍLET TYTÉŽ BODY.
      Stížnost: „funkce se překrývají." Byla přesná. Ovládání nad výpisem

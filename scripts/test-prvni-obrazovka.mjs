@@ -228,8 +228,12 @@ try {
        nad výpisem a kontrola by platila i s kartou mimo obrazovku. */
     const cena = karta ? karta.querySelector('.opp-price, .opp-cena, [class*="price"]') : null;
     const cr = cena ? cena.getBoundingClientRect() : null;
+    const nahled = karta ? karta.querySelector('.opp-media') : null;
+    const nr = nahled ? nahled.getBoundingClientRect() : null;
     return {
       karta: y(karta),
+      vyskaKarty: karta ? Math.round(karta.getBoundingClientRect().height) : null,
+      nahledVidno: nr ? Math.round(Math.min(nr.bottom, window.innerHeight) - Math.max(nr.top, 0)) : null,
       hlavicka: hlavicka ? Math.round(hlavicka.getBoundingClientRect().height) : null,
       cenaSpodek: cr ? Math.round(cr.top + window.scrollY + cr.height) : null,
       cenaText: cena ? cena.textContent.replace(/\s+/g, ' ').trim().slice(0, 30) : null,
@@ -269,7 +273,22 @@ try {
          se tím vrátí NAD seznam, jenže getElementById už nic nenajde
          a kontrola projde naprázdno. Třída .mc-akce je v obou
          případech, takže se tahle díra zavřela. */
+      /* A JEDNO SLEPÉ MÍSTO, KTERÉ SE 12. 11. NAŠLO MĚŘENÍM. Hledalo se
+         `.mc-akce` a bral se jeho obdélník — jenže ten obal má
+         `display:contents`, takže vlastní rozměr NEMÁ: výška vyšla 0,
+         podmínka `height > 1` ho zahodila, nastrojeY bylo null
+         a kontrola níž procházela naprázdno. Nářadí přitom nad výpisem
+         skutečně stálo a bralo 104 px na dvou řádcích mřížky
+         (naměřeno 390×844: „Procházet po jednom" 434–478 px,
+         „Stáhnout výběr" 538–582 px).
+         Měří se proto tlačítka sama, ne obal: ta rozměr mají vždycky,
+         ať je obal čímkoli. Obal zůstává jako záložní cesta pro případ,
+         že by si js/main.js nářadí poskládal jinak. */
       nastrojeY: (function () {
+        const ys = [...document.querySelectorAll('.mc-akce .mc-nastroj, .mc-nastroj')]
+          .filter((e) => e.getBoundingClientRect().height > 1)
+          .map((e) => e.getBoundingClientRect().top + window.scrollY);
+        if (ys.length) return Math.round(Math.min(...ys));
         const e = document.querySelector('.mc-akce');
         return e && e.getBoundingClientRect().height > 1
           ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
@@ -289,10 +308,45 @@ try {
     je(m.karta) && m.karta < MEZ_PRVNI,
     `začíná na ${m.karta} px z ${VYSKA} px obrazovky`);
   /* Tohle je ta vlastní otázka: nestačí, že karta začne — musí z ní být
-     vidět to, kvůli čemu se na web chodí. */
-  pravda('a je z ní na první obrazovce vidět cena',
-    je(m.cenaSpodek) && m.cenaSpodek <= VYSKA,
-    `cena „${m.cenaText}" končí na ${m.cenaSpodek} px, obrazovka má ${VYSKA}`);
+     vidět to, kvůli čemu se na web chodí.
+     DO 11. 11. TU STÁLO „a je z ní na první obrazovce vidět cena"
+     a platilo to jen o PLOCHÉ KARTĚ: ta byla vodorovný řádek se
+     116px miniaturou, takže cena ležela 70 px pod jejím vrškem.
+     Plochá karta týž den skončila — majitel: „nevím, proč jsi ty
+     inzeráty zmenšil". Na vrácené svislé kartě je cena 290 px pod
+     vrškem karty (naměřeno 390×844: karta začíná na 669 px, cena
+     končí na 985, tedy 141 px pod hranou; 360×844: karta 669, cena
+     966, tedy 122 px pod hranou).
+     DVĚ MAJITELOVA ROZHODNUTÍ TO DRŽÍ, A JDOU PROTI SOBĚ. Karta se
+     zmenšovat nesmí (viz výš) a nářadí výpisu má stát NAD první
+     nabídkou („mají být úplně nahoře" — viz kontrola o kus níž).
+     Hlavička výpisu je kvůli tomu 227 px a panel ovladačů 345 px,
+     tedy 572 px ovládání před první nabídkou; aby byla cena nad
+     hranou, musela by karta začínat na 554 px (390 px) a na 510 px
+     (360 px). Těch 141 px se dá vzít jedině z nářadí (104 px na dvou
+     řádcích) a z řádku s počtem (27 px) — tedy z věcí, které si
+     majitel vyžádal. Kontrola tu tedy nemá co vymáhat a nahradilo ji
+     to, co z karty na první obrazovce vidět JE a ověřit se dá.
+     CO BY SILNĚJŠÍ TVRZENÍ VRÁTILO: cena přes fotku (jako na
+     Srealitách) — spodek náhledu je na 893 px, přesun ceny do něj ji
+     dostane nad hranu bez zmenšení karty. Je to ale změna vzhledu
+     karty, a tu majitel po poslední zkušenosti chce vidět dřív, než
+     se stane; proto se nedělá sama. */
+  pravda(`a je z ní na první obrazovce vidět náhled (${m.nahledVidno} px)`,
+    je(m.nahledVidno) && m.nahledVidno >= 120,
+    `z náhledu je nad hranou ${m.nahledVidno} px — nabídka není poznat`);
+  /* Celá nabídka se musí vejít na jednu obrazovku: po jednom posunu
+     palcem má být vidět od fotky po štítky. Naměřeno 394 px (390 px)
+     a 376 px (360 px) z 844; mez 450 nechává 56 px na delší nadpis. */
+  pravda(`a celá nabídka se vejde na jednu obrazovku (${m.vyskaKarty} px z ${VYSKA})`,
+    je(m.vyskaKarty) && m.vyskaKarty <= 450,
+    `karta má ${m.vyskaKarty} px — na jednu obrazovku se nevejde`);
+  /* A past na posouvání dolů: kdyby nad výpis přirostl další ovladač,
+     cena spadne hlouběji. Naměřeno 141 px pod hranou, mez 170 px. */
+  pravda(`a cena je nejvýš 170 px pod hranou obrazovky`,
+    je(m.cenaSpodek) && m.cenaSpodek - VYSKA <= 170,
+    `cena „${m.cenaText}" končí na ${m.cenaSpodek} px, obrazovka má ${VYSKA}`
+      + ` — to je ${m.cenaSpodek - VYSKA} px pod hranou`);
   /* Past na návrat starého stavu: značka patří do lišty, a tam jednou. */
   pravda('a značka „Parcelka" na stránce nestojí dvakrát pod sebou',
     m.znacek === 1, `viditelných značek: ${m.znacek}`);
@@ -305,8 +359,14 @@ try {
      kontrola tedy obrátila znaménko: nářadí MÁ stát nad první
      nabídkou — a to, co z toho doopravdy bolí, hlídá mez MEZ_PRVNI
      o kus výš a blok s naplněným pruhem níž. */
+  /* A JEDNA VYCPÁVKA PRYČ: podmínka začínala `!je(m.nastrojeY) ||`,
+     takže se splnila i tím, že se nářadí nevykreslí vůbec. Spolu se
+     slepým místem u `display:contents` výš to znamenalo, že kontrola
+     procházela ze dvou různých důvodů, z nichž ani jeden není ten,
+     o který jde. Teď se žádá číslo: nářadí musí být k nalezení
+     a musí stát nad první nabídkou. */
   pravda('nářadí výpisu stojí v jeho hlavičce, ne mezi nabídkami',
-    !je(m.nastrojeY) || (je(m.karta) && m.nastrojeY < m.karta),
+    je(m.nastrojeY) && je(m.karta) && m.nastrojeY < m.karta,
     `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
 
   /* „POZEMKY V OKOLÍ" MUSÍ BÝT VIDĚT HNED.
@@ -511,9 +571,12 @@ try {
       const cena = karta ? karta.querySelector('.opp-price, .opp-cena, [class*="price"]') : null;
       const cr = cena ? cena.getBoundingClientRect() : null;
       const pruh = document.querySelector('.ms-vysledky');
+      const nahled = karta ? karta.querySelector('.opp-media') : null;
+      const nr = nahled ? nahled.getBoundingClientRect() : null;
       return {
         karta: karta ? Math.round(karta.getBoundingClientRect().top + window.scrollY) : null,
         cenaSpodek: cr ? Math.round(cr.top + window.scrollY + cr.height) : null,
+        nahledVidno: nr ? Math.round(Math.min(nr.bottom, window.innerHeight) - Math.max(nr.top, 0)) : null,
         pruhH: pruh ? Math.round(pruh.getBoundingClientRect().height) : null,
       };
     });
@@ -523,9 +586,18 @@ try {
     pravda(`a první nabídka začíná nad ${MEZ_PRVNI_UZKA} px (${u.karta})`,
       u.karta !== null && u.karta < MEZ_PRVNI_UZKA,
       `začíná na ${u.karta} px z ${VYSKA}; pruh ovládání má ${u.pruhH} px`);
-    pravda(`a cena je i tam na první obrazovce`,
-      u.cenaSpodek !== null && u.cenaSpodek <= VYSKA,
-      `cena končí na ${u.cenaSpodek} px, obrazovka má ${VYSKA}`);
+    /* Táž změna jako na širším telefonu a z téhož důvodu (zdůvodnění
+       je u kontroly výš): cena je na svislé kartě 290 px pod jejím
+       vrškem, takže na první obrazovku nedosáhne. Naměřeno na 360 px:
+       náhled 670–874 (174 px nad hranou), cena končí na 966, tedy
+       122 px pod hranou. */
+    pravda(`a je i tam vidět náhled první nabídky (${u.nahledVidno} px)`,
+      u.nahledVidno !== null && u.nahledVidno >= 120,
+      `z náhledu je nad hranou ${u.nahledVidno} px`);
+    pravda(`a cena je i tam nejvýš 170 px pod hranou`,
+      u.cenaSpodek !== null && u.cenaSpodek - VYSKA <= 170,
+      `cena končí na ${u.cenaSpodek} px, obrazovka má ${VYSKA}`
+        + ` — to je ${u.cenaSpodek - VYSKA} px pod hranou`);
   }
 
   /* ---- A TOTÉŽ NA VELKÉM MONITORU --------------------------------

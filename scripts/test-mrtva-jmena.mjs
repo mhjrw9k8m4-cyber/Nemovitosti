@@ -59,6 +59,15 @@ function pravda(popis, vyslo, proc) {
    Ke každému KDO ho čte; bez toho tu nemá co dělat. */
 const VYJIMKY = {
   'pz-pozn-skok-t': 'úchyt pro skript: js/pozemek.js si jím přepisuje text v tlačítku „Přidat poznámku"',
+  /* Pravidlo na .os-t ve stylopisu BYLO, a to je na tom to poučné: patřilo
+     ploché kartě z 11. 11., která slovo v tlačítku schovávala na 1 px
+     (karta byla vodorovný řádek a dvě pilulky se slovy se na 116px
+     miniaturu nevešly). Plochá karta se týž den vrátila, pravidlo s ní,
+     a jméno zůstalo bez deklarace — ne proto, že by bylo mrtvé, ale
+     proto, že na svislé kartě je slovo vidět a nic se s ním nedělá.
+     Deklaraci dopsat jen kvůli téhle kontrole by bylo podvádění, stejně
+     jako u .mc-popis níž. */ 
+  'os-t': 'úchyt pro skript: js/main.js (řádek 8101) si jím po klepnutí přepisuje slovo v tlačítku karty mezi „Uložit" a „Uloženo"',
   'pk-maska': 'úchyt pro zkoušky: scripts/test-maska.mjs a scripts/test-obrys.mjs si jím hledají závoj nad mapou',
   'leaflet-dots-pane': 'jméno vlastní vrstvy, kterou si web v Leafletu zakládá na tečky pozemků; hledají si ji scripts/test-pohyb.mjs, test-obec.mjs a test-tvary.mjs',
   'leaflet-control-container': 'skládá si ho Leaflet sám (prefix + „-container") a svůj stylopis na něj nemá',
