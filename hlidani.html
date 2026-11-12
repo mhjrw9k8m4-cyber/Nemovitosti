@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-FFuxvxeeE7OJXZyD0tWgvxgc+RtTnbbgEceYWl6j5lA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-6HhAYtOI8aGs9sHtqUfhph6n9H7YZx40eGBhB9u+maQ='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co https://api.bezrealitky.cz; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -993,7 +993,7 @@
     /* A u každé volby stojí, kolik dnešních nabídek by jí vyhovělo —
        přesně jako u „Musí mít" níž. Bez toho šlo vybrat druh, pod kterým
        není NIC, a hlídání pak mlčelo navždy, aniž by se dalo poznat proč. */
-    var druhOpts = opt('', 'jakýkoli druh', true) + druhyKNabidnuti().map(function (d) {
+    var druhOpts = opt('', 'jakýkoli', true) + druhyKNabidnuti().map(function (d) {
       var n = 0;
       for (var i = 0; i < DATA.length; i++) if (matches({ druh: d }, DATA[i])) n++;
       var nazev = d.charAt(0).toUpperCase() + d.slice(1);
@@ -1050,8 +1050,20 @@
       return '<button type="button" class="hl-rychle" aria-pressed="false" data-od="' + x[1] + '" data-do="' + x[2] + '" data-pole="vymera">' + esc(x[0]) + '</button>';
     }).join('');
     return '<div class="hl-card hl-new">' +
-        '<div class="hl-new-head"><b>Nové hlídání</b>' +
-          '<span>Dáme vědět, jakmile přibude pozemek, který sedí.</span></div>' +
+        /* NADPIS KARTY VYPADL (12. 11.). Stálo tu <b>Nové hlídání</b>
+           čtyřiatřicet pixelů pod vybranou záložkou „Nové hlídání" —
+           totéž slovo dvakrát pod sebou, a na jedné obrazovce se slovo
+           „hlídání" objevilo pětkrát (titulek stránky, záložka v účtu,
+           obě záložky formuláře, nadpis karty). Záložka JE nadpisem:
+           je vybraná, je nad kartou a je vidět. Zbyla věta, která
+           jediná něco říká.
+           A TA VĚTA SLIBOVALA POZEMEK, zatímco souhrn na konci
+           formuláře počítá „3 993 nemovitostí" a přepínač o kus výš
+           se jmenuje „Jen celé nemovitosti". Web sbírá i domy a byty
+           (§412), takže slib o pozemku byl užší než to, co hlídání
+           opravdu dělá. */
+        '<div class="hl-new-head">' +
+          '<span>Dáme vědět, jakmile přibude nemovitost, která sedí.</span></div>' +
 
         '<div class="hl-sekce">' +
           sekceHlava('kde', 'Kde') +
@@ -1064,18 +1076,39 @@
              a jindy končí pár kilometrů od domu: z okolí Tišnova do
              25 km spadá pět okresů naráz a žádný z nich celý. Kdo
              dojede za hodinu, hledá okolí, ne správní jednotku. */
+          /* POPISEK NESE SAMO ROZBALOVÁTKO (12. 11.). Nad ním tu stál
+             <label> „Místo hranic okresu hlídat okolí" — šestislovná
+             věta v roli jmenovky pole, a k tomu předpokládala, že
+             čtenář ví, jak se hlídání chovalo DŘÍV. Kdo zakládá první
+             hlídání, nemá co srovnávat. Od chvíle, kdy rozbalovátko
+             vypadá jako řazení nad výpisem, si jmenovku nese v sobě
+             („Okolí"), takže řádek nad ním říkal totéž podruhé.
+             A VOLBA „— celý okres (jak to bylo)" byla poznámka pro
+             vývojáře vystavená lidem: „jak to bylo" neznamená nic
+             nikomu, kdo nečetl historii repozitáře. Zbylo „celý okres".
+             Vypadlo i „od místa" u kilometrů — pole stojí v sekci
+             „Kde", takže od čeho se měří, je jasné z okolí, a na
+             tlačítku se čte „Okolí · do 25 km". */
           '<div class="hl-okruh">' +
-            '<label class="hl-lbl" for="ns-okruh">Místo hranic okresu hlídat okolí</label>' +
-            '<select class="hl-sel" id="ns-okruh" data-ikona="okoli" data-popisek="Okolí" data-sipka="sipka-dolu">' +
-              '<option value="">— celý okres (jak to bylo)</option>' +
-              '<option value="10">do 10 km od místa</option>' +
-              '<option value="25">do 25 km od místa</option>' +
-              '<option value="50">do 50 km od místa</option>' +
-              '<option value="100">do 100 km od místa</option>' +
+            '<select class="hl-sel" id="ns-okruh" aria-label="Okolí" data-ikona="okoli" data-popisek="Okolí" data-sipka="sipka-dolu">' +
+              '<option value="">celý okres</option>' +
+              '<option value="10">do 10 km</option>' +
+              '<option value="25">do 25 km</option>' +
+              '<option value="50">do 50 km</option>' +
+              '<option value="100">do 100 km</option>' +
             '</select>' +
             '<p class="hl-napoveda" id="ns-okruh-pozn"></p>' +
           '</div>' +
-          '<div><label class="hl-lbl" for="ns-druh">Druh nabídky</label><select class="hl-sel" id="ns-druh" data-ikona="vrstvy" data-popisek="Druh" data-sipka="sipka-dolu">' + druhOpts + '</select></div>' +
+          /* DRUH POZEMKU, NE „DRUH NABÍDKY" (12. 11.). Tohle rozbalovátko
+             nabízí ornou půdu, zahradu, les — tedy DRUH POZEMKU. Na
+             úvodní stránce se ale „Druh nabídky" jmenuje něco jiného:
+             prodej, dražba, exekuce (#mf-druh), a druh pozemku je tam
+             „Druh pozemku" (#mc-druhy). Hlídání mělo obě jména
+             PROHOZENÁ, takže tatáž dvě slova znamenala na dvou
+             obrazovkách opačné věci. Jmenuje se to proto stejně jako
+             v hledání, včetně ikony (mapa pro pozemek, vrstvy pro
+             nabídku), a jmenovku si zase nese rozbalovátko samo. */
+          '<div><select class="hl-sel" id="ns-druh" aria-label="Druh pozemku" data-ikona="mapa" data-popisek="Pozemek" data-sipka="sipka-dolu">' + druhOpts + '</select></div>' +
           /* TYP NABÍDKY JE ŘADA DLAŽDIC, NE ROZBALOVÁTKO (1. 11.).
              Majitel: „to hledání vizuálně potřebuje brutálně překopat,
              udělej to podobné našemu vyhledávání, které mám na hlavní
@@ -1087,7 +1120,13 @@
              zdroj pravdy pro kriteria() i pro předvyplnění při úpravě
              hlídání, takže se nemusí sahat na nic kolem. Dlaždice ho
              jen přepínají. */
-          '<span class="hl-lbl" id="ns-type-lbl">Typ nabídky</span>' +
+          /* „DRUH NABÍDKY", NE „TYP NABÍDKY" (12. 11.). Tyhle dlaždice
+             (Vše · Na prodej · Dražba · Exekuce) jsou na úvodní stránce
+             „Druh nabídky" — viz #map-filters. Tady se jim říkalo „Typ
+             nabídky" a o patnáct pixelů výš stálo „Druh nabídky" nad
+             něčím úplně jiným. Dvě synonyma na jedné obrazovce, každé
+             u jiné věci: nikdo nemohl poznat, co je co. */
+          '<span class="hl-lbl" id="ns-type-lbl">Druh nabídky</span>' +
           '<div class="hl-dlazdice" role="group" aria-labelledby="ns-type-lbl">' + typeDlazdice + '</div>' +
           '<select class="hl-sel hl-skryty-sel" id="ns-type" tabindex="-1" aria-hidden="true">' + typeOpts + '</select>' +
         '</div>' +
@@ -1805,6 +1844,6 @@
 </script>
 <script src="js/min/offline.js?v=3759e5ca" defer></script>
 <script src="js/min/mereni.js?v=72436fa9" defer></script>
-<script src="js/min/dropdown.js?v=638d5046" defer></script>
+<script src="js/min/dropdown.js?v=3149ee2c" defer></script>
 </body>
 </html>

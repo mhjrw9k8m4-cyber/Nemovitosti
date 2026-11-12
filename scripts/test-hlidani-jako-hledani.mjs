@@ -156,6 +156,18 @@ await p.goto(BASE + '/index.html', { waitUntil: 'load' });
 await p.waitForSelector('#ms-rozsirene', { timeout: 25000 }).catch(() => null);
 await p.waitForTimeout(800);
 const A = await recepty('hledani');
+/* JAK SE TA VĚC JMENUJE, ne jak vypadá. Recepty výš srovnávají vzhled;
+   tohle srovnává SLOVA. Majitel 12. 11.: „navíc je tam plno věcí, co
+   nedávají smysl, oprav to hned." Nejhorší z nich byla dvojice jmen:
+   na úvodu je „Druh nabídky" prodej/dražba/exekuce a „Druh pozemku"
+   orná půda/zahrada — a v hlídání to bylo PROHOZENÉ, takže tatáž dvě
+   slova znamenala na dvou obrazovkách opačné věci. Vzhledu si toho
+   žádný hlídač nevšiml, protože vzhled byl v pořádku. */
+const jmenaHledani = await p.evaluate(() => {
+  const cap = (sel) => { const e = document.querySelector(sel); const f = e && e.closest('.mc-field');
+    const c = f && f.querySelector('.mc-cap'); return c ? c.textContent.replace(/\s+/g, ' ').trim() : null; };
+  return { druhNabidky: cap('#map-filters'), druhPozemku: cap('#mc-druhy') };
+});
 
 await p.goto(BASE + '/hlidani.html', { waitUntil: 'load' });
 await p.waitForSelector('#ns-okres', { state: 'attached', timeout: 25000 }).catch(() => null);
@@ -167,6 +179,16 @@ const B = await recepty('hlidani');
 const jeFormular = await p.evaluate(() => !!document.getElementById('ns-okres'));
 const jednotky = await p.evaluate(() => [...document.querySelectorAll('.hl-lbl .jednotka, .mc-cap .jednotka')]
   .map((e) => getComputedStyle(e).textTransform));
+/* Jméno ovladače je to, čím ho obrazovka člověku představí — ať je to
+   viditelný popisek (dlaždice druhu nabídky), nebo `aria-label`
+   rozbalovátka, které si popisek nese samo na tlačítku. Obojí je
+   jméno; srovnává se proto obojí se svým protějškem v hledání. */
+const jmenaHlidani = await p.evaluate(() => {
+  const t = (sel, atr) => { const e = document.querySelector(sel); if (!e) return null;
+    return (atr ? (e.getAttribute(atr) || '') : e.textContent).replace(/\s+/g, ' ').trim(); };
+  return { druhNabidky: t('#ns-type-lbl'), druhPozemku: t('#ns-druh', 'aria-label'),
+    slib: t('.hl-new-head span'), souhrn: t('#ns-souhrn') };
+});
 
 await p.goto(BASE + '/pridat.html', { waitUntil: 'load' });
 await p.waitForTimeout(800);
@@ -198,6 +220,28 @@ for (const r of ROLE) {
   srovnej(r, A[r.jm], B[r.jm], 'hlídání', r.hlidani);
   if (r.pridat) { srovnej(r, A[r.jm], C[r.jm], 'inzerát', r.pridat); sPridanim++; }
 }
+/* --- STEJNÁ VĚC SE JMENUJE STEJNĚ --------------------------------- */
+for (const [klic, co] of [['druhNabidky', 'prodej, dražba, exekuce'],
+                          ['druhPozemku', 'orná půda, zahrada, les']]) {
+  const h = jmenaHledani[klic], l = jmenaHlidani[klic];
+  pravda(`${co}: v hledání i v hlídání se to jmenuje stejně`,
+    !!h && !!l && h === l, `hledání „${h}" · hlídání „${l}"`);
+}
+
+/* SLIB NESMÍ SLIBOVAT UŽŠÍ VĚC, NEŽ CO HLÍDÁNÍ DĚLÁ. Věta nad
+   formulářem zvala na „pozemek, který sedí", zatímco souhrn na jeho
+   konci počítá nemovitosti — web sbírá i domy a byty (§412). Kdo
+   hledá chalupu, tu větu přečte a odejde. Měří se vzájemně: jakmile
+   souhrn mluví o nemovitostech, slib nesmí mluvit jen o pozemcích. */
+{
+  const slib = jmenaHlidani.slib || '';
+  const souhrn = jmenaHlidani.souhrn || '';
+  const siroky = /nemovitost/i.test(souhrn);
+  const uzky = /pozem(ek|ky|ků|kem|ku)/i.test(slib);
+  pravda('slib nad formulářem neslibuje užší věc, než souhrn počítá',
+    !siroky || !uzky, `souhrn „${souhrn}" · slib „${slib}"`);
+}
+
 /* PŘEDPOKLAD: bez rolí, které má i formulář inzerátu, by se o té
    stránce netvrdilo nic a kontroly výš by platily jen o dvou. */
 pravda(`a formulář inzerátu se srovnává aspoň ve třech rolích (${sPridanim})`,

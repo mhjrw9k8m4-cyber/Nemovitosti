@@ -30,7 +30,8 @@
     var IKONY = { razeni: '#i-razeni', 'sipka-dolu': '#i-sipka-dolu',
       okoli: '#i-okoli', vrstvy: '#i-vrstvy', cena: '#i-cena', druh: '#i-druh',
       kalendar: '#i-kalendar', obalka: '#i-obalka', prijezd: '#i-prijezd',
-      vystraha: '#i-vystraha', vymera: '#i-vymera', dum: '#i-dum' };
+      vystraha: '#i-vystraha', vymera: '#i-vymera', dum: '#i-dum',
+      mapa: '#i-mapa' };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
