@@ -83,7 +83,15 @@ export const PRELIVY = {
   '.mcf-akce': 'maska na kraji vodorovného pásu akcí — říká, že je kam rolovat',
   '.pz-btn.primary': 'hlavní akce inzerátu: týž značkový přeliv jako zelené plochy ve stylopisu webu. Vlastní zápis proto, že se tenhle soubor vkládá do stránky AŽ ZA stylopisem a zkratkou background by přeliv jinak shodil',
   '.hl-btn': 'tlačítka hlídání: totéž — vlastní zápis, protože vložený styl stránky stojí za stylopisem a přebil by ho',
-  '.ms-vysledky .mc-nastroj, .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn': 'ovladače v téže sestavě: týž směr světla o řád slabší, aby byly klávesy, ne ploché obrysy. Od 11. 11. sem patří i „Procházet po jednom" — do té doby to byla druhá sytě zelená plocha vedle hlavního tlačítka filtrů, tedy druhá „hlavní akce" 140 px od první',
+  /* PŘELIV NA OVLADAČÍCH NAD VÝPISEM — ZRUŠEN 12. 11., PROTO TU UŽ
+     NENÍ. Zdůvodnění znělo „týž směr světla o řád slabší, aby byly
+     klávesy, ne ploché obrysy" a platilo, dokud měla karta pod nimi
+     desku se stínem. Karta desku ztratila a tyhle tři ovladače pak
+     byly jediné bílé s přelivem a stínem vedle pěti tichých filtrů.
+     Majitel: „tohle se nedá pozerat, srovnej to podle nějakého
+     velkého webu." Mají teď tutéž tichou výplň jako filtry; přeliv
+     by na ní nebyl vidět a v tomhle seznamu by zůstal jako mrtvý
+     zápis — což tahle kontrola správně našla. */
   '.sk': 'kostra načítání: přejezd třpytu, který říká „ještě se to nese"',
   '.opp-media': 'podklad náhledu, než se snímek stáhne — a vrstva pod závojem',
   '.opp-mgrad': 'závoj nad snímkem: bez něj není bílé písmo na fotce čitelné',

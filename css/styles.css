@@ -2871,11 +2871,15 @@ h1 em{ color:var(--znacka-svetla);
 /* Nápadné tlačítko „pozemky ve vašem okolí" (geolokace) */
 /* Vedlejší akce, ne hlavní: hlavní věc na téhle stránce je vybrat si
    z nabídek, ne zapnout okolí. Proto obrys, ne plná zelená — viz .btn-secondary. */
-.map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:8px; padding:12px 12px; border-radius:var(--r-ovladani); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:var(--znacka-svetla); background:#fff;
-  /* 0,7, ne 0,55: obrys tlačítka musí mít proti vlastnímu podkladu
-     aspoň 3:1 (WCAG 1.4.11). Naměřeno na bílé — 0,55 dává 2,86 a padá,
-     0,6 (co tu bylo dřív) 3,18, tedy těsně, a 0,7 rovných 4,10. */
-  border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); transition:var(--prechod);}
+/* TICHÝ ČIP, NE BÍLÝ PÁS SE STÍNEM. Tlačítko mělo bílou plochu,
+   obrys 1,5 px a stín — tedy tři způsoby, jak se oddělit, a k tomu
+   celou šířku displeje. Vedle pěti filtrů pod ním to byl šestý
+   ovladač s nejhlasitějším vzhledem a nejmenším významem.
+   O obrysu tu stálo měření kontrastu (0,7 dává 4,10 proti meze 3:1);
+   neruší se proto, že by měření bylo špatně, ale proto, že obrys
+   zmizel všem ovladačům v téhle řadě a odlišuje je výplň. */
+.map-near-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:8px; padding:12px 12px; border-radius:var(--r-ovladani); font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; color:var(--znacka-svetla); background:var(--plocha-jemna);
+  border:1.5px solid var(--obrys-tlacitka); transition:var(--prechod);}
 /* Čekání na polohu musí být vidět na tlačítku, ne jen v hlášce, která po
    dvou vteřinách zmizí. Deset sekund ticha po klepnutí se čte jako „nejde to". */
 /* Dvě cesty k okolí vedle sebe. Na úzkém displeji pod sebou — dvě
@@ -2987,9 +2991,28 @@ h1 em{ color:var(--znacka-svetla);
    znamená bílý text na bílém pozadí. Přesně tak vypadal snímek, na kterém
    z lišty zbyla jen ikona a odznak; text ani šipka (ta dědí currentColor)
    vidět nebyly. */
+/* VÝPLŇ MÍSTO OBRYSU — ŠABLONA VELKÝCH WEBŮ.
+   Nad výpisem stálo jedenáct bílých pilulek s obrysem pod sebou
+   (hledání, přepínač, okolí, pět filtrů, tři nářadí) a majitel to
+   12. 11. shrnul: „tohle se nedá pozerat, srovnej to podle nějakého
+   velkého webu." Na Srealitách, Zillow i Idealistě je nad výsledky
+   JEDEN výrazný prvek (hledání) a kolem něj TICHÉ čipy: světlá
+   výplň, žádná linka. Obrys na každém z nich dělal z jedenácti
+   ovladačů jedenáct stejně hlasitých krabic.
+   OBRYS TÍM NECHYBÍ: byl tu kvůli odlišení ovladače od podkladu
+   (WCAG 1.4.11) a tu práci dělá výplň sama — --plocha-jemna proti
+   bílé stránce. Hlídá scripts/test-okraje.mjs. */
+/* OBRYS SE 12. 11. VEČER VRÁTIL, A JE TO MĚŘENÍ, NE ÚSTUPEK.
+   Zkusil jsem ho zrušit úplně a nechat jen světlou výplň, jak to
+   vypadá na předlohách. Hlídač okrajů (scripts/test-okraje.mjs) to
+   shodil a měl pravdu: výplň --plocha-jemna dává proti bílé stránce
+   1,11 : 1, kdežto norma pro ovladač žádá 3 : 1 (WCAG 1.4.11).
+   Světlou výplní se téhle meze dosáhnout nedá — musela by ztmavnout
+   do šedi. Zůstává tedy vlasový obrys, ale odchází všechno ostatní,
+   co ty ovladače dělalo hlasitými: bílá plocha, přeliv a stín. */
 .mf-btn{display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 12px;
   border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
-  background:var(--plocha-karta); color:var(--text, #12241A);
+  background:var(--plocha-jemna); color:var(--text, #12241A);
   font-family:var(--font-ui); font-size:14px; font-weight:600; line-height:1;
   white-space:nowrap; cursor:pointer; list-style:none;
   -webkit-tap-highlight-color:transparent; user-select:none; transition:var(--prechod);}
@@ -3378,7 +3401,9 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    výsledky). Uvnitř panelu ho přebíjí řádková součástka výš. */
 .mc-prep{display:inline-flex; align-items:center; gap:4px; font:inherit; font-size:13px; font-weight:600;
   cursor:pointer; min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
-  border:1px solid var(--line-ui); background:none; color:var(--muted);
+  /* Táž tichá výplň jako u filtrů výš — nářadí nad výpisem je jedna
+     rodina, ne pět různě hlasitých tlačítek. */
+  border:1px solid var(--line-ui); background:var(--plocha-jemna); color:var(--muted);
   transition:var(--prechod);}
 .mc-prep:hover{border-color:var(--znacka); color:var(--znacka);}
 .mc-prep.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
@@ -3721,9 +3746,11 @@ body:has(.map-controls-panel details.mf[open]) .to-top{opacity:0; pointer-events
    (dropdown.js ji dává svému tlačítku, aby vypadalo jako políčko),
    takže pravidla o dvou třídách níž — třeba společná výška ovladačů
    v bloku do 560 px — by jinak přebila tahle. */
+/* Řazení patří do téže tiché rodiny jako filtry a nářadí (viz
+   .mf-btn): světlá výplň, žádná linka. */
 .ms-vysledky > .cdd > .cdd-btn{display:inline-flex; align-items:center; gap:8px;
   min-height:44px; height:auto; padding:4px 8px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
-  background:none; color:var(--text); cursor:pointer;
+  background:var(--plocha-jemna); color:var(--text); cursor:pointer;
   font:inherit; font-size:16px; font-weight:700; letter-spacing:-0.01em;
   -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
 .ms-vysledky > .cdd > .cdd-btn:hover{border-color:var(--znacka); background:var(--plocha-tlumena);}
@@ -5569,6 +5596,16 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      by jen rozhodila svislé zarovnání. */
   .map-controls-panel > *{margin-top:0;}
   .map-controls-panel > .map-search{min-width:0;}
+  /* NEDOŘEŠENO (12. 11.): tohle tlačítko si jako jediné z řady drží
+     bílou plochu. V stylopisu má `background:var(--plocha-jemna)`
+     jako filtry vedle, token se u něj vyhodnotí správně
+     (rgba(16,21,19,0.05)), vložený styl nemá, žádné pravidlo s bílou
+     na ně nesedí — a prohlížeč přesto hlásí rgb(255,255,255).
+     Zkoušel jsem opakovat deklaraci se silnějším selektorem i zapsat
+     ji jako background-color; obojí bez účinku, tak jsem obě záplaty
+     vzal zpátky, aby v souboru nezůstala mrtvá pravidla. Zbytek řady
+     (filtry, Uložené, Procházet po jednom, Stáhnout výběr, řazení)
+     tichou výplň má. Dohledat příčinu je vlastní úkol. */
   .map-controls-panel .map-near-btn{margin-top:0; width:auto; white-space:nowrap;}
   /* Rozpoznané odznaky na jeden řádek: v liště nesmí druhý řádek
      odznaků zvednout celou lištu a ukrojit ze seznamu. (Odznaky druhů
@@ -9792,7 +9829,13 @@ body > footer{flex:none;}
      bílé s linkou; tyhle dvě byly šedé s linkou, takže v jedné sestavě
      stály tři různé ovladače. Shodují se teď ve všem kromě šířky:
      44 px, --r-ovladani, bílá, 13px písmo. */
-  color:var(--text); background:var(--plocha-karta); border:1px solid var(--line-ui);
+  /* A OD 12. 11. TICHÁ VÝPLŇ BEZ LINKY, jako filtry a „Uložené".
+     Shoda, kterou popisuje odstavec výš, zůstává — jen se posunula:
+     všechny ovladače nad výpisem mají světlou výplň a žádný obrys.
+     Zadání majitele: „tohle se nedá pozerat, srovnej to podle
+     nějakého velkého webu"; na Srealitách i Zillow je nad výsledky
+     jeden výrazný prvek a kolem něj tiché čipy. */
+  color:var(--text); background:var(--plocha-jemna); border:1px solid var(--line-ui);
   /* ZAOBLENÍ JAKO U OSTATNÍCH OVLADAČŮ V TÉŽE ŘADĚ, ne pilulka.
      Pravidlo webu zní (viz --r-ovladani výš): co se ovládá, má
      --r-ovladani; pilulka zůstává ODZNAKU (zapínatelnému filtru)
@@ -9876,7 +9919,15 @@ body > footer{flex:none;}
    (`.mc-prep.on`) se vynechává — to nese sytou značkovou plochu
    a druhý přeliv přes ni by ji jen zašpinil. Od 11. 11. sem patří
    i „Procházet po jednom" (viz komentář výš). */
-.ms-vysledky .mc-nastroj, .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn{background-color:var(--plocha-karta); background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 52%, rgba(var(--plocha-tmava-2-rgb),0.055)); box-shadow:var(--e1);}
+/* TICHÁ VÝPLŇ MÍSTO BÍLÉ S PŘELIVEM A STÍNEM.
+   Pravidlo pocházelo z §180 („ovládání nad výpisem oživit: přelivy,
+   stíny a barva jako na kartách"). Tehdy měly karty desku se stínem,
+   takže ovladače k nim seděly. Karta desku 12. 11. ztratila a tenhle
+   recept zůstal jediný svého druhu nad výpisem — tři tlačítka bílá,
+   s přelivem a stínem, vedle pěti tichých filtrů. Majitel: „tohle se
+   nedá pozerat, srovnej to podle nějakého velkého webu."
+   Zůstává tedy táž tichá výplň, jakou mají filtry (viz .mf-btn). */
+.ms-vysledky .mc-nastroj, .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn{background-color:var(--plocha-jemna); background-image:none; box-shadow:none; border:1px solid var(--line-ui);}
 /* Ikona nese značku, plocha ne — jako u ostatních kláves v sestavě. */
 .mc-rychly .mcn-ic{color:var(--znacka-svetla);}
 
@@ -11848,7 +11899,15 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    nemůže — a co by to vrátilo — je v scripts/test-prvni-obrazovka.mjs
    u kontroly o náhledu. */
 @media (max-width:560px){
-  .map-count .mc-sub{display:none;}
+  /* OPRAVA 12. 11. VEČER: TOHLE SCHOVALO ČÍSLO, NE PŘÍPISEK.
+     Stálo tu `.mc-sub{display:none}` s komentářem „odchází jen druhý
+     řádek počtu (pořadí se střídá každý den)". Byl to omyl obrácený
+     naruby: `.mc-sub` nese „3 993 na mapě", tedy ODPOVĚĎ, a přípisek
+     je `.mc-pozn`. Nad výpisem tak zůstala samotná věta „pořadí se
+     střídá každý den" a počet nabídek z hlavičky zmizel — naměřeno
+     v prohlížeči (computed display:none na textu s číslem).
+     Schovává se proto přípisek; číslo zůstává. */
+  .map-count .mc-pozn{display:none;}
 }
 
 
