@@ -2295,6 +2295,16 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     const merit = new Function('return (' + kod + ')()');
     const rada = document.getElementById('mc-rada');
     if (!rada) return { chyba: 'řádek filtrů se nenašel' };
+    /* OD 12. 11. JE ŘÁDEK FILTRŮ NA TELEFONU ZA JEDNÍM OTVÍRAČEM.
+       Majitel: „toto brát na ten ještě původní model." Sabotáž se
+       proto musí nejdřív dostat dovnitř — do zavřeného <details>
+       nevidí ani prohlížeč, takže by nic neujelo a kontrola živosti
+       by hlásila pád, aniž by cokoli změřila. Otvírač se zase zavře
+       hned po měření, aby zkouška nenechala stránku v jiném stavu,
+       než ji našla. */
+    const obal = document.getElementById('mf-vse');
+    const bylOtevreny = !!(obal && obal.open);
+    if (obal) obal.open = true;
     const pred = merit().length;
     const z = document.createElement('span');
     z.id = 'sabot-pretok';
@@ -2303,6 +2313,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     const pri = merit();
     z.remove();
     const po = merit().length;
+    if (obal && !bylOtevreny) obal.open = false;
     return { pred, pri: pri.length, kdo: pri.map((x) => x.t + ' o ' + x.ujelo + ' px'), po };
   }, MERENI.toString());
   await ctx.close();

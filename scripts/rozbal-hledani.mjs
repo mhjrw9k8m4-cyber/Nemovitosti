@@ -103,6 +103,14 @@ export async function otevriSkupinu(p, sel, cekani = 300) {
         + 'overflow:visible !important;}';
       document.head.appendChild(st);
     }
+    /* OD 12. 11. JE CELÝ ŘÁDEK FILTRŮ NA TELEFONU ZA JEDNÍM OTVÍRAČEM
+       (#mf-vse — majitel: „toto brát na ten ještě původní model").
+       Bez jeho otevření leží skupiny v zavřeném <details>, nemají
+       krabici, a Playwright na klepnutí čeká třicet vteřin a pak hlásí
+       timeout — přesně tak spadla zkouška našeptávače. Obal se proto
+       otevírá první; na monitoru nic nedělá, tam je display:contents. */
+    const obal = document.getElementById('mf-vse');
+    if (obal) obal.open = true;
     const el = document.querySelector(kam);
     const skupina = el && el.closest ? el.closest('details.mf') : null;
     document.querySelectorAll('details.mf').forEach(function (x) {

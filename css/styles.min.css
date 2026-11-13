@@ -454,6 +454,11 @@ to{opacity:1;transform:none}
 .filter-chip>*:not(.fc-ik):not(.chip-n){flex:1 1 auto;min-width:0;line-height:1.2}
 .filter-chip:hover{border-color:var(--znacka);background:var(--plocha-zapustena)}
 .filter-chip.active{background:var(--plocha-znacka);border-color:var(--plocha-znacka);color:#fff}
+.mf-vse{display:block}
+.mfv-btn{width:100%;justify-content:flex-start}
+.mfv-btn .mf-jm{display:block;flex:1 1 auto;text-align:left}
+.mf-vse[open]>.mfv-btn{border-color:var(--znacka-svetla);background:var(--plocha-zapustena)}
+.mf-vse[open]>.mfv-btn .mf-chev{transform:rotate(180deg)}
 .mc-rada{position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .mc-rada>*{flex:none}
 .mf-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-jemna);color:var(--text,#12241A);font-family:var(--font-ui);font-size:14px;font-weight:600;line-height:1;white-space:nowrap;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;user-select:none;transition:var(--prechod)}
@@ -1114,6 +1119,9 @@ to{opacity:1;transform:none}
 .map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 8px;padding:8px var(--okraj-stranky);grid-template-columns:minmax(220px,520px) auto auto minmax(0,1fr);grid-template-areas:"hledani okoli ." "filtry filtry filtry" "akce akce akce"}
 .map-controls-panel>.map-search{grid-area:hledani}
 .map-controls-panel .map-okoli{grid-area:okoli}
+.mf-vse{display:contents}
+.mf-vse::details-content{display:contents;content-visibility:visible}
+.mfv-btn{display:none}
 .map-controls-panel .mc-rada{grid-area:filtry}
 .map-controls-panel .mcf-akce{grid-area:akce;margin-top:8px;padding:0;border-top:0;justify-content:flex-start}
 .map-controls-panel .mcf-hotovo{flex:0 0 auto;min-width:220px}
