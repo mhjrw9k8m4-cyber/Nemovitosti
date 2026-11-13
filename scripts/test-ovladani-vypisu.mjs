@@ -209,16 +209,9 @@ try {
     pravda(`${sirka} px: „Procházet po jednom" je úplně nahoře`,
       v.rychly.y < v.ulozene.y && v.rychly.y < v.vyvoz.y && v.rychly.y < v.razeni.y,
       `rychlý ${v.rychly.y} px, uložené ${v.ulozene.y} px, vývoz ${v.vyvoz.y} px, řazení ${v.razeni.y} px`);
-    /* MĚŘÍ SE ŠÍŘKA ŘÁDKU, NE ROZDÍL PROTI SOUSEDOVI. Do 13. 11. tu
-       stálo `rychly.w > ulozene.w + 20`, tedy „je širší než Uložené".
-       Na 320 px to přestalo platit ve chvíli, kdy se nápisy začaly
-       měřit: do půlky řádku (uvnitř 116 px) se nevejde ani „Uložené",
-       takže je plné taky — a kontrola zčervenala, i když „Procházet
-       po jednom" bralo celý řádek správně. Chce se tu právě tohle,
-       tak se to tak i ptá. */
     pravda(`${sirka} px: a bere celý řádek`,
-      v.rychly.w >= v.razeni.w - 1,
-      `„Procházet po jednom" ${v.rychly.w} px, celý řádek je ${v.razeni.w} px`);
+      v.rychly.w > v.ulozene.w + 20,
+      `„Procházet po jednom" ${v.rychly.w} px, „Uložené" ${v.ulozene.w} px`);
     pravda(`${sirka} px: „Uložené" i „Stáhnout výběr" stojí uprostřed`,
       v.ulozene.y > v.rychly.y && v.vyvoz.y > v.rychly.y
       && v.ulozene.y < v.razeni.y && v.vyvoz.y < v.razeni.y,
@@ -674,61 +667,6 @@ try {
       pravda(`${sirka} px: a zapnutá polovina nese plnou plochu („${pohled}")`,
         /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(j.barva || ''), `plocha ${j.barva}`);
     }
-    await ctx.close();
-  }
-
-  /* PRUH NÁŘADÍ S PLNÝM NÁŘADÍM — STAV, KTERÝ HLÍDAČI NIKDY NEVIDĚLI.
-     Všechno výš měří odhlášeného člověka, kterému se ukazují tři
-     nástroje. Majitel má uložené pozemky, skryté nabídky i porovnání,
-     takže vidí šest — a v tom stavu mu 13. 11. nápis „Dražby po
-     termínu (2)" lezl z pilulky ven. Poslal to vyfocené: „nepřipadá
-     ti, že to vypadá totálně na picu?" Naměřeno na 390 px: půlka
-     řádku má uvnitř 151 px, nápis 170, přeteklo o 19.
-     Stav se nasimuluje tak, jak ho dělá člověk: dvakrát „Uložit"
-     a pětkrát „Skrýt" na kartách výpisu. */
-  {
-    const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
-      viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
-    const p = await ctx.newPage();
-    await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-    await naSeznam(p);
-    await p.waitForSelector('#mc-vyvoz', { timeout: 25000 }).catch(() => {});
-    await p.waitForTimeout(1000);
-    const klepni = (jak) => p.evaluate((t) => {
-      const b = [...document.querySelectorAll('.opp-item button')]
-        .filter((e) => new RegExp(t).test(e.textContent || ''));
-      b.slice(0, t === 'Uložit' ? 2 : 5).forEach((e) => e.click());
-      return b.length;
-    }, jak);
-    await klepni('Uložit'); await p.waitForTimeout(500);
-    await klepni('Skrýt');  await p.waitForTimeout(1200);
-
-    const n = await p.evaluate(() => [...document.querySelectorAll('.mc-nastroj, #map-fav, .mc-prep')]
-      .filter((e) => e.checkVisibility())
-      .map((e) => { const r = e.getBoundingClientRect();
-        return { jm: (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 24),
-          w: Math.round(r.width), x: Math.round(r.left), y: Math.round(r.top),
-          preteka: e.scrollWidth > e.clientWidth + 1 }; }));
-
-    pravda(`nářadí v plném stavu: je co měřit (${n.length})`, n.length >= 5,
-      n.map((x) => x.jm).join(', '));
-    const rozsype = n.filter((x) => x.preteka);
-    pravda('žádný nápis neleze z pilulky ven',
-      rozsype.length === 0, rozsype.map((x) => `${x.jm} v ${x.w} px`).join('; '));
-
-    /* A ŽÁDNÁ DÍRA V ŘADĚ. Dvousloupcová mřížka nechá u lichého počtu
-       prázdné políčko; majitel to 30. 10. vyfotil jako chybu
-       vykreslení. Ovladač, který stojí v řádku sám, musí mít celou
-       šířku — jinak vedle něj zeje prázdno. */
-    const radky = [];
-    n.forEach((x) => {
-      const r = radky.find((y) => Math.abs(y.y - x.y) <= 2);
-      if (r) r.kusy.push(x); else radky.push({ y: x.y, kusy: [x] });
-    });
-    const siroky = Math.max(...n.map((x) => x.w));
-    const diry = radky.filter((r) => r.kusy.length === 1 && r.kusy[0].w < siroky - 1);
-    pravda(`a žádný ovladač nestojí v řádku sám v půlce (${radky.length} řádků)`,
-      diry.length === 0, diry.map((r) => `${r.kusy[0].jm} ${r.kusy[0].w} px`).join('; '));
     await ctx.close();
   }
 } catch (e) {

@@ -1555,14 +1555,9 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
     pred.karet === 2 && !pred.obce.join(' ').includes('Prošlá'),
     `ve výpisu je ${pred.karet} karet: ${pred.obce.join(', ')}`);
   pravda('a nepočítá se ani do čísel u kategorií', pred.vse === 2, `„Vše" hlásí ${pred.vse}`);
-  /* Tohle je to jádro: nemá tiše zmizet, má být napsané, že zmizela.
-     Hledá se obojím písmenem schválně. Nápis se 13. 11. zkrátil
-     z „Dražby po termínu (N)" na „Po termínu (N)", protože v půlce
-     řádku (151 px uvnitř) lezlo dlouhé znění přes rám — slovo se tím
-     posunulo na začátek a velké P je tam jen proto. Co hlídáme, je
-     číslo v závorce, ne velikost písmene. */
+  // Tohle je to jádro: nemá tiše zmizet, má být napsané, že zmizela.
   pravda('nad seznamem je napsané, kolik jich je stranou',
-    /[Pp]o termínu \(1\)/.test(pred.tlacitko), `tlačítko hlásí „${pred.tlacitko.trim()}"`);
+    /po termínu \(1\)/.test(pred.tlacitko), `tlačítko hlásí „${pred.tlacitko.trim()}"`);
   if (pred.tlacitko) {
     await p.click('#mc-prosle');
     await p.waitForTimeout(900);

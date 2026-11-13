@@ -8220,21 +8220,11 @@
        dohromady 330 a pruh zůstává na 98. Slovo „Zobrazit" přitom
        nenese nic: číslo v závorce říká, že se něco skrývá.
        Stav „Schovat dražby po termínu" (178 px) se vedle vývozu vejde
-       taky. Hlídá scripts/test-prvni-obrazovka.mjs.
-       A 13. 11. VYPADLO I SLOVO „DRAŽBY". Majitel poslal vyfocený pruh
-       se dvěma uloženými a pěti skrytými nabídkami: „nepřipadá ti, že
-       to vypadá totálně na picu?" V tom stavu má nářadí šest kusů,
-       „Dražby po termínu (2)" sedí v PŮLCE řádku — uvnitř 151 px —
-       a nápis měří 170, takže lezl přes rám. Zkusil jsem nejdřív dát
-       takovému ovladači celý řádek; pruh tím narostl a první nabídka
-       spadla z 592 na 740 px, což shodilo sedm kontrol v
-       test-prvni-obrazovka. Levnější je slovo: „Po termínu (2)" se do
-       půlky vejde a ikona hodin říká, čeho se to týká — ve výpisu,
-       kde dražby jsou, nic jiného po termínu být nemůže. */
+       taky. Hlídá scripts/test-prvni-obrazovka.mjs. */
     if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-nastroj" id="mc-prosle">' +
       ikonaNastroje('prosle') +
-      (ukazProsle ? 'Schovat po termínu'
-                  : 'Po termínu (' + proslychStranou + ')') + '</button>';
+      (ukazProsle ? 'Schovat dražby po termínu'
+                  : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
     /* Kolik podobných názvů se právě nepočítá. Musí to být vidět:
        zúžit výpis a mlčet o tom je horší než vrátit moc — člověk pak
        neví, jestli nabídka není, nebo se jen skrývá. Počítá se přes
