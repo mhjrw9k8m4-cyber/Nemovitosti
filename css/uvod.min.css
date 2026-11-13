@@ -1101,6 +1101,7 @@ to{opacity:1;transform:none}
 .mvt-n{font-size:12px;opacity:0.8}
 @media (max-width:1040px){.map-controls-panel:not(:has(details.mf[open])) .mcf-akce:not(:has(.mcf-zrusit:not([hidden]))){display:none}
 .map-controls-panel:not(:has(details.mf[open])) .mcf-hotovo{display:none}
+.map-controls-panel:not(.mc-hledani):not(:has(.mcf-zrusit:not([hidden]))) .mc-rada{display:none}
 .map-app{display:flex;flex-direction:column;grid-template-columns:1fr;height:auto;gap:0}
 .hero-map .map-wide{margin-top:0}
 .map-controls-panel{order:0;border-right:0;border-bottom:0;background-color:var(--plocha-karta)}

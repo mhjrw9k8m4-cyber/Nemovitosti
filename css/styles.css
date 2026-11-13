@@ -5687,6 +5687,35 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      výpisu — a nemá co zobrazovat, protože zapnutý filtr se na výpisu
      projevil hned. */
   .map-controls-panel:not(:has(details.mf[open])) .mcf-hotovo{display:none;}
+
+  /* FILTRY SE OBJEVÍ AŽ PO ROZKLIKNUTÍ HLEDÁNÍ (13. 11.).
+     ====================================================================
+     Majitel zakroužkoval na snímku řádek pěti otvíračů (Nabídka, Typ,
+     Pozemek, Cena, Další) a napsal: „to v modrém tam nemá být, taky
+     ukázat 3 900 pozemků tam také nemá být. Člověk má vidět jen ty
+     funkce dole, a když rozklikne vyhledávání, bude tam prostě to
+     původní řazení, kde člověk vyklikával co chce, jak je teď v Další."
+     Na telefonu je tedy nad výpisem hledání, přepínač Seznam/Mapa,
+     „Nabídky v okolí" a pak rovnou nástroje k výpisu a řazení. Filtry
+     nikam nezmizely: otevřou se klepnutím do pole hledání (js/main.js
+     navěsí .mc-hledani) a zavřou se tlačítkem „Zobrazit N nemovitostí",
+     které s nimi přijde a jinak tam není.
+     SE ZAPNUTÝM FILTREM SE ŘADA UKÁŽE SAMA. Jinak by člověk neviděl,
+     čím je výpis zúžený, a neměl by to jak vrátit — zúžit výpis a
+     mlčet o tom je horší než ukázat o řádek víc. Pozná se to podle
+     #mcf-zrusit, kterému JS odkládá `hidden` podle jeNecoZapnute().
+     Na monitoru od 1041 px řada stojí v mřížce vedle hledání, ne jako
+     vlastní řádek nad výpisem, takže tam zůstává vždycky. */
+  .map-controls-panel:not(.mc-hledani):not(:has(.mcf-zrusit:not([hidden])))
+    .mc-rada{display:none;}
+  /* ZELENÉ „ZOBRAZIT N" SE S ŘADOU NEUKAZUJE. Zkusil jsem to a dvě
+     pravidla pro to tu chvíli stála — prohrávala vahou se skrývacím
+     předpisem výš a hlavně: majitel to tlačítko nechce vidět vůbec
+     („ukázat 3 900 pozemků tam také nemá být"). Objeví se až v
+     otevřeném panelu skupiny, kde potvrzuje volbu, a tím se celá řada
+     zase zavře. Kdo si jen klepne do hledání a odroluje, má řadu
+     otevřenou dál — to je levnější než mu nad výpis vrátit plochu,
+     kterou si nechal odstranit. */
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0;}
   /* Na mobilu se vejde jen jedno: výběr nahoře, pod ním přepínač a pod ním
      buď seznam, nebo mapa. Výchozí je SEZNAM — na úvodní stránce mají být

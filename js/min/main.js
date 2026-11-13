@@ -4066,6 +4066,9 @@
   if (akceHotovo) akceHotovo.addEventListener('click', function () {
     zavriPanely(null);
 
+    var pnl = document.querySelector('.map-controls-panel');
+    if (pnl) pnl.classList.remove('mc-hledani');
+
     var tab = document.querySelector('.mvt-btn[data-mv="seznam"]');
     if (tab && !tab.classList.contains('active')) tab.click();
     scrollNaVypis();
@@ -6054,6 +6057,13 @@
       else if (e.key === 'Escape') { e.preventDefault(); zavriNavrhy(); }
     });
     searchEl.addEventListener('blur', function () { setTimeout(zavriNavrhy, 120); });
+  }
+
+  var panelOvladani = document.querySelector('.map-controls-panel');
+  if (searchEl && panelOvladani && document.getElementById('mc-rada')) {
+    var otevriFiltry = function () { panelOvladani.classList.add('mc-hledani'); };
+    searchEl.addEventListener('focus', otevriFiltry);
+    searchEl.addEventListener('click', otevriFiltry);
   }
 
   var chipyEl = document.getElementById('ms-chipy');

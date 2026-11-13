@@ -87,11 +87,19 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
   await p.locator('.opp-item').first().waitFor({ state: 'visible', timeout: 20000 }).catch(() => {});
   await p.waitForTimeout(400);
 
-  /* 0: ŘÁDEK FILTRŮ JE VIDĚT HNED, NA VŠECH ŠÍŘKÁCH.
-     Takhle si to majitel nastavil a 13. 11. k tomu napsal „vrať to
-     tam, kde jsem to nastavil sám", když jsem pilulky zkusil schovat
-     za jeden otvírač. Kontrola tu proto stojí jako past: kdyby se
-     filtry zase octly za klepnutím, zčervená.
+  /* 0: NA TELEFONU JE ŘÁDEK FILTRŮ AŽ PO ROZKLIKNUTÍ HLEDÁNÍ,
+        NA MONITORU HNED.
+     Majitel 13. 11. večer zakroužkoval řádek pěti otvíračů na snímku
+     úvodu: „to v modrém tam nemá být, taky ukázat 3 900 pozemků tam
+     také nemá být. Člověk má vidět jen ty funkce dole, a když
+     rozklikne vyhledávání, bude tam prostě to původní řazení, kde
+     člověk vyklikával co chce."
+     Tahle kontrola tvrdila do té chvíle opak („vidět hned, na všech
+     šířkách") — zapsal jsem ji tak ráno téhož dne, kdy filtry za
+     jedním otvíračem odmítl. Teď hlídá obojí, každé na své šířce,
+     a pořád je to past: do 1040 px musí být řada v klidu schovaná
+     A PO KLEPNUTÍ DO HLEDÁNÍ se musí ukázat; od 1041 px stojí
+     v mřížce vedle hledání a je vidět pořád.
      PTÁ SE checkVisibility(), A STÁLO TO JEDNO SLEPÉ MĚŘENÍ. Prvek
      uvnitř zavřeného <details> hlásí v Chromu pořád poslední známý
      obdélník: naměřeno 13. 11. na 390 px, že pilulka „Druh nabídky"
@@ -106,12 +114,33 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
       && !document.querySelector('#mc-rada').checkVisibility(),
     lista: Math.round(document.querySelector('.map-controls-panel').getBoundingClientRect().height)
   }));
-  pravda(`${jmeno}: řádek filtrů je vidět hned, bez klepnutí (${stav0.pilulkyVidno})`,
-    !stav0.zaKlepnutim && stav0.pilulkyVidno >= NEJMIN_OTVIRACU,
-    `pilulek vidět ${stav0.pilulkyVidno}, schováno za klepnutím: ${stav0.zaKlepnutim}`);
+  const telefonniSirka = w <= 1040;
+  if (telefonniSirka) {
+    pravda(`${jmeno}: v klidu řádek filtrů vidět není (${stav0.pilulkyVidno})`,
+      stav0.zaKlepnutim && stav0.pilulkyVidno === 0,
+      `pilulek vidět ${stav0.pilulkyVidno}, schováno: ${stav0.zaKlepnutim}`);
+  } else {
+    pravda(`${jmeno}: řádek filtrů je vidět hned, bez klepnutí (${stav0.pilulkyVidno})`,
+      !stav0.zaKlepnutim && stav0.pilulkyVidno >= NEJMIN_OTVIRACU,
+      `pilulek vidět ${stav0.pilulkyVidno}, schováno za klepnutím: ${stav0.zaKlepnutim}`);
+  }
   pravda(`${jmeno}: lišta nad výpisem nenarostla (${stav0.lista} px)`,
     stav0.lista <= STROP_LISTY[w],
     `${stav0.lista} px proti meznímu ${STROP_LISTY[w]} px — o 52 px výš je řádek otvíračů navíc`);
+
+  /* A TEĎ SE HLEDÁNÍ ROZKLIKNE — tím se na telefonu filtry otevřou
+     a všechno dál (jména otvíračů, panely, dosah prstem) se měří na
+     nich. Na monitoru klepnutí nic nemění, řada je vidět tak jako tak,
+     takže se jede stejnou cestou na obou šířkách. */
+  await p.click('#map-search').catch(() => {});
+  await p.waitForTimeout(400);
+  if (telefonniSirka) {
+    const stav1 = await p.evaluate(() =>
+      [...document.querySelectorAll('#mc-rada > details.mf > summary')]
+        .filter((e) => e.checkVisibility()).length);
+    pravda(`${jmeno}: po klepnutí do hledání se filtry ukážou (${stav1})`,
+      stav1 >= NEJMIN_OTVIRACU, `pilulek vidět ${stav1}`);
+  }
 
   /* 1 + 2: co je vidět, aniž se na cokoli klepne */
   const pred = await p.evaluate(() => {

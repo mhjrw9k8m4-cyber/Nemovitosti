@@ -6720,6 +6720,10 @@
   }
   if (akceHotovo) akceHotovo.addEventListener('click', function () {
     zavriPanely(null);
+    /* A s panely se zavře i celá řada otvíračů: na telefonu je od
+       13. 11. vidět jen po rozkliknutí hledání (viz searchEl výš). */
+    var pnl = document.querySelector('.map-controls-panel');
+    if (pnl) pnl.classList.remove('mc-hledani');
     /* Přepnout na seznam, ne jen sjet: kdo filtruje, chce vidět nabídky.
        Když už je seznam zapnutý, klepnutí nic nezkazí. */
     var tab = document.querySelector('.mvt-btn[data-mv="seznam"]');
@@ -10144,6 +10148,23 @@
       else if (e.key === 'Escape') { e.preventDefault(); zavriNavrhy(); }
     });
     searchEl.addEventListener('blur', function () { setTimeout(zavriNavrhy, 120); });
+  }
+  /* FILTRY SE OTEVŘOU KLEPNUTÍM DO HLEDÁNÍ (13. 11.).
+     Majitel zakroužkoval řádek pěti otvíračů nad výpisem: „to v modrém
+     tam nemá být, taky ukázat 3 900 pozemků tam také nemá být. Člověk
+     má vidět jen ty funkce dole, a když rozklikne vyhledávání, bude
+     tam prostě to původní řazení, kde člověk vyklikával co chce."
+     Třída na panelu je jediné, co se tu drží; co je vidět, rozhoduje
+     stylopis (css/styles.css, blok do 1040 px). Zpátky se zavře
+     tlačítkem „Zobrazit N nemovitostí", které s filtry přijde — a
+     které se mimo tenhle stav nikde neukazuje.
+     JEN KDYŽ TU FILTRY JSOU. Na mapové stránce ani v hlídání tenhle
+     panel není, a `if` to ošetří bez další větve. */
+  var panelOvladani = document.querySelector('.map-controls-panel');
+  if (searchEl && panelOvladani && document.getElementById('mc-rada')) {
+    var otevriFiltry = function () { panelOvladani.classList.add('mc-hledani'); };
+    searchEl.addEventListener('focus', otevriFiltry);
+    searchEl.addEventListener('click', otevriFiltry);
   }
   /* Odznaky toho, co se z věty vzalo. Zrušení odznaku znamená vyškrtnout
      ta slova z políčka — jinak by se filtr vrátil při dalším úhozu. */

@@ -97,6 +97,14 @@ pravda(`výpis se vykreslil a něco ukazuje (${pocetStart})`, /\d/.test(pocetSta
 /* Druh nabídky má od 10. 11. svůj otvírač (tlačítko „Filtry"
    i rozbalování hledání jsou pryč — schovávalo to filtry, viz
    scripts/test-filtry-radek.mjs). */
+/* NEJDŘÍV ROZKLIKNOUT HLEDÁNÍ. Od 13. 11. večer je řada otvíračů na
+   telefonu v klidu schovaná a otevře ji klepnutí do pole hledání
+   (majitel: „to v modrém tam nemá být … a když rozklikne vyhledávání,
+   bude tam to původní řazení"). Bez toho nemá klepnutí na otvírač kam
+   dopadnout a zkouška padne na třicetivteřinovém čekání. Na monitoru
+   klepnutí nic nemění, řada je vidět tak jako tak. */
+await p.locator('#map-search').click().catch(() => {});
+await p.waitForTimeout(350);
 await p.locator('#mf-druh summary').click();
 await p.waitForTimeout(500);
 const chip = p.locator('#map-filters [data-type]').nth(1);
@@ -169,6 +177,11 @@ pravda('a v adrese po filtru nic nezbylo', !/[?&#]t=/.test(hashPoZpet), 'hash: '
   await p.waitForTimeout(900);
   const pocetA = await pocetZ();
   await p.evaluate(() => history.replaceState(history.state, '', location.pathname + location.search));
+  /* Zase nejdřív rozkliknout hledání — viz poznámka u prvního klepnutí
+     na otvírač výš. Stránka se mezitím načetla znovu, takže je řada
+     zase schovaná. */
+  await p.locator('#map-search').click().catch(() => {});
+  await p.waitForTimeout(350);
   await p.locator('#mf-druh summary').click();
   await p.waitForTimeout(400);
   const chip2 = p.locator('#map-filters [data-type]').nth(1);

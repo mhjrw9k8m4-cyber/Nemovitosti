@@ -2295,12 +2295,19 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     const merit = new Function('return (' + kod + ')()');
     const rada = document.getElementById('mc-rada');
     if (!rada) return { chyba: 'řádek filtrů se nenašel' };
-    /* ŘÁDEK FILTRŮ JE VIDĚT ROVNOU, takže se do něj dá sabotovat bez
-       příprav. 13. 11. tu na půl dne stálo otevírání obalu #mf-vse:
-       zkusil jsem pilulky schovat za jeden otvírač a sabotáž tím
-       přestala kousat, protože do zavřeného <details> nevidí ani
-       prohlížeč. Majitel řekl „vrať to tam, kde jsem to nastavil
-       sám", obal je pryč a s ním i tahle příprava. */
+    /* NEJDŘÍV ROZKLIKNOUT HLEDÁNÍ. Od 13. 11. večer je řada otvíračů
+       na telefonu v klidu schovaná (majitel: „to v modrém tam nemá
+       být … a když rozklikne vyhledávání, bude tam to původní
+       řazení"), takže do ní sabotáž nemá co vložit — bez tohohle
+       kroku vyšlo `pri: 0` a kontrola by se sama odkývala.
+       Třída je táž, jakou navěsí js/main.js při klepnutí do pole
+       hledání; zkouška si tedy nevyrábí stav, který by člověk neuměl
+       vyrobit taky.
+       (Ráno 13. 11. tu stálo otevírání obalu #mf-vse — jiný pokus
+       o totéž, který majitel zamítl. Obal je pryč, tahle cesta je
+       jeho vlastní.) */
+    const pnl = document.querySelector('.map-controls-panel');
+    if (pnl) pnl.classList.add('mc-hledani');
     const pred = merit().length;
     const z = document.createElement('span');
     z.id = 'sabot-pretok';

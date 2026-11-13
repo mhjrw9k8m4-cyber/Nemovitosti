@@ -68,6 +68,16 @@ export async function otevriPanel(p, cekani = 300) {
         + 'overflow:visible !important;}';
       document.head.appendChild(st);
     }
+    /* ŘADA FILTRŮ JE OD 13. 11. NA TELEFONU ZA ROZKLIKNUTÝM HLEDÁNÍM.
+       Majitel ji nechal z úvodu odstranit („to v modrém tam nemá být
+       … a když rozklikne vyhledávání, bude tam to původní řazení").
+       Panel skupiny je uvnitř té řady, takže dokud je řada schovaná,
+       nemá klepnutí kam dopadnout a Playwright čeká 30 s. Třída je
+       přesně to, co na ni navěsí js/main.js při klepnutí do pole
+       hledání — zkouška si tedy nevyrábí stav, který by člověk neuměl
+       vyrobit taky. Na monitoru od 1041 px je bez účinku. */
+    var pnl = document.querySelector('.map-controls-panel');
+    if (pnl) pnl.classList.add('mc-hledani');
     var d = document.querySelectorAll('details.mf');
     d.forEach(function (x) { x.open = true; });
     return d.length;
@@ -103,6 +113,16 @@ export async function otevriSkupinu(p, sel, cekani = 300) {
         + 'overflow:visible !important;}';
       document.head.appendChild(st);
     }
+    /* ŘADA FILTRŮ JE OD 13. 11. NA TELEFONU ZA ROZKLIKNUTÝM HLEDÁNÍM.
+       Majitel ji nechal z úvodu odstranit („to v modrém tam nemá být
+       … a když rozklikne vyhledávání, bude tam to původní řazení").
+       Panel skupiny je uvnitř té řady, takže dokud je řada schovaná,
+       nemá klepnutí kam dopadnout a Playwright čeká 30 s. Třída je
+       přesně to, co na ni navěsí js/main.js při klepnutí do pole
+       hledání — zkouška si tedy nevyrábí stav, který by člověk neuměl
+       vyrobit taky. Na monitoru od 1041 px je bez účinku. */
+    var pnl = document.querySelector('.map-controls-panel');
+    if (pnl) pnl.classList.add('mc-hledani');
     const el = document.querySelector(kam);
     const skupina = el && el.closest ? el.closest('details.mf') : null;
     document.querySelectorAll('details.mf').forEach(function (x) {

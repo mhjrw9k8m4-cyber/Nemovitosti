@@ -427,7 +427,21 @@ try {
              právě to je způsob, jakým by se dala hlavní funkce zase
              schovat za klepnutí. Že se v těch dvou stavech lišta
              opravdu vrací, měří test-filtry-radek. */
-          && e.id !== 'mcf-hotovo')
+          && e.id !== 'mcf-hotovo'
+          /* A ŘÁDEK FILTRŮ, OD 13. 11. VEČER. Majitel ho na snímku
+             úvodu zakroužkoval: „to v modrém tam nemá být … a když
+             rozklikne vyhledávání, bude tam prostě to původní řazení,
+             kde člověk vyklikával co chce." Je to tedy ROZHODNUTÍ, ne
+             vada — pět otvíračů v klidu nad výpisem nestojí a otevře
+             je klepnutí do hledání. První nabídka tím spadla z 688 na
+             455 px.
+             Výjimka je jmenovitá a úzká (jen `#mc-rada`), ne obecné
+             povolení pro `display:none`: tím by se tahle kontrola
+             vykuchala, protože právě skrytí stylopisem je způsob,
+             jakým by se hlavní funkce dala schovat za klepnutí
+             potichu. Že se řada po klepnutí do hledání opravdu
+             otevře, měří scripts/test-filtry-radek.mjs. */
+          && !e.closest('#mc-rada'))
         .filter((e) => { const r = e.getBoundingClientRect();
           return r.width < 2 || r.height < 2; }).length,
     };
