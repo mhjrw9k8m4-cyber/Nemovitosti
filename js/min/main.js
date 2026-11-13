@@ -4788,8 +4788,8 @@
 
     if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-nastroj" id="mc-prosle">' +
       ikonaNastroje('prosle') +
-      (ukazProsle ? 'Schovat dražby po termínu'
-                  : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
+      (ukazProsle ? 'Schovat po termínu'
+                  : 'Po termínu (' + proslychStranou + ')') + '</button>';
 
     var podobnychStranou = 0;
     var _pnNazev = (!mistoFiltr && !ukazPodobne) ? presnyNazev() : null;
