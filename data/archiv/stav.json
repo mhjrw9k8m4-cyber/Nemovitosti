@@ -39132,16 +39132,6 @@
    "dr": "trvalý travní porost",
    "t": "drazba"
   },
-  "Dolní Nivy|2340|Sokolov|50.230|12.591#1rrj3a0": {
-   "od": "2026-11-13",
-   "videno": "2026-11-13",
-   "c": 186830,
-   "v": 1099,
-   "m": "Dolní Nivy",
-   "o": "Sokolov",
-   "dr": "ostatní plocha",
-   "t": "drazba"
-  },
   "Seninka|1236|Vsetín|49.273|17.967#1ene8ys": {
    "od": "2026-11-11",
    "videno": "2026-11-13",
@@ -39450,16 +39440,6 @@
    "m": "Brno",
    "o": "Brno-město",
    "dr": "zastavěná plocha a nádvoří",
-   "t": "drazba"
-  },
-  "Perštejn|95/1|Chomutov|50.400|13.069#1rrj3a1": {
-   "od": "2026-11-13",
-   "videno": "2026-11-13",
-   "c": 1385100,
-   "v": 100,
-   "m": "Perštejn",
-   "o": "Chomutov",
-   "dr": "trvalý travní porost",
    "t": "drazba"
   },
   "Dolní Hořice|—|Tábor|49.436|14.854#1mli9u1": {
@@ -39921,6 +39901,26 @@
    "o": "Svitavy",
    "dr": "orná půda",
    "t": "exekuce"
+  },
+  "Dolní Nivy|2340|Sokolov|50.242|12.636#1rrj3a0": {
+   "od": "2026-11-13",
+   "videno": "2026-11-13",
+   "c": 186830,
+   "v": 1099,
+   "m": "Dolní Nivy",
+   "o": "Sokolov",
+   "dr": "ostatní plocha",
+   "t": "drazba"
+  },
+  "Vykmanov u Měděnce|—|Chomutov|50.396|13.047#1rrj3a1": {
+   "od": "2026-11-13",
+   "videno": "2026-11-13",
+   "c": 1385100,
+   "v": 100,
+   "m": "Perštejn",
+   "o": "Chomutov",
+   "dr": "trvalý travní porost",
+   "t": "drazba"
   }
  }
 }
