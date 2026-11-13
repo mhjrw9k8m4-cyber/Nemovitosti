@@ -1097,7 +1097,6 @@ body>footer{flex:none}
 .mo-k .mo-kde{display:block;font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;opacity:0.75;margin-top:2px}
 .mo-rozdil.mo-pochybna b,.pz-odhad .mo-rozdil.mo-pochybna b{color:var(--c-exekuce-ink)}
 .mo-rozdil.mo-pochybna{color:var(--text-ondeep-mute)}
-
 .mcn-ic{flex:none;display:flex;align-items:center;justify-content:center;color:var(--plocha-znacka)}
 .mcn-ic svg{width:var(--ik-xs);height:var(--ik-xs);fill:none;stroke:currentColor;stroke-width:var(--ik-xs-tah);stroke-linecap:round;stroke-linejoin:round}
 

@@ -28,7 +28,7 @@ import { rozbalHledani } from './rozbal-hledani.mjs';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { naSeznam, otevriNastroje } from './zkouska-pohled.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs.
    Tahle zkouška otevírá stránku na 23 místech, některá v cyklu přes
    třináct šířek, takže se pevné čekání po goto platilo desítky krát. */
@@ -216,9 +216,6 @@ async function otevri(soubor, sirka, vyska) {
      zkouška měří, žije ve VÝPISU — tohle přepnutí je proto pojistka, ne
      reakce na jednu konkrétní podobu webu. */
   await naSeznam(p);
-  /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
-     otevření na ně klepnutí nedosáhne. */
-  await otevriNastroje(p);
   return { ctx, p };
 }
 
@@ -1546,9 +1543,6 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
   await p.waitForTimeout(3600);
   // Nářadí výpisu („Dražby po termínu") je v mapovém pohledu skryté.
   await naSeznam(p);
-  /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
-     otevření na ně klepnutí nedosáhne. */
-  await otevriNastroje(p);
   const cti = () => p.evaluate(() => ({
     obce: [...document.querySelectorAll('.opp-item')].map((e) => (e.querySelector('.opp-place') || e).textContent.trim().slice(0, 30)),
     karet: document.querySelectorAll('.opp-item').length,
@@ -1866,9 +1860,6 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       await po.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
       // Odznaky jsou na kartách VÝPISU; v mapovém pohledu mají nulové rozměry.
       await naSeznam(po);
-      /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
-         otevření na ně klepnutí nedosáhne. */
-      await otevriNastroje(po);
       await po.waitForSelector('.opp-item .opp-badge', { timeout: 20000 }).catch(() => {});
       await po.waitForTimeout(500);
       const v = await po.evaluate(() => {
