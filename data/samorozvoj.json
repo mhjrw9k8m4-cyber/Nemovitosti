@@ -44,6 +44,11 @@
    "prokazanych": 19,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-13": {
+   "prokazanych": 19,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1272,7 +1277,7 @@
    "poznamka": ""
   },
   "test-karta-nabidky.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-13",
    "hlidá": 0,
    "chytila": 0,
    "nechytila": 0,
@@ -1282,7 +1287,7 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "419240244a6e",
+   "otisk": "73c8f9ef3af8",
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-karta-vede-spravne.mjs": {
@@ -1702,15 +1707,78 @@
    "pomucky": [],
    "otisk": "ab4f43e54478",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-filtry-radek.mjs": {
+   "kdy": "2026-11-13",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "7091c371d352",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-geokoder-pamet.mjs": {
+   "kdy": "2026-11-13",
+   "hlidá": 2,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/fetch-opportunities.mjs",
+    "obrácené porovnání (<= na <) v scripts/fetch-opportunities.mjs",
+    "obrácená rovnost (=== na !==) v scripts/fetch-opportunities.mjs",
+    "zahozená pojistka (if … continue) v scripts/fetch-opportunities.mjs",
+    "zahozený filter(Boolean) v scripts/fetch-opportunities.mjs",
+    "a místo nebo (&& na ||) v scripts/fetch-opportunities.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "750a6c860cc2",
+   "poznamka": ""
+  },
+  "test-hledani-v-liste.mjs": {
+   "kdy": "2026-11-13",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "a0be77a3d800",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-maska.mjs": {
+   "kdy": "2026-11-13",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "3338c53ba92a",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   }
  },
- "updated": "2026-11-12",
+ "updated": "2026-11-13",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "311 z 337 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "312 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
@@ -1841,7 +1909,8 @@
      "test-hlidac-zdroju.mjs",
      "test-hlidka-zdroju.mjs",
      "test-kategorie.mjs",
-     "test-bezrealitky.mjs"
+     "test-bezrealitky.mjs",
+     "test-geokoder-pamet.mjs"
     ],
     "hlidacu": 31
    },
@@ -1854,7 +1923,8 @@
      "test-hlidac-zdroju.mjs",
      "test-hlidka-zdroju.mjs",
      "test-kategorie.mjs",
-     "test-bezrealitky.mjs"
+     "test-bezrealitky.mjs",
+     "test-geokoder-pamet.mjs"
     ],
     "hlidacu": 31
    },
@@ -1867,7 +1937,8 @@
      "test-hlidac-zdroju.mjs",
      "test-hlidka-zdroju.mjs",
      "test-kategorie.mjs",
-     "test-bezrealitky.mjs"
+     "test-bezrealitky.mjs",
+     "test-geokoder-pamet.mjs"
     ],
     "hlidacu": 31
    },
@@ -1878,7 +1949,8 @@
      "test-drazby-cevd.mjs",
      "test-dvojnici.mjs",
      "test-hlidac-zdroju.mjs",
-     "test-bezrealitky.mjs"
+     "test-bezrealitky.mjs",
+     "test-geokoder-pamet.mjs"
     ],
     "hlidacu": 31
    },
@@ -1889,7 +1961,8 @@
      "test-drazby-cevd.mjs",
      "test-dvojnici.mjs",
      "test-hlidac-zdroju.mjs",
-     "test-bezrealitky.mjs"
+     "test-bezrealitky.mjs",
+     "test-geokoder-pamet.mjs"
     ],
     "hlidacu": 31
    },
@@ -1900,7 +1973,8 @@
      "test-drazby-cevd.mjs",
      "test-dvojnici.mjs",
      "test-hlidac-zdroju.mjs",
-     "test-bezrealitky.mjs"
+     "test-bezrealitky.mjs",
+     "test-geokoder-pamet.mjs"
     ],
     "hlidacu": 31
    }
