@@ -610,7 +610,7 @@ body>footer{flex:none}
 .mo-rozdil b{color:#9ADDB8;font-weight:700}
 .mo-pozn{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--text-ondeep-mute)}
 .mo-pozn b{color:var(--text-ondeep)}
-.pz-odhad{border-color:var(--line-strong);background:#fff;border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.pz-odhad{border-color:var(--line);background:#fff;border-radius:var(--r-plocha);box-shadow:var(--e1)}
 .pz-odhad .mo-radek{color:var(--muted)}
 .pz-odhad .mo-radek.mo-hlavni{border-top-color:var(--line-strong)}
 .pz-odhad .mo-radek.mo-hlavni .mo-k,.pz-odhad .mo-radek.mo-hlavni .mo-v{color:var(--text)}

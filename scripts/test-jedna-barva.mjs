@@ -14,9 +14,22 @@
 // Pravidlo je od té doby v js/main.js (funkce jednaBarva): barvu si
 // nechá jediný odznak s nejvyšším nárokem, ostatní dostanou .opp-tich.
 //
+// MĚŘÍ SE BARVA PÍSMA, NE PODKLAD — ZMĚNĚNO 13. 11. A JE TO OPRAVA
+// ZKOUŠKY, NE ZMĚKČENÍ MEZE. Do 12. 11. byly odznaky PILULKY a hlasitost
+// nesl podklad; tou přestavbou karty podle předlohy se z nich stal
+// prostý text (`.opp-chips > *{padding:0; border:0; background:none}`),
+// takže podklad nemá žádný z nich. Zkouška proto od té doby četla
+// u všech `rgba(0, 0, 0, 0)` a hlásila dvě chyby najednou: „tichá
+// plocha se nedá přečíst" a „ztichlo úplně všechno" — obojí nepravdivě.
+// Naměřeno 13. 11. na 24 kartách a 31 odznacích: tichá barva písma je
+// rgb(58, 64, 61) (--popisek), nese ji 9 odznaků, zbylých 22 má čtyři
+// hlasité barvy — a ANI JEDNA karta nemá dvě hlasité. Pravidlo tedy
+// platí dál, jen se jmenuje barva písma. Mez se nesnížila: pořád se
+// ptáme na „nejvýš jedna hlasitá v řadě" i na „nějaká barva zbyla".
+//
 // CO SE TU MĚŘÍ A PROČ ZROVNA TAKHLE. Ne přítomnost třídy .opp-tich —
-// ta sama o sobě nic neznamená. Měří se VYPOČTENÁ barva podkladu
-// každého odznaku, tedy to, co člověk opravdu uvidí. Tenhle rozdíl
+// ta sama o sobě nic neznamená. Měří se VYPOČTENÁ barva, kterou odznak
+// opravdu dostal, tedy to, co člověk uvidí. Tenhle rozdíl
 // není teoretický: pravidlo .opp-chips > .opp-tich napoprvé stálo ve
 // stylopisu NAD .opp-cd.soon, mělo stejnou váhu (0,2,0) — a prohrálo.
 // Sedm odznaků mělo třídu .opp-tich a přesto zůstalo měděných. Zkouška,
@@ -62,8 +75,9 @@ const v = await p.evaluate(() => {
   if (rada) {
     const vzorek = document.createElement('span');
     vzorek.className = 'opp-tich';
+    vzorek.textContent = '\u00A0';
     rada.appendChild(vzorek);
-    ticho = getComputedStyle(vzorek).backgroundColor;
+    ticho = getComputedStyle(vzorek).color;
     vzorek.remove();
   }
   const hrisnici = []; let karet = 0, barevnych = 0, odznaku = 0;
@@ -77,7 +91,7 @@ const v = await p.evaluate(() => {
       odznaku++;
       const c = getComputedStyle(e);
       tvary.add(c.fontSize + '/' + c.fontWeight + '/' + c.paddingTop + ' ' + c.paddingLeft + '/' + c.borderRadius);
-      if (c.backgroundColor !== ticho) { n++; jmena.push(e.textContent.trim()); }
+      if (c.color !== ticho) { n++; jmena.push(e.textContent.trim() + ' [' + c.color + ']'); }
     }
     barevnych += n;
     if (n > 1) hrisnici.push(jmena.join(' + '));
@@ -89,9 +103,9 @@ await prohlizec.close();
 pravda(`vzorek je dost velký (${v.karet} karet, ${v.odznaku} odznaků)`,
   v.karet >= 10 && v.odznaku >= 15,
   `karet ${v.karet}, odznaků ${v.odznaku} — na tomhle se nedá nic tvrdit`);
-pravda('tichá plocha se dá z odznaku přečíst',
+pravda('tichá barva se dá z odznaku přečíst',
   !!v.ticho && v.ticho !== 'rgba(0, 0, 0, 0)',
-  `.opp-tich nemá žádný podklad (${v.ticho}) — pravidlo ve stylopisu asi zmizelo`);
+  `.opp-tich nemá žádnou vlastní barvu (${v.ticho}) — pravidlo ve stylopisu asi zmizelo`);
 pravda(`žádná karta nemá dva barevné odznaky (${v.hrisnici.length} z ${v.karet})`,
   v.hrisnici.length === 0,
   v.hrisnici.slice(0, 6).join('\n      '));

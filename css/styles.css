@@ -9863,7 +9863,14 @@ body > footer{flex:none;}
 /* Karta s odhadem byla béžová na béžové — změřeno 1,02 : 1, tedy prakticky
    neviditelná; držel ji jen tenký rámeček. Bílá na béžové je ten rozdíl,
    po kterém se karta začne chovat jako karta. */
-.pz-odhad{border-color:var(--line-strong); background:#fff; border-radius:var(--r-plocha); box-shadow:var(--e1);}
+/* RÁM JE --line JAKO U VŠECH OSTATNÍCH DESEK (13. 11.).
+   Karta s odhadem byla jediná ze čtyřiadvaceti, která měla rám
+   --line-strong (0,28) místo --line (0,14) — našel to
+   scripts/test-deska.mjs („rám desky má jednu sílu") a na stránce
+   pozemku to bylo vidět: obtažená dvakrát silněji než karta nabídky
+   kousek od ní. --line-strong je na OVLADAČE, které musí mít proti
+   ploše 3:1 (hlídá test-okraje); odhad ovladač není, je to deska. */
+.pz-odhad{border-color:var(--line); background:#fff; border-radius:var(--r-plocha); box-shadow:var(--e1);}
 .pz-odhad .mo-radek{color:var(--muted);}
 .pz-odhad .mo-radek.mo-hlavni{border-top-color:var(--line-strong);}
 .pz-odhad .mo-radek.mo-hlavni .mo-k, .pz-odhad .mo-radek.mo-hlavni .mo-v{color:var(--text);}
