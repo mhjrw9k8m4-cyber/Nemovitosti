@@ -798,20 +798,23 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
       JSON.stringify(v));
     pravda(`${jm}: a po jeho stisku zaměření nespadne na body (${v.poZruseni})`,
       v.poZruseni !== 'body', JSON.stringify(v));
-    /* SABOTÁŽ TU DO 12. 11. PROKAZOVALA ŽIVOST A DNES UŽ NEMŮŽE.
-       Stavěla na tom, že lišta akcí po stisku na telefonu MIZÍ: bez
-       `tabindex` na hlavičce výpisu tedy zaměření nemělo kam padnout
-       než na body. Majitel to mizení odpoledne zrušil („vrať to jak
-       to bylo původně"), takže po stisku zůstane vedle soused
-       (#mcf-hotovo) a zaměření drží i bez náhradníka — na telefonu
-       stejně jako na monitoru.
-       Kontrola proto na obou šířkách měří totéž a říká pravdu: i bez
-       náhradníka zaměření nespadne na body, protože lišta zůstává.
-       Náhradník (`tabindex="-1"` na #map-count) se tím nestal
-       zbytečným — platí dál pro případ, kdy je soused vypnutý nebo
-       skrytý, což je stav, který JS umí vyrobit. */
-    {
-      pravda(`${jm}: lišta po stisku zůstává, takže zaměření drží i bez náhradníka (${v.sabotKdo})`,
+    /* SABOTÁŽ ZASE PROKAZUJE ŽIVOST — NA TELEFONU (13. 11.).
+       Na telefonu lišta akcí po stisku „Zobrazit N" MIZÍ: panel se
+       zavře, stránka je v klidovém stavu a tam lišta není (majitel
+       13. 11.: „jen to řazení s ty funkce, nic víc"). Bez `tabindex`
+       na hlavičce výpisu tedy zaměření nemá kam jít a MUSÍ spadnout
+       na body — tím je vidět, že mez výš měří živou vlastnost, a ne
+       že by na body nespadlo samo.
+       Mezi 12. a 13. 11. to tu bylo obráceně („lišta zůstává, tedy
+       nespadne"), protože mizení bylo na jeden den zrušeno. Teď
+       platí zase původní znění, jen rozlišené podle šířky:
+       na monitoru od 1041 px lišta stojí v mřížce vedle filtrů,
+       nemizí, a zaměření tam drží i bez náhradníka. */
+    if (telefon) {
+      pravda(`${jm}: bez náhradníka zaměření spadne na body — mez výš tedy měří živou věc (${v.sabotKdo})`,
+        v.sabotKdo === 'body', JSON.stringify(v));
+    } else {
+      pravda(`${jm}: lišta na monitoru zůstává, takže zaměření drží i bez náhradníka (${v.sabotKdo})`,
         v.sabotKdo !== 'body', JSON.stringify(v));
     }
     await ctx.close();

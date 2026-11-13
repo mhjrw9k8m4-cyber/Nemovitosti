@@ -343,10 +343,34 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
       return out;
     });
     const jm = telefon ? `telefon ${sirka}` : `stolní ${sirka}`;
-    pravda(`${jm}: lišta akcí je vidět ve všech třech stavech`,
-      v.klid > 40 && v.panel > 40 && v.filtr > 40, JSON.stringify(v));
-    pravda(`${jm}: a „Zobrazit N" v ní zůstává taky`,
-      v.klidHotovo > 40 && v.panelHotovo > 40 && v.filtrHotovo > 40, JSON.stringify(v));
+    /* LIŠTA MÁ NA TELEFONU TŘI STAVY, NA MONITORU JEDEN (13. 11.).
+       Majitel nad snímkem pruhu nad výpisem: „uprav to už jak to bylo
+       předtím, prostě jen to řazení s ty funkce, nic víc nedělej."
+       Zelené „Zobrazit N nemovitostí" tam není ani řazení, ani funkce
+       k výpisu — je to potvrzení panelu filtrů a opakuje týž počet,
+       jaký o kus níž nese hlavička výpisu. Na telefonu je tedy
+       v klidu pryč; naměřeno 390 px: první nabídka 688 → 563 px.
+       Tahle kontrola tvrdila od 12. 11. opak („vidět ve všech třech
+       stavech") — zapsal jsem ji tak, když majitel nechal celou tu
+       oblast vrátit do původního stavu. Měří se zase tři stavy:
+         klid    → lišta ani „Zobrazit N" (jen na telefonu),
+         panel   → obojí (potvrzení volby nad přilepeným panelem),
+         filtr   → lišta ano, „Zobrazit N" ne, „Zrušit filtry" ano.
+       Na monitoru od 1041 px lišta stojí v mřížce vedle filtrů, ne
+       jako vlastní řádek nad výpisem, takže zůstává ve všech stavech. */
+    if (telefon) {
+      pravda(`${jm}: v klidu lišta akcí není`,
+        v.klid <= 1 && v.klidHotovo <= 1, JSON.stringify(v));
+      pravda(`${jm}: v otevřeném panelu je i se „Zobrazit N"`,
+        v.panel > 40 && v.panelHotovo > 40, JSON.stringify(v));
+      pravda(`${jm}: se zapnutým filtrem zbude lišta bez „Zobrazit N"`,
+        v.filtr > 40 && v.filtrHotovo <= 1, JSON.stringify(v));
+    } else {
+      pravda(`${jm}: lišta akcí je vidět ve všech třech stavech`,
+        v.klid > 40 && v.panel > 40 && v.filtr > 40, JSON.stringify(v));
+      pravda(`${jm}: a „Zobrazit N" v ní zůstává taky`,
+        v.klidHotovo > 40 && v.panelHotovo > 40 && v.filtrHotovo > 40, JSON.stringify(v));
+    }
     /* „Zrušit filtry" se zapnutým filtrem je stav, který jinde vidět
        není — ten se hlídá dál, ať je lišta schovaná, nebo ne. */
     pravda(`${jm}: se zapnutým filtrem je v liště „Zrušit filtry"`,

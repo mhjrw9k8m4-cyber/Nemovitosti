@@ -1099,7 +1099,9 @@ to{opacity:1;transform:none}
 .mv-toggle .mvt-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .mv-toggle .mvt-btn svg{width:var(--ik-xs);height:var(--ik-xs);stroke-width:var(--ik-xs-tah);fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .mvt-n{font-size:12px;opacity:0.8}
-@media (max-width:1040px){.map-app{display:flex;flex-direction:column;grid-template-columns:1fr;height:auto;gap:0}
+@media (max-width:1040px){.map-controls-panel:not(:has(details.mf[open])) .mcf-akce:not(:has(.mcf-zrusit:not([hidden]))){display:none}
+.map-controls-panel:not(:has(details.mf[open])) .mcf-hotovo{display:none}
+.map-app{display:flex;flex-direction:column;grid-template-columns:1fr;height:auto;gap:0}
 .hero-map .map-wide{margin-top:0}
 .map-controls-panel{order:0;border-right:0;border-bottom:0;background-color:var(--plocha-karta)}
 .map-app{border-top:0}

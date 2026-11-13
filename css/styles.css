@@ -5656,6 +5656,37 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 .mv-toggle .mvt-btn svg{width:var(--ik-xs); height:var(--ik-xs); stroke-width:var(--ik-xs-tah); fill:none; stroke:currentColor;  stroke-linecap:round; stroke-linejoin:round;}
 .mvt-n{font-size:12px; opacity:0.8;}
 @media (max-width:1040px){
+  /* V KLIDU TAM „ZOBRAZIT N NEMOVITOSTÍ" NENÍ (13. 11.).
+     ====================================================================
+     Majitel poslal snímek pruhu nad výpisem: „uprav to už jak to bylo
+     předtím, prostě jen to řazení s ty funkce, nic víc nedělej."
+     V tom pruhu stojí řazení a nástroje k výpisu (Procházet po jednom,
+     Uložené, Porovnat, Zobrazit skryté, Stáhnout výběr) — a mezi nimi
+     plná zelená plocha přes celou šířku, která není ani jedno. Je to
+     potvrzovací tlačítko panelu filtrů a opakuje TÝŽ POČET, jaký o kus
+     níž nese hlavička výpisu („3 992 na mapě"); na snímku jsou obě
+     čísla vidět naráz.
+     Pravidlo tu jednou bylo (12. 11.) a zmizelo 12. 11. večer, když
+     majitel nechal celou tu oblast vrátit do původního stavu —
+     v balíku s věcmi, o které mu tehdy šlo. Tohle z toho balíku vrací
+     zpátky, a jen tohle.
+     ZŮSTÁVÁ VE DVOU STAVECH, a v obou nese informaci, která jinde
+     není vidět:
+       1. otevřený panel skupiny — tam je to potvrzení volby a lišta
+          se navíc přilepí ke spodní hraně obrazovky;
+       2. zapnutý filtr — pak v liště svítí „Zrušit filtry"
+          (#mcf-zrusit odkládá `hidden` JS podle jeNecoZapnute())
+          a odznak s počtem zapnutých filtrů.
+     Na monitoru od 1041 px lišta zůstává vždy: tam stojí v mřížce
+     vedle filtrů, ne jako vlastní řádek nad výpisem. */
+  .map-controls-panel:not(:has(details.mf[open]))
+    .mcf-akce:not(:has(.mcf-zrusit:not([hidden]))){display:none;}
+  /* A SE ZAPNUTÝM FILTREM ZBYDE JEN „ZRUŠIT FILTRY": lišta se vrátit
+     musí (nese odznak s počtem a jediné tlačítko, kterým se filtry
+     zruší), ale „Zobrazit N" v ní pořád opakuje počet z hlavičky
+     výpisu — a nemá co zobrazovat, protože zapnutý filtr se na výpisu
+     projevil hned. */
+  .map-controls-panel:not(:has(details.mf[open])) .mcf-hotovo{display:none;}
   .map-app{display:flex; flex-direction:column; grid-template-columns:1fr; height:auto; gap:0;}
   /* Na mobilu se vejde jen jedno: výběr nahoře, pod ním přepínač a pod ním
      buď seznam, nebo mapa. Výchozí je SEZNAM — na úvodní stránce mají být
