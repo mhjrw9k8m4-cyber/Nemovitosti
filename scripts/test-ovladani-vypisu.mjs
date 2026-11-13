@@ -82,6 +82,35 @@ try {
     await p.waitForSelector('#mc-vyvoz', { timeout: 25000 }).catch(() => {});
     await p.waitForTimeout(1200);
 
+    /* 0: NÁŘADÍ JE NA TELEFONU POD JEDNÍM NÁPISEM (13. 11.).
+       Majitel: „ale aj potřebuju, aby jsi to nějak upravil, je to
+       přehlcené." Sedm tlačítek v pěti řádcích je teď pod otvíračem
+       „Další akce" (<details id="mn-vse">); nad výpisem zůstalo jen
+       řazení a počet. První nabídka tím vyšla na 584 px místo 636.
+       Měří se DVOUFÁZOVĚ, a má to důvod: prvek v zavřeném <details>
+       hlásí v Chromu pořád poslední známý obdélník (naměřeno 13. 11.
+       na filtrech: 110×44 na y=285 zavřeno i otevřeno), takže
+       kontroly níž by bez otevření měřily duchy. Tady se změří
+       zavřený stav, pak se otvírač otevře jako prstem a zbytek
+       hlídače měří skutečné krabice. */
+    const nar0 = await p.evaluate(() => {
+      const o = document.getElementById('mn-vse');
+      const s = o ? o.querySelector('summary') : null;
+      const sr = s ? s.getBoundingClientRect() : null;
+      return { obalJe: !!o, otevreny: !!(o && o.open),
+        otviracVidno: !!(s && s.checkVisibility()),
+        otviracVyska: sr ? Math.round(sr.height) : 0,
+        nastrojuVidno: [...document.querySelectorAll('.mc-nastroj, #map-fav')]
+          .filter((e) => e.checkVisibility()).length };
+    });
+    pravda(`${sirka} px: nářadí je po načtení schované pod „Další akce"`,
+      nar0.obalJe && !nar0.otevreny && nar0.otviracVidno && nar0.nastrojuVidno === 0,
+      JSON.stringify(nar0));
+    pravda(`${sirka} px: a ten nápis unese prst (${nar0.otviracVyska} px)`,
+      nar0.otviracVyska >= 44, `${nar0.otviracVyska} px`);
+    await p.locator('#mn-vse > summary').click().catch(() => {});
+    await p.waitForTimeout(400);
+
     const v = await p.evaluate(() => {
       const mer = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); const cs = getComputedStyle(e);
         return { w: Math.round(r.width), h: Math.round(r.height), r: cs.borderTopLeftRadius,

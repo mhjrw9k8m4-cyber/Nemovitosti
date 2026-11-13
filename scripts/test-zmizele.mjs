@@ -108,9 +108,17 @@ async function vUlozenych(nastav) {
   p.on('request', (r) => { if (/zmizele\.json/.test(r.url())) stazeno.push(1); });
   p.on('pageerror', (e) => chybyJs.push(String(e).slice(0, 120)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-  await p.waitForSelector('#map-fav', { timeout: 15000 });
-  const { naSeznam } = await import('./zkouska-pohled.mjs');
+  /* ČEKÁ SE NA VÝPIS, NE NA „Uložené". Od 13. 11. je nářadí
+     i s #map-fav pod otvíračem „Další akce", takže na ně
+     waitForSelector (ten čeká na VIDITELNÝ prvek) nedosáhne
+     a zkouška padala na timeoutu. Že se stránka vykreslila,
+     řekne stejně dobře první karta výpisu. */
+  await p.waitForSelector('#opp-list .opp-item', { timeout: 20000 });
+  const { naSeznam, otevriNastroje } = await import('./zkouska-pohled.mjs');
   await naSeznam(p);
+  /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+     otevření na ně klepnutí nedosáhne. */
+  await otevriNastroje(p);
   await p.waitForTimeout(500);
   await p.click('#map-fav');
   /* Čeká se na obsah, ne na čas: seznam se dotahuje po síti. Když

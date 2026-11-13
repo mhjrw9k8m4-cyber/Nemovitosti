@@ -5037,7 +5037,9 @@
     var hlavicka = document.querySelector('.ms-vysledky');
     if (!a || !hlavicka) return;
     a.classList.remove('mc-akce-vlozka');
-    if (a.parentNode !== hlavicka) hlavicka.appendChild(a);
+
+    var cil = document.getElementById('mn-vse') || hlavicka;
+    if (a.parentNode !== cil) cil.appendChild(a);
     if (!a.getAttribute('data-stin')) { a.setAttribute('data-stin', 'ano'); rsStin(a); }
     else { a.classList.toggle('je-dal', a.scrollWidth - a.clientWidth - a.scrollLeft > 8); }
   }

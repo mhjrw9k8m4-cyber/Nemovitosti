@@ -9192,6 +9192,19 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      a „Procházet po jednom" uprostřed místo nahoře. */
   .ms-vysledky > .msv-ovladani,
   .map-side .ms-vysledky > .mc-akce, .ms-vysledky > .mc-akce{display:contents;}
+  /* A TOTÉŽ UVNITŘ OTVÍRAČE „DALŠÍ AKCE" (13. 11.). Nářadí je na
+     telefonu pod <details id="mn-vse">, takže pravidla výš, psaná na
+     PŘÍMÉ dítě .ms-vysledky, na ně přestala platit a tlačítka se po
+     otevření poskládala jinak (naměřeno: „Procházet po jednom" 84 px
+     místo celého řádku). Řetěz display:contents drží i přes dva obaly:
+     .ms-vysledky (mřížka) → #mn-vse → #mc-akce → tlačítka jsou
+     políčka té mřížky. Tři třídy v selektoru schválně — přebíjí to
+     `.map-side .mc-akce{display:grid}` o kus níž, jak popisuje
+     poznámka u něj. */
+  .ms-vysledky .mn-vse > .msv-ovladani,
+  .ms-vysledky .mn-vse > .mc-akce{display:contents;}
+  .ms-vysledky .mn-vse > .mc-akce > *:not([hidden]){width:100%; min-width:0;}
+  .ms-vysledky .mn-vse > .mc-akce > .msv-siroky{grid-column:1 / -1;}
   /* 1. nahoře, přes celou šířku */
   .ms-vysledky #mc-rychly{grid-column:1 / -1; order:-1;}
   /* 3. dole: řazení i počet. `order` o stupeň výš než všechno ostatní.
@@ -9901,6 +9914,53 @@ body > footer{flex:none;}
   display:inline-flex; align-items:center; gap:8px; white-space:nowrap;
   transition:var(--prechod);}
 .mc-nastroj:hover{color:var(--znacka); border-color:var(--znacka-svetla);}
+
+/* NÁŘADÍ POD JEDNÍM NÁPISEM „DALŠÍ AKCE" (13. 11.).
+   Majitel poslal vyfocený telefon: „ale aj potřebuju, aby jsi to nějak
+   upravil, je to přehlcené." Na tom snímku stálo nad první nabídkou
+   sedm tlačítek v pěti řádcích. Nad výpisem teď zůstává jen řazení
+   a počet; zbytek je za jedním klepnutím (<details id="mn-vse">
+   v index.html).
+   OTVÍRAČ VYPADÁ JAKO OSTATNÍ OVLADAČE NAD VÝPISEM: táž tichá výplň,
+   týž rám, totéž zaoblení, 44 px na prst. Liší se jen tím, že bere
+   celý řádek — je to jediná věc, která na něm stojí. */
+/* OBAL SÁM SE Z ROZVRŽENÍ VYTRATÍ (display:contents) a do mřížky nad
+   výpisem jdou rovnou jeho děti — jinak by se ta mřížka přerušila.
+   Nářadí ji totiž skládá přes `display:contents` na .mc-akce
+   i .msv-ovladani: tlačítka jsou políčka mřížky .ms-vysledky, ne
+   vlastního pruhu. Když jsem obal nechal jako `display:block`,
+   pravidla `.ms-vysledky > .mc-akce` přestala platit a nářadí se
+   po otevření poskládalo jinak (naměřeno 13. 11.: „Procházet po
+   jednom" 84 px místo celého řádku).
+   ZAVŘENÝ STAV DĚLÁ PROHLÍŽEČ SÁM: ::details-content je u zavřeného
+   <details> vynechaný z vykreslování, takže se nekreslí nic než
+   otvírač. Otevřený ho vrací do mřížky. */
+.mn-vse{display:contents;}
+.mn-vse[open]::details-content{display:contents; content-visibility:visible;}
+.mnv-btn{grid-column:1 / -1; order:-2;
+  display:flex; align-items:center; gap:8px; width:100%; min-height:44px;
+  padding:0 12px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+  background:var(--plocha-jemna); color:var(--text); font:inherit; font-size:16px;
+  font-weight:700; letter-spacing:-0.01em; cursor:pointer; list-style:none;
+  -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+/* Trojúhelníček, který si <summary> kreslí sám, by byl v téže sestavě
+   šestý tvar; šipku máme vlastní, shodnou s filtry. */
+.mnv-btn::-webkit-details-marker{display:none;}
+.mnv-btn::marker{content:'';}
+.mnv-btn .mn-jm{flex:1 1 auto; text-align:left;}
+.mnv-btn:hover{border-color:var(--znacka); background:var(--plocha-tlumena);}
+.mn-chev{transition:var(--prechod);}
+.mn-vse[open] > .mnv-btn{border-color:var(--znacka-svetla); background:var(--plocha-zapustena);}
+.mn-vse[open] > .mnv-btn .mn-chev{transform:rotate(180deg);}
+@media (min-width:1041px){
+  /* NA MONITORU SE OBAL ROZPLYNE a nářadí stojí v řádku jako dřív.
+     A JEHO VNITŘNÍ KRABICE TAKY: Chrome dělá ::details-content i pod
+     display:contents, a ta krabice by řádek rozhodila — u filtrů to
+     13. 11. znamenalo posun o 31 px. */
+  .mn-vse{display:contents;}
+  .mn-vse::details-content{display:contents; content-visibility:visible;}
+  .mnv-btn{display:none;}
+}
 
 /* RYCHLÝ VÝBĚR: PILULKA S IKONOU, NE PRUH PŘES CELOU ŠÍŘKU.
    Pruh se dvěma řádky textu vznikl proto, že samotné „Rychlý výběr"

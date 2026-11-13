@@ -145,8 +145,11 @@ const schranka = (p) => p.evaluate(() => {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   /* Přepnutí na seznam přes zkouska-pohled.mjs: ručně psané selektory
      na přepínač nefungují (viz tam). */
-  const { naSeznam } = await import('./zkouska-pohled.mjs');
+  const { naSeznam, otevriNastroje } = await import('./zkouska-pohled.mjs');
   await naSeznam(p);
+  /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+     otevření na ně klepnutí nedosáhne. */
+  await otevriNastroje(p);
   await p.waitForSelector('#mc-rychly', { timeout: 15000 });
   await p.click('#mc-rychly');
   await p.waitForSelector('#rv-pozn-vyzva', { state: 'visible', timeout: 15000 });

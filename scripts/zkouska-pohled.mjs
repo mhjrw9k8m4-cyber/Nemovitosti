@@ -59,3 +59,29 @@ export async function naPohled(p, pohled, cekani) {
 
 export const naSeznam = (p, cekani) => naPohled(p, 'seznam', cekani);
 export const naMapu = (p, cekani) => naPohled(p, 'mapa', cekani);
+
+/** Otevře na telefonu otvírač „Další akce" nad výpisem.
+ *
+ *  OD 13. 11. JE NÁŘADÍ POD JEDNÍM NÁPISEM. Majitel poslal vyfocený
+ *  telefon: „ale aj potřebuju, aby jsi to nějak upravil, je to
+ *  přehlcené" — sedm tlačítek v pěti řádcích nad první nabídkou je
+ *  teď v <details id="mn-vse">: „Procházet po jednom", „Uložené",
+ *  „Porovnat", „Zobrazit skryté", „Dražby po termínu" a „Stáhnout
+ *  výběr". Kdo na ně chce klepnout, musí otvírač nejdřív otevřít —
+ *  jinak Playwright čeká třicet vteřin a zkouška PADNE, protože
+ *  prvek v zavřeném <details> nemá krabici (přesně tak spadl
+ *  test-rozvrzeni na `p.click('#mc-prosle')`).
+ *  Na monitoru obal mizí (display:contents) a nářadí stojí v řádku,
+ *  takže tam pomůcka nic nedělá a vrací false. */
+export async function otevriNastroje(p, cekani) {
+  const otevrel = await p.evaluate(() => {
+    const o = document.getElementById('mn-vse');
+    if (!o) return false;
+    const s = o.querySelector('summary');
+    if (!s || !s.checkVisibility()) return false;   // monitor: otvírač se nekreslí
+    if (!o.open) o.open = true;
+    return true;
+  });
+  if (otevrel) await p.waitForTimeout(cekani == null ? 300 : cekani);
+  return otevrel;
+}

@@ -14,7 +14,7 @@
  */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { naSeznam } from './zkouska-pohled.mjs';
+import { naSeznam, otevriNastroje } from './zkouska-pohled.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 
@@ -37,6 +37,10 @@ await p.waitForTimeout(3500);
 /* Pohled se žádá jménem: rychlý výběr se pouští z nářadí VÝPISU, a ten je
    v mapovém pohledu skrytý. Výchozí pohled se za dva dny obrátil dvakrát,
    tak se na něj zkouška nespoléhá. */await naSeznam(p);
+/* A NÁŘADÍ JE OD 13. 11. POD OTVÍRAČEM „Další akce" (#mn-vse).
+   Bez otevření by klepnutí na #mc-rychly čekalo třicet vteřin
+   a zkouška by spadla — prvek v zavřeném <details> nemá krabici. */
+await otevriNastroje(p);
 
 const stav = () => p.evaluate(() => {
   const cti = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };

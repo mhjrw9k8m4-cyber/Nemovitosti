@@ -21,7 +21,7 @@
    ================================================================== */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { naSeznam } from './zkouska-pohled.mjs';
+import { naSeznam, otevriNastroje } from './zkouska-pohled.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs. */
 import { pripravenoKdyz } from './zkouska-pripraveno.mjs';
@@ -84,6 +84,9 @@ try {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   // Tlačítko stahování stojí v nářadí VÝPISU, a ten je v mapovém pohledu skrytý.
   await naSeznam(p);
+  /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+     otevření na ně klepnutí nedosáhne. */
+  await otevriNastroje(p);
   await p.waitForSelector('#mc-vyvoz', { timeout: 15000 });
 
   /* --- 1) Tlačítko otevírá okno, nestahuje ------------------------- */
@@ -266,6 +269,9 @@ try {
     await t.goto(`${BASE}/index.html`, { waitUntil: 'load' });
     // Na telefonu je výpis s nářadím skrytý, dokud se nepřepne z mapy.
     await naSeznam(t);
+    /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+       otevření na ně klepnutí nedosáhne. */
+    await otevriNastroje(t);
     await t.waitForSelector('#mc-vyvoz', { timeout: 15000 });
     await t.click('#mc-vyvoz');
     await t.waitForTimeout(400);
@@ -345,6 +351,9 @@ try {
     await n.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
     await n.goto(`${BASE}/index.html`, { waitUntil: 'load' });
     await naSeznam(n);
+    /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+       otevření na ně klepnutí nedosáhne. */
+    await otevriNastroje(n);
     await n.waitForSelector('#mc-vyvoz', { timeout: 15000 });
     await n.click('#mc-vyvoz');
     await n.waitForSelector('#vyv-vrstva:not([hidden])', { timeout: 15000 });
@@ -417,6 +426,9 @@ try {
     await f.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
     await f.goto(`${BASE}/index.html`, { waitUntil: 'load' });
     await naSeznam(f);
+    /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+       otevření na ně klepnutí nedosáhne. */
+    await otevriNastroje(f);
     await f.waitForSelector('#mc-vyvoz', { timeout: 15000 });
     const vse = cislo(await f.textContent('#mc-vyvoz'));
     await f.fill('#map-search', 'Kolín');
@@ -463,6 +475,9 @@ try {
     await k.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
     await k.goto(`${BASE}/index.html`, { waitUntil: 'load' });
     await naSeznam(k);
+    /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+       otevření na ně klepnutí nedosáhne. */
+    await otevriNastroje(k);
     await k.waitForSelector('#mc-vyvoz', { timeout: 15000 });
     const kolik = cislo(await k.textContent('#mc-vyvoz'));
     await k.click('#mc-vyvoz');
@@ -503,6 +518,9 @@ try {
     await g.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
     await g.goto(`${BASE}/index.html`, { waitUntil: 'load' });
     await naSeznam(g);
+    /* Nářadí je od 13. 11. pod otvíračem „Další akce"; bez jeho
+       otevření na ně klepnutí nedosáhne. */
+    await otevriNastroje(g);
     await g.waitForSelector('#mc-vyvoz', { timeout: 15000 });
     const vse = cislo(await g.textContent('#mc-vyvoz'));
     pravda('výpis má víc než sto nabídek (jinak strop nemá co ořezat)',

@@ -1962,6 +1962,9 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 @media (max-width:560px){.hero-map .map-wide{margin-top:0;background:var(--plocha-vypis)}
 .ms-vysledky{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:8px;margin-bottom:8px}
 .ms-vysledky>.msv-ovladani,.map-side .ms-vysledky>.mc-akce,.ms-vysledky>.mc-akce{display:contents}
+.ms-vysledky .mn-vse>.msv-ovladani,.ms-vysledky .mn-vse>.mc-akce{display:contents}
+.ms-vysledky .mn-vse>.mc-akce>*:not([hidden]){width:100%;min-width:0}
+.ms-vysledky .mn-vse>.mc-akce>.msv-siroky{grid-column:1 / -1}
 .ms-vysledky #mc-rychly{grid-column:1 / -1;order:-1}
 .ms-vysledky>.map-count{grid-column:1 / -1;order:9;margin-bottom:0}
 .ms-vysledky>.cdd{grid-column:1 / -1;order:8;width:auto}
@@ -2109,6 +2112,20 @@ body>footer{flex:none}
 .mc-akce.je-dal{mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .mc-nastroj{font:inherit;font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--text);background:var(--plocha-jemna);border:1px solid var(--line-ui);border-radius:var(--r-ovladani);padding:0 12px;min-height:36px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:var(--prechod)}
 .mc-nastroj:hover{color:var(--znacka);border-color:var(--znacka-svetla)}
+.mn-vse{display:contents}
+.mn-vse[open]::details-content{display:contents;content-visibility:visible}
+.mnv-btn{grid-column:1 / -1;order:-2;display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 12px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-jemna);color:var(--text);font:inherit;font-size:16px;font-weight:700;letter-spacing:-0.01em;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
+.mnv-btn::-webkit-details-marker{display:none}
+.mnv-btn::marker{content:''}
+.mnv-btn .mn-jm{flex:1 1 auto;text-align:left}
+.mnv-btn:hover{border-color:var(--znacka);background:var(--plocha-tlumena)}
+.mn-chev{transition:var(--prechod)}
+.mn-vse[open]>.mnv-btn{border-color:var(--znacka-svetla);background:var(--plocha-zapustena)}
+.mn-vse[open]>.mnv-btn .mn-chev{transform:rotate(180deg)}
+@media (min-width:1041px){.mn-vse{display:contents}
+.mn-vse::details-content{display:contents;content-visibility:visible}
+.mnv-btn{display:none}
+}
 .mcn-ic{flex:none;display:flex;align-items:center;justify-content:center;color:var(--plocha-znacka)}
 .mcn-ic svg{width:var(--ik-xs);height:var(--ik-xs);fill:none;stroke:currentColor;stroke-width:var(--ik-xs-tah);stroke-linecap:round;stroke-linejoin:round}
 .ms-vysledky .mc-nastroj,.ms-vysledky .mc-prep:not(.on),.ms-vysledky>.cdd>.cdd-btn{background-color:var(--plocha-jemna);background-image:none;box-shadow:none;border:1px solid var(--line-ui)}

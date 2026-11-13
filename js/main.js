@@ -8690,7 +8690,15 @@
     var hlavicka = document.querySelector('.ms-vysledky');
     if (!a || !hlavicka) return;
     a.classList.remove('mc-akce-vlozka');
-    if (a.parentNode !== hlavicka) hlavicka.appendChild(a);
+    /* MÍŘÍ SE DO OBALU „DALŠÍ AKCE", KDYŽ NA STRÁNCE JE (13. 11.).
+       Nářadí je na telefonu pod jedním otvíračem (<details id="mn-vse">
+       v index.html). Tahle funkce ho vrací do hlavičky — a dokud
+       mířila rovnou na .ms-vysledky, vytáhla ho z otvírače ven: na
+       telefonu bylo vidět i zavřené a první nabídka spadla na 698 px
+       místo 624. Když obal na stránce není (jiné rozvržení, starší
+       značkování), zůstává cílem hlavička jako dřív. */
+    var cil = document.getElementById('mn-vse') || hlavicka;
+    if (a.parentNode !== cil) cil.appendChild(a);
     if (!a.getAttribute('data-stin')) { a.setAttribute('data-stin', 'ano'); rsStin(a); }
     else { a.classList.toggle('je-dal', a.scrollWidth - a.clientWidth - a.scrollLeft > 8); }
   }
