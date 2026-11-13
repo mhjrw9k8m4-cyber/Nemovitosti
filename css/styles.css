@@ -2942,26 +2942,6 @@ h1 em{ color:var(--znacka-svetla);
    „Okolí" přesunuté mezi otvírače, mizející lišta akcí a ztišení
    výplní. Co si majitel vyžádal zvlášť (řazení, rozbalovátka, menu,
    texty hlídání), zůstává. */
-/* JEDEN OTVÍRAČ MÍSTO PĚTI (12. 11.). Zdůvodnění je u <details
-   class="mf-vse"> v index.html; tady je, jak se to sází.
-   NA TELEFONU je řádek filtrů schovaný za jedním tlačítkem téhož
-   tvaru jako ostatní ovladače (.mf-btn), takže nad výpisem zbyde
-   jediný řádek místo dvou plných pilulek. Po otevření se pět skupin
-   rozloží pod ním jako dosud.
-   NA MONITORU (od 1041 px) se obal neuplatní: jeho summary je pryč
-   a řádek je vidět pořád — tam je místa dost a lišta ho má v mřížce.
-   `display:contents` na obalu je k tomu to pravé: obal zmizí
-   z rozvržení a .mc-rada zůstane přímým dítětem lišty, takže
-   `grid-area:filtry` platí dál. */
-.mf-vse{display:block;}
-.mfv-btn{width:100%; justify-content:flex-start;}
-/* DLOUHÝ POPISEK TU PLATÍ VŽDYCKY. Ostatní otvírače mají na telefonu
-   krátkou podobu (.mf-jm-k) a dlouhou schovávají, aby se jich pět
-   vešlo do řádku; tenhle je jediný a místa má dost — bez téhle
-   výjimky by na něm zbyla jen ikona (naměřeno). */
-.mfv-btn .mf-jm{display:block; flex:1 1 auto; text-align:left;}
-.mf-vse[open] > .mfv-btn{border-color:var(--znacka-svetla); background:var(--plocha-zapustena);}
-.mf-vse[open] > .mfv-btn .mf-chev{transform:rotate(180deg);}
 .mc-rada{position:relative; display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
 .mc-rada > *{flex:none;}
 /* Otvírač je týž ovladač jako ostatní bílé ovladače nad výpisem:
@@ -5600,20 +5580,6 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
       "akce akce akce";}
   .map-controls-panel > .map-search{grid-area:hledani;}
   .map-controls-panel .map-okoli{grid-area:okoli;}
-  /* Obal „jeden otvírač" je věc telefonu; tady zmizí z rozvržení
-     (display:contents), takže .mc-rada zůstane přímým dítětem mřížky
-     a `grid-area` na něm platí dál. */
-  /* Obal „jeden otvírač" je věc telefonu; tady zmizí z rozvržení
-     a .mc-rada si drží svůj vlastní odstup, aby byla geometrie lišty
-     na pixel táž jako před obalem (panel skupiny „Další" se jinak
-     posunul a přerostl okno o 31 px — naměřeno). */
-  .mf-vse{display:contents;}
-  /* A JEHO VNITŘNÍ KRABICE TAKY. Prohlížeč obsah <details> balí do
-     ::details-content; s display:contents na obalu ta krabice zbyla
-     a posunula řádek filtrů o 31 px dolů, takže panel skupiny
-     „Další" přerostl okno (naměřeno 887 px proti oknu 844). */
-  .mf-vse::details-content{display:contents; content-visibility:visible;}
-  .mfv-btn{display:none;}
   .map-controls-panel .mc-rada{grid-area:filtry;}
   .map-controls-panel .mcf-akce{grid-area:akce; margin-top:8px; padding:0;
     border-top:0; justify-content:flex-start;}

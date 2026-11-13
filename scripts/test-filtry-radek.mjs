@@ -57,14 +57,16 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 
-/* MEZNÍ VÝŠKY LIŠTY. Přeměřeno 13. 11., když se řádek filtrů schoval
-   na telefonu za jeden otvírač: 320 → 281 px, 390 → 281, 768 → 310,
-   1280 → 188. Mez je nad tím s rezervou na jiné písmo v CI, ale POD
-   hodnotou, která by znamenala řádek navíc (zalomení přidá 52 px).
-   MĚŘÍ SE ZAVŘENÝ STAV, protože to je, co člověk uvidí. Otevřený je
-   o hodně vyšší (320 → 441, 390 → 389, 768 → 366) a měřit ho proti
-   téhle mezi by znamenalo hlídat něco, co na obrazovce není. */
-const STROP_LISTY = { 320: 310, 390: 310, 768: 340, 1280: 220 };
+/* MEZNÍ VÝŠKY LIŠTY. Naměřeno 10. 11. po přestavbě: 320 → 396 px,
+   390 → 344, 768 → 292, 1280 → 176. Mez je nad tím s rezervou na jiné
+   písmo v CI, ale POD hodnotou, která by znamenala řádek navíc
+   (zalomení přidá 52 px).
+   13. 11. SE TY MEZE NA PŮL DNE ZMĚNILY A ZASE VRÁTILY. Zkusil jsem
+   dát pět pilulek na telefonu za jeden otvírač — lišta tím spadla na
+   281 px — jenže majitel napsal „vrať to tam, kde jsem to nastavil
+   sám". Vráceno a přeměřeno: 320 → 397, 390 → 345, 768 → 322,
+   1280 → 176, takže původní meze platí dál. */
+const STROP_LISTY = { 320: 430, 390: 380, 768: 330, 1280: 220 };
 /* Kolik otvíračů má být vidět. Pět: druh nabídky, typ nemovitosti,
    druh pozemku, cena a výměra, další filtry. „Typ nemovitosti" se umí
    schovat, když je v datech jediná kategorie — proto mez, ne rovnost. */
@@ -85,59 +87,31 @@ for (const [jmeno, w] of [['telefon 320', 320], ['telefon 390', 390], ['tablet 7
   await p.locator('.opp-item').first().waitFor({ state: 'visible', timeout: 20000 }).catch(() => {});
   await p.waitForTimeout(400);
 
-  /* 0: OTVÍRAČ FILTRŮ NA TELEFONU (od 12. 11.).
-     Pět pilulek stojí na telefonu uvnitř <details id="mf-vse">, na
-     monitoru se obal rozplyne (display:contents) a řádek je vidět
-     rovnou.
-     TENHLE ODDÍL VZNIKL Z VADY V MĚŘENÍ, NE Z NÁPADU. Prvek uvnitř
-     ZAVŘENÉHO <details> hlásí v Chromu pořád poslední známý obdélník:
-     naměřeno 13. 11. na 390 px, že pilulka „Druh nabídky" má 110×44 na
-     y=285 jak zavřená, tak otevřená — a stejně tak lže display,
-     visibility i offsetParent (u .mc-rada vyšel offsetParent dokonce
-     na true). Jediný, kdo řekl pravdu, byl checkVisibility().
-     Kontroly níž proto na telefonu měřily duchy: prošly by i tehdy,
-     kdyby se řádek nedal otevřít vůbec. Napravuje se to dvojfázově —
-     tady se změří zavřený stav, pak se obal otevře a zbytek hlídače
-     měří skutečné krabice. */
-  const stav0 = await p.evaluate(() => {
-    const o = document.getElementById('mf-vse');
-    const souhrn = o ? o.querySelector('summary') : null;
-    const sr = souhrn ? souhrn.getBoundingClientRect() : null;
-    return {
-      obalJe: !!o,
-      otevreny: !!(o && o.open),
-      otviracVidno: !!(souhrn && souhrn.checkVisibility()),
-      otviracVyska: sr ? Math.round(sr.height) : 0,
-      pilulkyVidno: [...document.querySelectorAll('#mc-rada > details.mf > summary')]
-        .filter((e) => e.checkVisibility()).length,
-      lista: Math.round(document.querySelector('.map-controls-panel').getBoundingClientRect().height)
-    };
-  });
-  const telefon = w <= 1040;
-  pravda(`${jmeno}: obal filtrů je ve stránce a po načtení zavřený`,
-    stav0.obalJe && !stav0.otevreny, JSON.stringify(stav0));
-  if (telefon) {
-    pravda(`${jmeno}: vidět je jen otvírač, žádná z pěti pilulek`,
-      stav0.otviracVidno && stav0.pilulkyVidno === 0,
-      `otvírač ${stav0.otviracVidno}, pilulek vidět ${stav0.pilulkyVidno}`);
-    pravda(`${jmeno}: a otvírač má plochu pro prst (${stav0.otviracVyska} px)`,
-      stav0.otviracVyska >= 44, `${stav0.otviracVyska} px`);
-  } else {
-    pravda(`${jmeno}: na monitoru je vidět všech pět pilulek a otvírač ne`,
-      !stav0.otviracVidno && stav0.pilulkyVidno >= NEJMIN_OTVIRACU,
-      `otvírač ${stav0.otviracVidno}, pilulek vidět ${stav0.pilulkyVidno}`);
-  }
+  /* 0: ŘÁDEK FILTRŮ JE VIDĚT HNED, NA VŠECH ŠÍŘKÁCH.
+     Takhle si to majitel nastavil a 13. 11. k tomu napsal „vrať to
+     tam, kde jsem to nastavil sám", když jsem pilulky zkusil schovat
+     za jeden otvírač. Kontrola tu proto stojí jako past: kdyby se
+     filtry zase octly za klepnutím, zčervená.
+     PTÁ SE checkVisibility(), A STÁLO TO JEDNO SLEPÉ MĚŘENÍ. Prvek
+     uvnitř zavřeného <details> hlásí v Chromu pořád poslední známý
+     obdélník: naměřeno 13. 11. na 390 px, že pilulka „Druh nabídky"
+     má 110×44 na y=285 zavřená i otevřená — a stejně lže display,
+     visibility i offsetParent (u .mc-rada vyšel dokonce na true).
+     Kdyby se tedy filtry schovaly, kontroly psané na obdélník by to
+     nepoznaly a prošly by naprázdno. */
+  const stav0 = await p.evaluate(() => ({
+    pilulkyVidno: [...document.querySelectorAll('#mc-rada > details.mf > summary')]
+      .filter((e) => e.checkVisibility()).length,
+    zaKlepnutim: !!document.querySelector('#mc-rada')
+      && !document.querySelector('#mc-rada').checkVisibility(),
+    lista: Math.round(document.querySelector('.map-controls-panel').getBoundingClientRect().height)
+  }));
+  pravda(`${jmeno}: řádek filtrů je vidět hned, bez klepnutí (${stav0.pilulkyVidno})`,
+    !stav0.zaKlepnutim && stav0.pilulkyVidno >= NEJMIN_OTVIRACU,
+    `pilulek vidět ${stav0.pilulkyVidno}, schováno za klepnutím: ${stav0.zaKlepnutim}`);
   pravda(`${jmeno}: lišta nad výpisem nenarostla (${stav0.lista} px)`,
     stav0.lista <= STROP_LISTY[w],
     `${stav0.lista} px proti meznímu ${STROP_LISTY[w]} px — o 52 px výš je řádek otvíračů navíc`);
-
-  /* Od téhle chvíle se měří to, co člověk uvidí PO klepnutí na
-     otvírač. Na monitoru je obal display:contents, takže otevření
-     nic nemění. */
-  if (telefon) {
-    await p.evaluate(() => { const o = document.getElementById('mf-vse'); if (o) o.open = true; });
-    await p.waitForTimeout(250);
-  }
 
   /* 1 + 2: co je vidět, aniž se na cokoli klepne */
   const pred = await p.evaluate(() => {

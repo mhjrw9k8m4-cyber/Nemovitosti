@@ -80,20 +80,15 @@ try {
   await p.waitForSelector('#opp-list .opp-item', { timeout: 30000 });
   await p.waitForTimeout(1200);
 
-  /* NEJDŘÍV SE MUSÍ OTEVŘÍT OBAL. Od 12. 11. leží pět skupin filtrů
-     na telefonu uvnitř <details id="mf-vse"> („Druh, cena, výměra
-     a další"); na monitoru se obal rozplyne (display:contents).
-     Tenhle hlídač měří na 390 px a klepe podle obdélníku z
-     boundingBox — jenže prvek v ZAVŘENÉM <details> hlásí v Chromu
-     pořád poslední známý obdélník. Klepnutí proto dopadalo na
-     souřadnice, kde ve skutečnosti nic není, a tři kontroly padaly
-     (naměřeno 13. 11.: „klepnutí na otvírač panel otevře",
-     „klepnutí uvnitř panelu ho nezavře" a „klepnutí na jiný otvírač
-     zavře ten první"). Člověk se ke skupinám dostane přes otvírač,
-     tak se k nim takhle dostane i hlídač. */
-  await p.evaluate(() => { const o = document.getElementById('mf-vse'); if (o) o.open = true; });
-  await p.waitForTimeout(300);
-
+  /* KLEPE SE PODLE OBDÉLNÍKU Z boundingBox, A JE TO BEZPEČNÉ JEN
+     POTUD, POKUD JSOU SKUPINY VIDĚT ROVNOU. 13. 11. jsem pilulky
+     zkusil schovat na telefonu za jeden otvírač a tenhle hlídač tím
+     spadl na třech kontrolách: prvek v ZAVŘENÉM <details> hlásí
+     v Chromu pořád poslední známý obdélník, takže dotyk dopadal na
+     souřadnice, kde nic není. Majitel řekl „vrať to tam, kde jsem to
+     nastavil sám" — skupiny jsou zase vidět hned a klepat se dá
+     přímo. Kdyby se někdy znovu schovaly, musí se sem vrátit krok,
+     který je napřed odhalí. */
   pravda('je co měřit: řádek filtrů je ve stránce',
     (await p.$$('details.mf')).length >= 4, 'otvírače skupin nejsou');
   pravda('po načtení není otevřený žádný panel', (await otevrene()).length === 0,
