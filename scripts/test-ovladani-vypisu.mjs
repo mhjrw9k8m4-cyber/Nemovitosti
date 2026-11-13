@@ -93,6 +93,19 @@ try {
         hledani: q('.mcp-hledani #map-search'), prepinac: q('.mcp-hledani .mv-toggle'),
         ulozene: q('#map-fav'),
         rychly: q('#mc-rychly'), vyvoz: q('#mc-vyvoz'),
+        /* VŠECHNO NÁŘADÍ UPROSTŘED, ne jen ty dva kusy, které tu byly
+           jmenovitě. Kolik jich je, rozhodují DATA: „Dražby po termínu"
+           se vykreslí, jen když v nabídce nějaké skončené jsou — a 13. 11.
+           se právě to stalo (o půlnoci uplynul termín dvěma dražbám),
+           takže se do pruhu přidal třetí kus a dvojice se přeskládala.
+           Kontrola, která čekala jmenovitě „Uložené + Stáhnout výběr"
+           v jednom řádku, tím padla, ačkoli web byl v pořádku. Měří se
+           proto TVAR pruhu, ne jména. */
+        stred: [...document.querySelectorAll('.ms-vysledky .mc-nastroj, #map-fav')]
+          .filter((e) => e.checkVisibility() && e.id !== 'mc-rychly')
+          .map((e) => { const r = e.getBoundingClientRect();
+            return { jm: (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 24),
+              y: Math.round(r.top), w: Math.round(r.width), p: Math.round(r.right) }; }),
         /* Ovladač řazení nad výpisem — ten, ze kterého se 30. 10. stal
            nadpis „Doporučené" (§248). Hlídá se jeho poloha: majitel ho
            chce úplně dole.
@@ -199,12 +212,31 @@ try {
     pravda(`${sirka} px: a bere celý řádek`,
       v.rychly.w > v.ulozene.w + 20,
       `„Procházet po jednom" ${v.rychly.w} px, „Uložené" ${v.ulozene.w} px`);
-    pravda(`${sirka} px: „Uložené" a „Stáhnout výběr" stojí uprostřed vedle sebe`,
-      Math.abs(v.ulozene.y - v.vyvoz.y) <= 2 && stejne(v.ulozene, v.vyvoz),
-      `uložené ${v.ulozene.y} px / ${v.ulozene.w} px, vývoz ${v.vyvoz.y} px / ${v.vyvoz.w} px`);
-    pravda(`${sirka} px: a dělí se o řádek beze zbytku`,
-      Math.abs(v.ulozene.w + v.vyvoz.w + v.mezera - v.rychly.w) <= 2,
-      `${v.ulozene.w} + ${v.vyvoz.w} + mezera ${v.mezera} proti řádku ${v.rychly.w} px`);
+    pravda(`${sirka} px: „Uložené" i „Stáhnout výběr" stojí uprostřed`,
+      v.ulozene.y > v.rychly.y && v.vyvoz.y > v.rychly.y
+      && v.ulozene.y < v.razeni.y && v.vyvoz.y < v.razeni.y,
+      `rychlý ${v.rychly.y}, uložené ${v.ulozene.y}, vývoz ${v.vyvoz.y}, řazení ${v.razeni.y} px`);
+    /* ŘÁDKY UPROSTŘED SE DĚLÍ BEZE ZBYTKU — ať jsou nástroje dva, tři
+       nebo čtyři. Nástroje se seskupí podle svislé polohy a od každého
+       řádku se chce dvojí: kdo na něm stojí, má stejnou šířku, a ty
+       šířky i s mezerami vyplní celý řádek (měří se podle „Procházet po
+       jednom", který řádek bere celý). Tím se hlídá, že nikdo nezůstane
+       trčet v půlce a nikomu nepřeteče okno. */
+    const radky = [];
+    for (const n of v.stred) {
+      const r = radky.find((x) => Math.abs(x.y - n.y) <= 2);
+      if (r) r.kusy.push(n); else radky.push({ y: n.y, kusy: [n] });
+    }
+    const krive = radky.filter((r) => {
+      const sirky = r.kusy.map((k) => k.w);
+      const nejvetsi = Math.max(...sirky), nejmensi = Math.min(...sirky);
+      const soucet = sirky.reduce((a, b) => a + b, 0) + v.mezera * (r.kusy.length - 1);
+      return nejvetsi - nejmensi > 1 || Math.abs(soucet - v.rychly.w) > 2;
+    });
+    pravda(`${sirka} px: a řádky nářadí se dělí beze zbytku (${radky.length})`,
+      radky.length > 0 && krive.length === 0,
+      krive.map((r) => r.kusy.map((k) => `${k.jm} ${k.w}`).join(' + ')
+        + ` + mezery ${v.mezera * (r.kusy.length - 1)} proti řádku ${v.rychly.w} px`).join('; '));
     pravda(`${sirka} px: řazení („Doporučené") je úplně dole`,
       v.razeni.y > v.ulozene.y && v.razeni.y > v.vyvoz.y,
       `řazení ${v.razeni.y} px, dvojice na ${v.ulozene.y} px`);
