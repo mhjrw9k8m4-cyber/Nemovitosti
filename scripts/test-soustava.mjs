@@ -92,6 +92,14 @@ export const PRELIVY = {
      velkého webu." Mají teď tutéž tichou výplň jako filtry; přeliv
      by na ní nebyl vidět a v tomhle seznamu by zůstal jako mrtvý
      zápis — což tahle kontrola správně našla. */
+  /* VLÁSEČNICE MEZI ŘÁDKY NABÍDKY. Není to přeliv barev — obě zarážky
+     jsou táž `--line`, takže je to plná linka. Kreslí se přelivem
+     proto, že musí být ODSAZENÁ: začíná tam, kde začíná nápis (50 px
+     = 16 odsazení + 22 ikona + 12 mezera), aby nerozřízla desku ani
+     sloupec ikon. Rám ani vnitřní stín se odsadit nedají — rám by
+     navíc zvedl výšku řádku o pixel a shodil mez 52 px v test-menu. */
+  '#nav a:not(.btn-primary) + a:not(.btn-primary)': 'odsazená vlásečnice mezi řádky nabídky v mobilním šuplíku: jedna barva --line ve dvou zarážkách, tedy plná linka, kterou lze přes background-size odsadit pod text. Rám by zvedl výšku řádku, vnitřní stín se odsadit nedá.',
+  '#nav .nav-sk > .nav-sk-panel > a:not(.btn-primary)': 'táž odsazená vlásečnice mezi řádky v desce účtu — aby všechny linky v šuplíku začínaly na jedné svislici s nápisy.',
   '.sk': 'kostra načítání: přejezd třpytu, který říká „ještě se to nese"',
   '.opp-media': 'podklad náhledu, než se snímek stáhne — a vrstva pod závojem',
   '.opp-mgrad': 'závoj nad snímkem: bez něj není bílé písmo na fotce čitelné',

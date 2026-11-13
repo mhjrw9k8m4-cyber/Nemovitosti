@@ -6253,12 +6253,30 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
        vyfotil. Je to táž předloha jako všude jinde na webu: zapuštěná
        plocha a na ní desky. */
     background:var(--plocha-zapustena); border:0; border-right:1px solid var(--line);
-    border-radius:0; box-shadow:var(--e3);
+    /* Pravá hrana je zaoblená týmž poloměrem jako desky uvnitř (14 px).
+       Ostrý roh dělal z panelu uříznutý sloupec; zaoblení říká, že to
+       je samostatná vrstva ležící na stránce. Vlevo, nahoře a dole se
+       nezaobluje — tam panel končí hranou obrazovky. */
+    border-radius:0 var(--r-ovladani) var(--r-ovladani) 0; box-shadow:var(--e3);
     overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
     transform:translateX(-101%); visibility:hidden;
     transition:transform var(--cas-zakladni) var(--ease), visibility 0s linear var(--cas-zakladni);}
   body.nav-otevreno #nav{transform:none; visibility:visible; transition-delay:0s;}
   body.nav-otevreno{overflow:hidden;}
+  /* ZTMAVENÍ ZA ŠUPLÍKEM (13. 11.). Panel je překryv nad stránkou, ale
+     stránka za ním svítila v plné síle — na snímku z telefonu je vpravo
+     proužek nezašlého výpisu a šuplík z toho vypadá jako kus, který se
+     nedokreslil, ne jako vrstva nad obsahem. Tmavý závoj je to, čím
+     každá mobilní aplikace říká „pod tím se teď nedá pracovat".
+     POZOR, NEBERE KLEPNUTÍ: `pointer-events:none`. Zavírání klepnutím
+     mimo panel obsluhuje js/menu.js na dokumentu a závoj je jen
+     obarvené sklo — kdyby klepnutí chytal, přepsal bych tím chování,
+     a tady se mění jenom vzhled. */
+  body.nav-otevreno::before{content:""; position:fixed; inset:0; z-index:90;
+    background:rgba(var(--plocha-tmava-2-rgb),0.44); pointer-events:none;
+    animation:nav-zaves var(--cas-zakladni) var(--ease) both;}
+  @keyframes nav-zaves{from{opacity:0;} to{opacity:1;}}
+  @media (prefers-reduced-motion:reduce){ body.nav-otevreno::before{animation:none;} }
   #nav::after, #nav::before{content:none;}
   @media (prefers-reduced-motion:reduce){ #nav{transition:none;} }
 
@@ -6300,9 +6318,19 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     font-family:var(--font-ui); font-size:16px; font-weight:600; letter-spacing:-0.01em;
     color:var(--text); background:var(--plocha-karta); box-shadow:var(--e1);
     transition:var(--prechod);}
+  /* VLÁSEČNICE ZAČÍNÁ U TEXTU, NE U HRANY DESKY (13. 11.).
+     Linka mezi řádky šla od kraje ke kraji a rozřízla desku vejpůl.
+     Odsazená linka (začíná tam, kde začíná nápis — 16 px odsazení
+     + 22 px ikona + 12 px mezera = 50) drží sloupec ikon v jednom
+     kuse a deska zůstane celá; dělá to tak každý mobilní seznam.
+     Kreslí se přelivem na pozadí, ne stínem ani rámem: stín by se
+     nedal odsadit a rám by zvedl výšku řádku o pixel. */
   #nav a:not(.btn-primary) + a:not(.btn-primary){
     border-top-left-radius:0; border-top-right-radius:0;
-    box-shadow:var(--e1), inset 0 1px 0 var(--line);}
+    box-shadow:var(--e1);
+    background-image:linear-gradient(var(--line), var(--line));
+    background-repeat:no-repeat; background-size:calc(100% - 50px) 1px;
+    background-position:50px 0;}
   #nav a:not(.btn-primary):has(+ a:not(.btn-primary)){
     border-bottom-left-radius:0; border-bottom-right-radius:0;}
   /* ZNAČKA JE ZE SADY, NE OBRÁZEK V CSS. Řádky nabídky měly ikonu jako
@@ -6316,7 +6344,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      na 1,5 px jako u všech ostatních ikon — hlídá test-tahy. */
   #nav a:not(.btn-primary) > .ik{flex:none; width:var(--ik-m); height:var(--ik-m); stroke-width:var(--ik-m-tah);
     color:var(--plocha-znacka);}
-  #nav a:not(.btn-primary):active{background:var(--plocha-tlumena);}
+  #nav a:not(.btn-primary):active{background-color:var(--plocha-tlumena);}
 
   /* AKTIVNÍ ŘÁDEK: tlumená značková plocha a značkový text, nic víc.
      Svislý proužek vlevo tu byl do 31. 10. — na ploché liště dával
@@ -6407,10 +6435,26 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* Uvnitř skupiny účtu se desky NEOPAKUJÍ: celá skupina je jedna
      deska (viz .nav-ucet-sk níž) a řádky v ní jsou ploché, dělené
      vlasovou linkou. Deska v desce by byla rám v rámu. */
-  #nav .nav-sk > .nav-sk-panel > a{min-height:52px; padding:0 16px;
-    margin:0; border:0; border-top:1px solid var(--line); border-radius:0;
-    background:none; box-shadow:none;
+  /* `:not(.btn-primary)` V SELEKTORU NENÍ OZDOBA, a stálo mě to hodinu.
+     Sousedský předpis výš (`#nav a:not(.btn-primary) + a:not(.btn-primary)`)
+     má o jeden PRVEK víc, takže tenhle bez něj prohrával: řádky účtu
+     braly bílou desku i stín odtamtud a k tomu si nesly vlastní
+     `border-top` — dvě vlásečnice nad sebou. Naměřeno ve vypočtených
+     stylech. S `:not()` je o třídu výš a platí celý.
+     Linka je odsazená na 50 px stejně jako u řádků nad nimi — řádky
+     účtu ikonu MAJÍ (komentář o kus výš tvrdí opak a mýlí se: <svg>
+     je v nich ve značce), takže všechny linky v šuplíku začínají na
+     jedné svislici. Stisk ztlumí plochu, ať je poznat,
+     že se klepnutí chytlo — do 13. 11. nedělal vůbec nic. */
+  #nav .nav-sk > .nav-sk-panel > a:not(.btn-primary){min-height:52px; padding:0 16px;
+    margin:0; border:0; border-radius:0; box-shadow:none;
+    background:none;
+    background-image:linear-gradient(var(--line), var(--line));
+    background-repeat:no-repeat; background-size:calc(100% - 50px) 1px;
+    background-position:50px 0;
     font-size:16px; font-weight:500;}
+  #nav .nav-sk > .nav-sk-panel > a:not(.btn-primary):active{
+    background-color:var(--plocha-tlumena);}
   #nav .nav-sk > .nav-sk-panel > a::before{content:none;}
 
   /* ÚČET STOJÍ PRVNÍ A JEHO NADPIS NESE STAV PŘIHLÁŠENÍ — je to ta
@@ -6421,7 +6465,22 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     column-gap:12px; row-gap:1px; align-items:center; min-height:68px;
     padding:12px 16px; font-size:16px; font-weight:600; letter-spacing:-0.01em;
     text-transform:none; color:var(--text);
-    background:rgba(var(--znacka-hluboka-rgb),0.05); border-bottom:0;}
+    /* ZELENÝ PÁS PŘES CELOU HLAVU JE PRYČ (13. 11.). Plocha s 5%
+       zelení dělala z hlavičky účtu podbarvený řádek — na majitelově
+       snímku to vypadá, jako by na něm stál kurzor nebo jako by byl
+       vypnutý. Zeleň zůstává, ale jen pod ikonou: kolečko za
+       panáčkem. Je to týž trik, jaký nese profil v každé aplikaci,
+       a hlava zůstane čistá bílá jako řádky pod ní. */
+    background:none; border-bottom:0;}
+  /* IKONA ZŮSTÁVÁ DVAADVACETIPIXELOVÁ, ŽÁDNÉ KOLEČKO. Zkusil jsem
+     panáčka posadit do zeleného kolečka o 40 px, jak to mají profily
+     v aplikacích — a naměřil jsem, co je na snímku vidět: nápis „Můj
+     profil" tím odskočil na 84 px, kdežto „Moje inzeráty" pod ním
+     začíná na 66. Dvě svislice v jedné desce. Kolečko kreslené
+     stínem (layout 22 px, vzhled 40) by svislici udrželo, ale sedlo
+     by si 9 px do dvanáctipixelové mezery a tisklo se na text.
+     Víc než ozdoba je tady JEDEN SLOUPEC IKON na celou výšku šuplíku:
+     mapa, cena, panáček, inzeráty, zprávy, hlídání pod sebou. */
   .nav-ucet-sk > summary::before{grid-column:1; grid-row:1 / span 2;
     align-self:center; background-image:var(--ikona-profil);}
   .nav-ucet-sk > summary .nav-ucet-t{grid-column:2; grid-row:1;}
@@ -6530,7 +6589,14 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     letter-spacing:-0.04em; color:var(--znacka);}
   /* Křížek sedí v té hlavičce vpravo (js/menu.js ho tam vkládá), takže
      už nemá vlastní řádek ani vlastní `order`. */
-  .nav-hlava .nav-zavrit{order:0; margin:0 0 0 auto; align-self:center;}
+  /* KŘÍŽEK JE OVLADAČ, NE ZNAK (13. 11.). Visel v hlavičce jako holá
+     šedá čárka bez plochy — jediný prvek v celém panelu, pod kterým nic
+     není. Dostává touž bílou desku se stínem jako řádky nabídky, jen
+     kulatou, a stisk ji ztlumí. Rozměr 44×44 zůstává (hlídá test-dotyk). */
+  .nav-hlava .nav-zavrit{order:0; margin:0 0 0 auto; align-self:center;
+    background:var(--plocha-karta); border-radius:var(--r-pill);
+    box-shadow:var(--e1); color:var(--text);}
+  .nav-hlava .nav-zavrit:active{background:var(--plocha-tlumena);}
   /* (Pravidlo pro .nav-oddil tu bývalo. Nadpis oddílu zmizel i se
      třemi odkazy, které měl v hlavě — viz výš.) */
   /* POČET U POLOŽKY. Vpravo, tabulkovými číslicemi, ať stojí pod sebou
