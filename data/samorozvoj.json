@@ -49,6 +49,11 @@
    "prokazanych": 19,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-14": {
+   "prokazanych": 19,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1770,9 +1775,25 @@
    "pomucky": [],
    "otisk": "3338c53ba92a",
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-menu.mjs": {
+   "kdy": "2026-11-14",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/vzorek-pozemku.mjs"
+   ],
+   "otisk": "fac1dd8e1a06",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-13",
+ "updated": "2026-11-14",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
