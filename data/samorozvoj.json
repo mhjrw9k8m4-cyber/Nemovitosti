@@ -54,6 +54,11 @@
    "prokazanych": 19,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-15": {
+   "prokazanych": 19,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1791,9 +1796,23 @@
    ],
    "otisk": "fac1dd8e1a06",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-mereni.mjs": {
+   "kdy": "2026-11-15",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "89b849239d50",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-14",
+ "updated": "2026-11-15",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
