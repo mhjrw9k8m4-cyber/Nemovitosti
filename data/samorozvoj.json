@@ -59,6 +59,11 @@
    "prokazanych": 19,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-16": {
+   "prokazanych": 21,
+   "slepych": 10,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1810,9 +1815,95 @@
    "pomucky": [],
    "otisk": "89b849239d50",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-mericka-odhadu.mjs": {
+   "kdy": "2026-11-16",
+   "hlidá": 3,
+   "chytila": 1,
+   "nechytila": 5,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácené porovnání (>= na >)",
+    "zahozená pojistka (if … continue)",
+    "a místo nebo (&& na ||)",
+    "posunutá konstanta (+1)"
+   ],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v js/ceny.js"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "85fb8f93ae7c",
+   "poznamka": ""
+  },
+  "test-meze.mjs": {
+   "kdy": "2026-11-16",
+   "hlidá": 3,
+   "chytila": 1,
+   "nechytila": 5,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (<= na <) v js/kontrola.js",
+    "zahozená pojistka (if … continue) v js/kontrola.js",
+    "a místo nebo (&& na ||) v js/kontrola.js",
+    "posunutá konstanta (+1) v js/kontrola.js",
+    "obrácené porovnání (>= na >) v js/cisteni.js"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "b0b51d42ca7a",
+   "poznamka": ""
+  },
+  "test-minifikace.mjs": {
+   "kdy": "2026-11-16",
+   "hlidá": 2,
+   "chytila": 4,
+   "nechytila": 2,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "zahozená pojistka (if … continue) v scripts/minifikace.mjs",
+    "obrácená rovnost (=== na !==) v scripts/rozdel-styly.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "40b605d8a5cd",
+   "poznamka": ""
+  },
+  "test-mira.mjs": {
+   "kdy": "2026-11-16",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "8cbae56011c3",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-misto-inzeratu.mjs": {
+   "kdy": "2026-11-16",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "43fa03b2afe8",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: ::error::Místo nabídky: na ostrých datech už není co opravit čekáno 0, vyšlo 1 ::error::Místo nabídky: 1 kontrol neprošlo. Co padlo: na ostrých datech už není co opravit čekáno 0, vyšlo 1 "
   }
  },
- "updated": "2026-11-15",
+ "updated": "2026-11-16",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
@@ -2287,7 +2378,10 @@
     "chytily": [
      "test-doporuceni.mjs"
     ],
-    "mlcely": []
+    "mlcely": [
+     "test-mericka-odhadu.mjs"
+    ],
+    "hlidacu": 29
    },
    "obrácené porovnání (<= na <)": {
     "chytily": [],
@@ -2757,6 +2851,135 @@
      "test-kopie-funkci.mjs"
     ],
     "hlidacu": 17
+   }
+  },
+  "scripts/mericka-odhadu.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mericka-odhadu.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-mericka-odhadu.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mericka-odhadu.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mericka-odhadu.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mericka-odhadu.mjs"
+    ],
+    "hlidacu": 1
+   }
+  },
+  "js/kontrola.js": {
+   "obrácené porovnání (<= na <)": {
+    "chytily": [],
+    "mlcely": [
+     "test-meze.mjs"
+    ],
+    "hlidacu": 5
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-meze.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-meze.mjs"
+    ],
+    "hlidacu": 5
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-meze.mjs"
+    ],
+    "hlidacu": 5
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [],
+    "mlcely": [
+     "test-meze.mjs"
+    ],
+    "hlidacu": 5
+   }
+  },
+  "js/cisteni.js": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-meze.mjs"
+    ],
+    "hlidacu": 10
+   }
+  },
+  "scripts/minifikace.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [
+     "test-minifikace.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-minifikace.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-minifikace.mjs"
+    ],
+    "hlidacu": 3
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-minifikace.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-minifikace.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   }
+  },
+  "scripts/rozdel-styly.mjs": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-minifikace.mjs"
+    ],
+    "hlidacu": 6
    }
   }
  }
