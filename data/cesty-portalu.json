@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-09",
+ "updated": "2026-11-16",
  "tvaru": 29,
  "zmerenychTvaru": 8,
  "dotazu": 400,
@@ -410,7 +410,7 @@
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 24788,
+     "bajtu": 24794,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1038,13 +1038,13 @@
      "skupina": "vstup",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 66 odkazech — bude to rozcestník, ne výpis",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 68 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 28857,
+     "bajtu": 29789,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1763,7 +1763,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 128316,
+     "bajtu": 127879,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1831,7 +1831,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 201195,
+     "bajtu": 202029,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1847,7 +1847,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 85988,
+     "bajtu": 85904,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1863,7 +1863,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 82358,
+     "bajtu": 82442,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1879,7 +1879,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 95664,
+     "bajtu": 95580,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1895,7 +1895,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 84969,
+     "bajtu": 84885,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1927,7 +1927,7 @@
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 87418,
+     "bajtu": 87502,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1943,7 +1943,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 73391,
+     "bajtu": 73475,
      "nabidek": 0,
      "cestaCteni": null
     }
@@ -2826,13 +2826,13 @@
      "skupina": "vstup",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 84 odkazech — bude to rozcestník, ne výpis",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 83 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 22987,
+     "bajtu": 22565,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -2992,7 +2992,7 @@
      "oPozemku": false,
      "oPrevodu": false,
      "stav": 200,
-     "bajtu": 20795,
+     "bajtu": 20373,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3201,7 +3201,7 @@
    "kontrolaNeexistujici": {
     "adresa": "https://drazby.policenm.cz/__takova-cesta-tu-neni-9c3f",
     "stav": 404,
-    "bajtu": 6326
+    "bajtu": 6327
    },
    "cesty": [
     {
@@ -3209,46 +3209,16 @@
      "jmeno": "vstupní adresa",
      "skupina": "vstup",
      "zmereno": true,
-     "verdikt": "ke čtení",
-     "nabidkyBezKotvy": true,
+     "verdikt": "odpověděla",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 28 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "přečteno 1 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
-     "znaky": {
-      "titulek": "Dražba | Dražební portál Police nad Metují",
-      "znaku": 2154,
-      "pocty": {
-       "cena": 1,
-       "výměra": 1,
-       "katastr": 1,
-       "dražba": 10
-      },
-      "odkazu": 31,
-      "jsonLd": 0,
-      "itemprop": 0,
-      "vypadaNaPrihlaseni": false,
-      "vypadaNaPrazdno": false,
-      "ukazka": "Dražba | Dražební portál Police nad Metují Registrace Přihlášení Dražby Dražby Připravované Probíhající Ukončené Mapa Vše o dražbách O nás Kontakt Registrace Přihlášení Mapa dražeb Filtrovat dražby: Kategorie Nemovitosti Pozemek Stavební pozemek Rodinný dům Rekreační objekt Bytový dům Byt Nebytový/kancelářský prostor Průmyslová stavba Zemědělská stavba Rozestavěná stavba Členský podíl v bytovém dr"
-     },
      "stav": 200,
-     "bajtu": 34538,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": "Detail dražby",
-      "cena": 1333500,
-      "vymera": 889,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazby.policenm.cz/drazby/detail/uvq3tsz3yccceyo93q9brlmlvh0e3s2ik5hio3e",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
+     "bajtu": 31731,
+     "nabidek": 0,
+     "cestaCteni": null
     },
     {
      "adresa": "https://drazby.policenm.cz/lod/catalog",
@@ -3258,7 +3228,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3270,7 +3240,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3282,7 +3252,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3294,7 +3264,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3306,7 +3276,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3318,7 +3288,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3330,7 +3300,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3342,7 +3312,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3354,7 +3324,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3366,7 +3336,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3378,7 +3348,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3390,7 +3360,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3402,7 +3372,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3414,7 +3384,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3426,7 +3396,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3438,7 +3408,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3450,7 +3420,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3462,7 +3432,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3474,7 +3444,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3486,7 +3456,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3498,7 +3468,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3510,7 +3480,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3522,7 +3492,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3534,7 +3504,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3546,7 +3516,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3558,7 +3528,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3570,7 +3540,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3582,7 +3552,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -3594,7 +3564,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 6326,
+     "bajtu": 6327,
      "nabidek": 0,
      "cestaCteni": null
     }
@@ -3611,7 +3581,7 @@
    "kontrolaNeexistujici": {
     "adresa": "https://drazbynaxos.cz/__takova-cesta-tu-neni-9c3f",
     "stav": 200,
-    "bajtu": 101947
+    "bajtu": 94296
    },
    "cesty": [
     {
@@ -3620,43 +3590,29 @@
      "skupina": "vstup",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -3681,43 +3637,29 @@
      "skupina": "katalog",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -3758,43 +3700,29 @@
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -3803,43 +3731,29 @@
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -3912,43 +3826,29 @@
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -3957,43 +3857,29 @@
      "skupina": "feed",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4002,43 +3888,29 @@
      "skupina": "feed",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4047,43 +3919,29 @@
      "skupina": "feed",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4092,43 +3950,29 @@
      "skupina": "feed",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4153,43 +3997,29 @@
      "skupina": "sitemap",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4198,43 +4028,29 @@
      "skupina": "sitemap",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4243,43 +4059,29 @@
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4288,43 +4090,29 @@
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4333,43 +4121,29 @@
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4378,43 +4152,29 @@
      "skupina": "stranka",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4423,43 +4183,29 @@
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4468,43 +4214,29 @@
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4513,43 +4245,29 @@
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4558,43 +4276,29 @@
      "skupina": "api",
      "zmereno": false,
      "verdikt": "odpověděla",
-     "nabidkyBezKotvy": true,
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
+     "proc": "táž stránka jako na vymyšlenou adresu (94296 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "znaky": {
       "titulek": "Dražby NAXOS - elektronické dražby",
-      "znaku": 1291,
+      "znaku": 1204,
       "pocty": {
-       "cena": 4,
+       "cena": 3,
        "dražba": 6
       },
-      "odkazu": 31,
+      "odkazu": 29,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Prodej souboru movitých věcí - Linka na porážku drůbeže a Chladící jednotky 250 000 Kč Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít ka"
+      "ukazka": "Dražby NAXOS - elektronické dražby Domovská stránka Kalendář Historie Přihlásit se Dražební platforma NAXOS Transparentní a bezpečné elektronické dražby podle nového zákona. Tyto soutěže pro Vás připravujeme Otevřít kalendář Pozemek 3 751 m², Loučná pod Klínovcem GPS: 50.417368, 12.981447 9 058 665 Kč Otevřít kalendář Podívejte se na výsledky proběhlých soutěží Zobrazit historii Prodej souboru mov"
      },
      "stav": 200,
-     "bajtu": 101947,
-     "nabidek": 1,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 250000,
-      "vymera": 3751,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://drazbynaxos.cz/drazby/444",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     },
+     "bajtu": 94296,
+     "nabidek": 0,
+     "cestaCteni": null,
      "jakoNeexistujici": true
     },
     {
@@ -4779,7 +4483,7 @@
    "kontrolaNeexistujici": {
     "adresa": "https://www.verejnedrazby.cz/__takova-cesta-tu-neni-9c3f",
     "stav": 404,
-    "bajtu": 22370
+    "bajtu": 22424
    },
    "cesty": [
     {
@@ -4796,12 +4500,12 @@
      "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Online Aukce | Veřejné dražby, Gaute",
-      "znaku": 2879,
+      "znaku": 2945,
       "pocty": {
        "cena": 8,
        "výměra": 18,
        "výběrové řízení": 1,
-       "dražba": 6
+       "dražba": 9
       },
       "odkazu": 46,
       "jsonLd": 0,
@@ -4811,8 +4515,33 @@
       "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
      },
      "stav": 200,
-     "bajtu": 27279,
+     "bajtu": 27402,
      "nabidek": 8,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 13990000,
+      "vymera": 5239,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/lod/catalog",
+     "jmeno": "OFN katalog (lod)",
+     "skupina": "katalog",
+     "zmereno": true,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22521,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -4829,31 +4558,6 @@
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/lod/catalog",
-     "jmeno": "OFN katalog (lod)",
-     "skupina": "katalog",
-     "zmereno": true,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22524,
-     "nabidek": 7,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 51265280,
-      "vymera": 2919,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
      "adresa": "https://www.verejnedrazby.cz/katalog",
      "jmeno": "OFN katalog (katalog)",
      "skupina": "katalog",
@@ -4861,13 +4565,13 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22395,
-     "nabidek": 6,
+     "bajtu": 22430,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
       "cena": 13700000,
-      "vymera": 52235,
+      "vymera": 3347,
       "misto": null,
       "okres": null,
       "druh": null,
@@ -4886,18 +4590,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22401,
-     "nabidek": 6,
+     "bajtu": 22439,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 51265280,
-      "vymera": 2919,
+      "cena": 17473000,
+      "vymera": 1813,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4911,18 +4615,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22378,
+     "bajtu": 22445,
      "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 51265280,
-      "vymera": 2666,
+      "cena": 17473000,
+      "vymera": 1813,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4936,18 +4640,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22362,
-     "nabidek": 7,
+     "bajtu": 22383,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 31680000,
-      "vymera": 3013,
+      "cena": 13990000,
+      "vymera": 5239,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4961,33 +4665,8 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22422,
+     "bajtu": 22567,
      "nabidek": 6,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 31680000,
-      "vymera": 52235,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/api/3/action/package_search?q=pozemky&rows=5",
-     "jmeno": "CKAN hledání",
-     "skupina": "katalog",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22494,
-     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -5004,6 +4683,31 @@
      }
     },
     {
+     "adresa": "https://www.verejnedrazby.cz/api/3/action/package_search?q=pozemky&rows=5",
+     "jmeno": "CKAN hledání",
+     "skupina": "katalog",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22422,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 29900000,
+      "vymera": 11945,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/verejna-drazba-areal-sts-prunerov-a-s-uzitna-",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
      "adresa": "https://www.verejnedrazby.cz/api/3/action/package_list",
      "jmeno": "CKAN seznam",
      "skupina": "katalog",
@@ -5011,18 +4715,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22404,
-     "nabidek": 6,
+     "bajtu": 22439,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 19200000,
-      "vymera": 2666,
+      "cena": 29900000,
+      "vymera": 11945,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "url": "https://www.verejnedrazby.cz/aukce/verejna-drazba-areal-sts-prunerov-a-s-uzitna-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5036,18 +4740,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22502,
-     "nabidek": 7,
+     "bajtu": 22523,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 3300000,
-      "vymera": 90,
+      "cena": 17473000,
+      "vymera": 52235,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5061,8 +4765,8 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22537,
-     "nabidek": 7,
+     "bajtu": 22541,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -5086,18 +4790,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22542,
-     "nabidek": 6,
+     "bajtu": 22456,
+     "nabidek": 5,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 7500000,
-      "vymera": 1189,
+      "cena": 19200000,
+      "vymera": 8703,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-byvaleho-komplexu-aurum-hotel-53-luzek",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5111,18 +4815,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22504,
+     "bajtu": 22408,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 7500000,
-      "vymera": 1189,
+      "cena": 13700000,
+      "vymera": 3347,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-byvaleho-komplexu-aurum-hotel-53-luzek",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozniho-arealu-uzitna-plocha-3-347-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5136,18 +4840,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22427,
+     "bajtu": 22453,
      "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 51265280,
-      "vymera": 2666,
+      "cena": 13990000,
+      "vymera": 5239,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5161,18 +4865,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22391,
-     "nabidek": 7,
+     "bajtu": 22423,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 31680000,
-      "vymera": 3013,
+      "cena": 19200000,
+      "vymera": 52235,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5186,18 +4890,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22384,
+     "bajtu": 22396,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 51265280,
-      "vymera": 2919,
+      "cena": 29900000,
+      "vymera": 11945,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "url": "https://www.verejnedrazby.cz/aukce/verejna-drazba-areal-sts-prunerov-a-s-uzitna-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5214,15 +4918,15 @@
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
+     "proc": "přečteno 9 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Online Aukce | Veřejné dražby, Gaute",
-      "znaku": 2892,
+      "znaku": 2932,
       "pocty": {
        "cena": 8,
-       "výměra": 18,
+       "výměra": 19,
        "výběrové řízení": 1,
-       "dražba": 6
+       "dražba": 9
       },
       "odkazu": 46,
       "jsonLd": 0,
@@ -5232,18 +4936,18 @@
       "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
      },
      "stav": 200,
-     "bajtu": 27316,
-     "nabidek": 8,
+     "bajtu": 27398,
+     "nabidek": 9,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 17473000,
-      "vymera": 1813,
+      "cena": 29900000,
+      "vymera": 11945,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
+      "url": "https://www.verejnedrazby.cz/aukce/verejna-drazba-areal-sts-prunerov-a-s-uzitna-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5257,7 +4961,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22533,
+     "bajtu": 22531,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -5282,18 +4986,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22488,
+     "bajtu": 22421,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 31680000,
-      "vymera": 3013,
+      "cena": 13700000,
+      "vymera": 3347,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozniho-arealu-uzitna-plocha-3-347-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5307,7 +5011,57 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22418,
+     "bajtu": 22422,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 3300000,
+      "vymera": 90,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/opendata",
+     "jmeno": "Otevřená data (stránka)",
+     "skupina": "stranka",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22417,
+     "nabidek": 5,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 3300000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/otevrena-data",
+     "jmeno": "Otevřená data (česky)",
+     "skupina": "stranka",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22551,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -5325,40 +5079,15 @@
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/opendata",
-     "jmeno": "Otevřená data (stránka)",
+     "adresa": "https://www.verejnedrazby.cz/nabidka-majetku",
+     "jmeno": "Nabídka majetku",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22527,
+     "bajtu": 22499,
      "nabidek": 7,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 13700000,
-      "vymera": 3347,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozniho-arealu-uzitna-plocha-3-347-",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/otevrena-data",
-     "jmeno": "Otevřená data (česky)",
-     "skupina": "stranka",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22415,
-     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -5369,31 +5098,6 @@
       "druh": null,
       "kat": null,
       "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/nabidka-majetku",
-     "jmeno": "Nabídka majetku",
-     "skupina": "stranka",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22384,
-     "nabidek": 6,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 3300000,
-      "vymera": 90,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5407,18 +5111,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22500,
-     "nabidek": 7,
+     "bajtu": 22384,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 17473000,
-      "vymera": 1813,
+      "cena": 13990000,
+      "vymera": 5239,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5432,7 +5136,32 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22392,
+     "bajtu": 22497,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 17473000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/prodej-nemovitosti",
+     "jmeno": "Prodej nemovitostí",
+     "skupina": "stranka",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22522,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -5450,31 +5179,6 @@
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/prodej-nemovitosti",
-     "jmeno": "Prodej nemovitostí",
-     "skupina": "stranka",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22420,
-     "nabidek": 5,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 13700000,
-      "vymera": 52235,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozniho-arealu-uzitna-plocha-3-347-",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
      "adresa": "https://www.verejnedrazby.cz/uredni-deska",
      "jmeno": "Úřední deska",
      "skupina": "stranka",
@@ -5482,18 +5186,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22395,
+     "bajtu": 22464,
      "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 13700000,
-      "vymera": 3347,
+      "cena": 19200000,
+      "vymera": 52235,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozniho-arealu-uzitna-plocha-3-347-",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5513,12 +5217,12 @@
      "proc": "přečteno 9 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Online Aukce | Veřejné dražby, Gaute",
-      "znaku": 2922,
+      "znaku": 2937,
       "pocty": {
        "cena": 8,
        "výměra": 19,
        "výběrové řízení": 1,
-       "dražba": 6
+       "dražba": 9
       },
       "odkazu": 46,
       "jsonLd": 0,
@@ -5528,18 +5232,18 @@
       "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
      },
      "stav": 200,
-     "bajtu": 27381,
+     "bajtu": 27408,
      "nabidek": 9,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 31680000,
-      "vymera": 3013,
+      "cena": 3300000,
+      "vymera": 90,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5553,18 +5257,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22403,
-     "nabidek": 7,
+     "bajtu": 22416,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 31680000,
-      "vymera": 3013,
+      "cena": 29900000,
+      "vymera": 11945,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "url": "https://www.verejnedrazby.cz/aukce/verejna-drazba-areal-sts-prunerov-a-s-uzitna-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5578,18 +5282,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22367,
-     "nabidek": 7,
+     "bajtu": 22425,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 3300000,
-      "vymera": 90,
+      "cena": 13990000,
+      "vymera": 5239,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5622,37 +5326,37 @@
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "přečteno 7 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
+     "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Elektronické dražby | Nabídka dražeb",
-      "znaku": 20158,
+      "znaku": 21243,
       "pocty": {
-       "cena": 24,
-       "výměra": 31,
-       "katastr": 4,
+       "cena": 21,
+       "výměra": 34,
+       "katastr": 3,
        "výběrové řízení": 8,
-       "dražba": 19
+       "dražba": 17
       },
       "odkazu": 52,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Elektronické dražby | Nabídka dražeb --> Menu info@gavlas.cz 221 666 666 Nabídka dražeb Jak dražit? Chci prodat Obchodní podmínky GDPR Registrace Přihlášení --> OBCHODNÍ PALÁC SPARKASSE v centru Karlových Varů, u Vřídelní kolonády Typ objektu vše Byt (724) Rodinný dům (183) Rekreační objekt (25) Činžovní dům (16) Komerční nemovitost (168) Pozemek (53) Ostatní (7) Obchodní závody (podniky) (1) Movi"
+      "ukazka": "Elektronické dražby | Nabídka dražeb --> Menu info@gavlas.cz 221 666 666 Nabídka dražeb Jak dražit? Chci prodat Obchodní podmínky GDPR Registrace Přihlášení --> OBCHODNÍ PALÁC SPARKASSE v centru Karlových Varů, u Vřídelní kolonády Typ objektu vše Byt (724) Rodinný dům (183) Rekreační objekt (25) Činžovní dům (16) Komerční nemovitost (168) Pozemek (57) Ostatní (7) Obchodní závody (podniky) (1) Movi"
      },
      "stav": 200,
-     "bajtu": 68063,
-     "nabidek": 7,
+     "bajtu": 68630,
+     "nabidek": 8,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": "více",
-      "cena": 5000000,
-      "vymera": 45,
+      "cena": 3580080,
+      "vymera": 2131,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.internetove-drazby.cz/view/1419",
+      "url": "https://www.internetove-drazby.cz/view/1425",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -6010,274 +5714,11 @@
   }
  ],
  "navrhy": [],
- "noveOdMinule": [
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "Ministerstvo obrany — nepotřebný majetek",
-   "adresa": "https://onnm.mo.gov.cz/rss.xml",
-   "cesta": "RSS (xml)",
-   "verdikt": "slibná",
-   "proc": "strojový tvar, mluví o pozemcích i o převodu",
-   "nabidek": 0,
-   "coSTim": "dopsat čtení toho strojového tvaru",
-   "znaky": {
-    "titulek": "Odbor nakládání s nepotřebným majetkem",
-    "znaku": 9227,
-    "pocty": {
-     "katastr": 1,
-     "výběrové řízení": 1
-    },
-    "odkazu": 0,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": false,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Odbor nakládání s nepotřebným majetkem https://onnm.mo.gov.cz/ cs inzerát nemovitého majetku ONNM https://onnm.mo.gov.cz/aktuality/kalendar-akci/inzerat-nemoviteho-majetku-onnm &lt;span&gt;inzerát nemovitého majetku ONNM&lt;/span&gt; &lt;span&gt;&lt;span&gt;Beáta Čajková&lt;/span&gt;&lt;/span&gt; &lt;span&gt;&lt;time datetime=\"2024-06-19T12:11:24+02:00\" title=\"Středa, Červen 19, 2024 - 12:11\"&gt;1"
-   }
-  },
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "Ministerstvo obrany — nepotřebný majetek",
-   "adresa": "https://onnm.mo.gov.cz/sitemap.xml",
-   "cesta": "Sitemapa",
-   "verdikt": "slibná",
-   "proc": "strojový tvar, mluví o pozemcích i o převodu",
-   "nabidek": 0,
-   "coSTim": "dopsat čtení toho strojového tvaru",
-   "znaky": {
-    "titulek": "",
-    "znaku": 3902,
-    "pocty": {
-     "dražba": 1
-    },
-    "odkazu": 0,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": false,
-    "vypadaNaPrazdno": false,
-    "ukazka": "http://akis-d9.msw-cloud.com/ daily 1.0 http://akis-d9.msw-cloud.com/prohlaseni-o-pristupnosti 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025 2026-04-27T07:32Z yearly http://akis-d9.msw-cloud.com/ochrana-osobnich-udaju 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/audio 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/videogalerie 2"
-   }
-  },
-  {
-   "host": "verejnedrazby.cz",
-   "jmeno": "Veřejné dražby",
-   "adresa": "https://www.verejnedrazby.cz/api",
-   "cesta": "API (koren)",
-   "verdikt": "ke čtení",
-   "proc": "přečteno 9 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
-   "nabidek": 9,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Online Aukce | Veřejné dražby, Gaute",
-    "znaku": 2922,
-    "pocty": {
-     "cena": 8,
-     "výměra": 19,
-     "výběrové řízení": 1,
-     "dražba": 6
-    },
-    "odkazu": 46,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
-   }
-  },
-  {
-   "host": "verejnedrazby.cz",
-   "jmeno": "Veřejné dražby",
-   "adresa": "https://www.verejnedrazby.cz/",
-   "cesta": "vstupní adresa",
-   "verdikt": "ke čtení",
-   "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
-   "nabidek": 8,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Online Aukce | Veřejné dražby, Gaute",
-    "znaku": 2879,
-    "pocty": {
-     "cena": 8,
-     "výměra": 18,
-     "výběrové řízení": 1,
-     "dražba": 6
-    },
-    "odkazu": 46,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
-   }
-  },
-  {
-   "host": "verejnedrazby.cz",
-   "jmeno": "Veřejné dražby",
-   "adresa": "https://www.verejnedrazby.cz/atom.xml",
-   "cesta": "Atom",
-   "verdikt": "ke čtení",
-   "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
-   "nabidek": 8,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Online Aukce | Veřejné dražby, Gaute",
-    "znaku": 2892,
-    "pocty": {
-     "cena": 8,
-     "výměra": 18,
-     "výběrové řízení": 1,
-     "dražba": 6
-    },
-    "odkazu": 46,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
-   }
-  },
-  {
-   "host": "elektronickedrazby.cz",
-   "jmeno": "Elektronické dražby",
-   "adresa": "https://www.elektronickedrazby.cz/",
-   "cesta": "vstupní adresa",
-   "verdikt": "ke čtení",
-   "proc": "přečteno 7 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
-   "nabidek": 7,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Elektronické dražby | Nabídka dražeb",
-    "znaku": 20158,
-    "pocty": {
-     "cena": 24,
-     "výměra": 31,
-     "katastr": 4,
-     "výběrové řízení": 8,
-     "dražba": 19
-    },
-    "odkazu": 52,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Elektronické dražby | Nabídka dražeb --> Menu info@gavlas.cz 221 666 666 Nabídka dražeb Jak dražit? Chci prodat Obchodní podmínky GDPR Registrace Přihlášení --> OBCHODNÍ PALÁC SPARKASSE v centru Karlových Varů, u Vřídelní kolonády Typ objektu vše Byt (724) Rodinný dům (183) Rekreační objekt (25) Činžovní dům (16) Komerční nemovitost (168) Pozemek (53) Ostatní (7) Obchodní závody (podniky) (1) Movi"
-   }
-  },
-  {
-   "host": "drazby.policenm.cz",
-   "jmeno": "Dražby Police nad Metují",
-   "adresa": "https://drazby.policenm.cz/",
-   "cesta": "vstupní adresa",
-   "verdikt": "ke čtení",
-   "proc": "přečteno 1 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
-   "nabidek": 1,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Dražba | Dražební portál Police nad Metují",
-    "znaku": 2154,
-    "pocty": {
-     "cena": 1,
-     "výměra": 1,
-     "katastr": 1,
-     "dražba": 10
-    },
-    "odkazu": 31,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": false,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Dražba | Dražební portál Police nad Metují Registrace Přihlášení Dražby Dražby Připravované Probíhající Ukončené Mapa Vše o dražbách O nás Kontakt Registrace Přihlášení Mapa dražeb Filtrovat dražby: Kategorie Nemovitosti Pozemek Stavební pozemek Rodinný dům Rekreační objekt Bytový dům Byt Nebytový/kancelářský prostor Průmyslová stavba Zemědělská stavba Rozestavěná stavba Členský podíl v bytovém dr"
-   }
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "Dražby Naxos",
-   "adresa": "https://drazbynaxos.cz/drazby/manualy/aukce",
-   "cesta": "adresa ze sitemapy",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu a v textu je 4× cena a 0× výměra — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Manuál k aukci | Dražby NAXOS",
-    "znaku": 4427,
-    "pocty": {
-     "cena": 4,
-     "dražba": 6
-    },
-    "odkazu": 14,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Manuál k aukci | Dražby NAXOS Domovská stránka Kalendář Historie Přihlásit se Návod k účasti v aukci na soutěžní platformě DRAŽBY NAXOS I. Příprava na aukci 1. Přihlášení do systému Klikněte na tlačítko „Přihlásit se“ v pravém horním rohu obrazovky. Zadejte své přihlašovací údaje (e-mail a heslo). 2. Výběr aukce Otevřete sekci „Kalendář“ a vyberte aukci, které se chcete zúčastnit. Klikněte na náze"
-   }
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "Dražby Naxos",
-   "adresa": "https://drazbynaxos.cz/drazby/testovaci-soutez",
-   "cesta": "adresa ze sitemapy",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu a v textu je 3× cena a 0× výměra — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Testovací soutěž | Dražby NAXOS",
-    "znaku": 3520,
-    "pocty": {
-     "cena": 3,
-     "výběrové řízení": 4,
-     "dražba": 21
-    },
-    "odkazu": 13,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Testovací soutěž | Dražby NAXOS Domovská stránka Kalendář Historie Přihlásit se Testovací dražba Vítejte v testovacím prostředí dražební platformy NAXOS . Toto je testovací prostředí, kde si můžete vyzkoušet přihazování nanečisto . Testovací dražbu si můžete spustit opakovaně a kdykoliv Vám to bude vyhovovat. V testovací dražební místnosti budete dražit proti fiktivním virtuálním účastníkům . Test"
-   }
-  },
-  {
-   "host": "policie.gov.cz",
-   "jmeno": "Policie ČR — prodej nemovitého majetku",
-   "adresa": "https://policie.gov.cz/clanek/prodej-nemoviteho-majetku-vyberove-rizeni.aspx",
-   "cesta": "vstupní adresa",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu a v textu je 15× cena a 0× výměra — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Archiv: Prodej nemovitého majetku – výběrové řízení - Policie České republiky",
-    "znaku": 8099,
-    "pocty": {
-     "cena": 15,
-     "katastr": 1,
-     "výběrové řízení": 20
-    },
-    "odkazu": 114,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": false,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Archiv: Prodej nemovitého majetku – výběrové řízení - Policie České republiky Nacházíte se na archivní verzi webu Policie České republiky. Obsah zde nemusí být aktuální. Přejít na novou verzi webu → Policie České republiky Přejdi na přejdi na obsah | přejdi na hlavní menu | přejdi na podmenu Hledat Rychlé menu Rychlé menu KŘP Moravskoslezského kraje KŘP Olomouckého kraje KŘP Zlínského kraje KŘP Ji"
-   }
-  },
-  {
-   "host": "edesky.cz",
-   "jmeno": "eDesky",
-   "adresa": "https://edesky.cz/api/v1/documents",
-   "cesta": "vstupní adresa",
-   "verdikt": "chce klíč",
-   "proc": "HTTP 401, a sama říká, že chce klíč nebo přihlášení: Chyba: nepřihlášen. Použijte svůj API klíč, který najdete pro přihlášení na https://edesky.cz/uzivatel/edit",
-   "nabidek": 0,
-   "coSTim": "zařídit účet a klíč (jen majitel) a dát ho do GitHub Secrets",
-   "znaky": null
-  }
- ],
+ "noveOdMinule": [],
  "dny": {
   "2026-11-04": 0,
   "2026-11-05": 1,
-  "2026-11-09": 0
+  "2026-11-09": 0,
+  "2026-11-16": 0
  }
 }
