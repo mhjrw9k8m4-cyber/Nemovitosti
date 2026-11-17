@@ -19472,16 +19472,6 @@
    "dr": "trvalý travní porost",
    "t": "sale"
   },
-  "Jestřebí|—|Náchod|50.372|16.183#obhd": {
-   "od": "2026-11-10",
-   "videno": "2026-11-17",
-   "c": 1799000,
-   "v": 2433,
-   "m": "Jestřebí",
-   "o": "Náchod",
-   "dr": "zahrada",
-   "t": "sale"
-  },
   "Vílanec|—|Jihlava|49.328|15.553#i21gsz": {
    "od": "2026-09-14",
    "videno": "2026-11-17",
@@ -39721,6 +39711,16 @@
    "o": "Svitavy",
    "dr": "orná půda",
    "t": "exekuce"
+  },
+  "Jestřebí|—|Česká Lípa|50.614|14.587#obhd": {
+   "od": "2026-11-10",
+   "videno": "2026-11-17",
+   "c": 1799000,
+   "v": 2433,
+   "m": "Jestřebí",
+   "o": "Náchod",
+   "dr": "zahrada",
+   "t": "sale"
   }
  }
 }
