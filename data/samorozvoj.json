@@ -69,6 +69,11 @@
    "prokazanych": 21,
    "slepych": 10,
    "nalezu": 1
+  },
+  "2026-11-18": {
+   "prokazanych": 22,
+   "slepych": 10,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1920,9 +1925,78 @@
    "pomucky": [],
    "otisk": "0a5fa2842d96",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: 17 v pořádku, 1 chyb  "
+  },
+  "test-mnozstvi.mjs": {
+   "kdy": "2026-11-18",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "04414a4c00fd",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-model-vstup.mjs": {
+   "kdy": "2026-11-18",
+   "hlidá": 2,
+   "chytila": 1,
+   "nechytila": 5,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v js/hlidani-logika.js",
+    "obrácené porovnání (<= na <) v js/hlidani-logika.js",
+    "zahozená pojistka (if … continue) v js/hlidani-logika.js",
+    "a místo nebo (&& na ||) v js/hlidani-logika.js",
+    "posunutá konstanta (+1) v js/hlidani-logika.js"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "892a8d0c69f1",
+   "poznamka": ""
+  },
+  "test-mrtva-hranice.mjs": {
+   "kdy": "2026-11-18",
+   "hlidá": 2,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácená rovnost (=== na !==) v js/druh.js",
+    "zahozená pojistka (if … continue) v js/druh.js",
+    "a místo nebo (&& na ||) v js/druh.js",
+    "posunutá konstanta (+1) v js/druh.js",
+    "obrácená rovnost (=== na !==) v js/kategorie.js",
+    "a místo nebo (&& na ||) v js/kategorie.js"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "bea1e37ce63f",
+   "poznamka": ""
+  },
+  "test-mrtva-jmena.mjs": {
+   "kdy": "2026-11-18",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "86040697e380",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-17",
+ "updated": "2026-11-18",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
@@ -2382,14 +2456,46 @@
    "obrácené porovnání (>= na >)": {
     "chytily": [],
     "mlcely": [
-     "test-data.mjs"
-    ]
+     "test-data.mjs",
+     "test-model-vstup.mjs"
+    ],
+    "hlidacu": 41
    },
    "obrácené porovnání (<= na <)": {
     "chytily": [],
     "mlcely": [
-     "test-data.mjs"
-    ]
+     "test-data.mjs",
+     "test-model-vstup.mjs"
+    ],
+    "hlidacu": 41
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-model-vstup.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-model-vstup.mjs"
+    ],
+    "hlidacu": 41
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-model-vstup.mjs"
+    ],
+    "hlidacu": 41
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [],
+    "mlcely": [
+     "test-model-vstup.mjs"
+    ],
+    "hlidacu": 41
    }
   },
   "js/ceny.js": {
@@ -2778,15 +2884,19 @@
     "chytily": [
      "test-kategorie.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "mlcely": [
+     "test-mrtva-hranice.mjs"
+    ],
+    "hlidacu": 8
    },
    "a místo nebo (&& na ||)": {
     "chytily": [
      "test-kategorie.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "mlcely": [
+     "test-mrtva-hranice.mjs"
+    ],
+    "hlidacu": 8
    },
    "posunutá konstanta (+1)": {
     "chytily": [
@@ -2999,6 +3109,36 @@
      "test-minifikace.mjs"
     ],
     "hlidacu": 6
+   }
+  },
+  "js/druh.js": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mrtva-hranice.mjs"
+    ],
+    "hlidacu": 3
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mrtva-hranice.mjs"
+    ],
+    "hlidacu": 3
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mrtva-hranice.mjs"
+    ],
+    "hlidacu": 3
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [],
+    "mlcely": [
+     "test-mrtva-hranice.mjs"
+    ],
+    "hlidacu": 3
    }
   }
  }
