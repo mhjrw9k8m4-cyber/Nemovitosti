@@ -8932,16 +8932,6 @@
    "dr": "orná půda",
    "t": "sale"
   },
-  "Brodek u Konice|—|Svitavy|49.674|16.616#i0ft9u": {
-   "od": "2026-09-14",
-   "videno": "2026-11-18",
-   "c": 59000,
-   "v": 1761,
-   "m": "Brodek u Konice",
-   "o": "Svitavy",
-   "dr": "orná půda",
-   "t": "sale"
-  },
   "Kvíčovice|—|Plzeň-jih|49.586|13.077#231bc": {
    "od": "2026-09-21",
    "videno": "2026-11-18",
@@ -11322,16 +11312,6 @@
    "dr": "trvalý travní porost",
    "t": "sale"
   },
-  "Oselce|—|Plzeň-jih|49.440|13.678#i0fubg": {
-   "od": "2026-09-14",
-   "videno": "2026-11-18",
-   "c": 199000,
-   "v": 4955,
-   "m": "Oselce",
-   "o": "Plzeň-jih",
-   "dr": "orná půda",
-   "t": "sale"
-  },
   "Boleradice|—|Břeclav|48.963|16.806#2vhnp": {
    "od": "2026-09-22",
    "videno": "2026-11-18",
@@ -11882,16 +11862,6 @@
    "dr": "trvalý travní porost",
    "t": "sale"
   },
-  "Brodek u Konice|—|Svitavy|49.674|16.616#4sz0j": {
-   "od": "2026-09-14",
-   "videno": "2026-11-18",
-   "c": 90000,
-   "v": 2138,
-   "m": "Brodek u Konice",
-   "o": "Svitavy",
-   "dr": "orná půda",
-   "t": "sale"
-  },
   "Katov|—|Brno-venkov|49.331|16.279#4sz3e": {
    "od": "2026-11-08",
    "videno": "2026-11-18",
@@ -11912,16 +11882,6 @@
    "dr": "orná půda",
    "t": "sale"
   },
-  "Brodek u Konice|—|Svitavy|49.674|16.616#4sz0g": {
-   "od": "2026-09-14",
-   "videno": "2026-11-18",
-   "c": 117000,
-   "v": 2777,
-   "m": "Brodek u Konice",
-   "o": "Svitavy",
-   "dr": "orná půda",
-   "t": "sale"
-  },
   "Nové Dvory|—|Žďár nad Sázavou|49.559|15.813#3gadh": {
    "od": "2026-11-10",
    "videno": "2026-11-18",
@@ -11929,16 +11889,6 @@
    "v": 13051,
    "m": "Nové Dvory",
    "o": "Žďár nad Sázavou",
-   "dr": "orná půda",
-   "t": "sale"
-  },
-  "Brodek u Konice|—|Svitavy|49.674|16.616#4sz0h": {
-   "od": "2026-09-14",
-   "videno": "2026-11-18",
-   "c": 359000,
-   "v": 8490,
-   "m": "Brodek u Konice",
-   "o": "Svitavy",
    "dr": "orná půda",
    "t": "sale"
   },
@@ -17222,16 +17172,6 @@
    "dr": "vodní plocha",
    "t": "sale"
   },
-  "Mikulovice|—|Znojmo|48.953|16.097#i4475f": {
-   "od": "2026-09-14",
-   "videno": "2026-11-18",
-   "c": 4900000,
-   "v": 51262,
-   "m": "Mikulovice",
-   "o": "Znojmo",
-   "dr": "orná půda",
-   "t": "sale"
-  },
   "Uhelná|—|Jeseník|50.368|17.022#2r0dg": {
    "od": "2026-09-16",
    "videno": "2026-11-18",
@@ -21952,16 +21892,6 @@
    "dr": "stavební pozemek",
    "t": "sale"
   },
-  "Březová nad Svitavou|—|Svitavy|49.650|16.514#4twmh": {
-   "od": "2026-11-07",
-   "videno": "2026-11-18",
-   "c": 4850000,
-   "v": 721,
-   "m": "Březová nad Svitavou",
-   "o": "Svitavy",
-   "dr": "dům",
-   "t": "sale"
-  },
   "Neklanova|—|Praha|50.193|14.313#9nvbc": {
    "od": "2026-11-10",
    "videno": "2026-11-18",
@@ -23630,16 +23560,6 @@
    "m": "Jívová",
    "o": "Olomouc",
    "dr": "dům",
-   "t": "sale"
-  },
-  "Sokolovská|—|Praha|50.165|14.747#9q8tr": {
-   "od": "2026-11-10",
-   "videno": "2026-11-18",
-   "c": 15000000,
-   "v": 463,
-   "m": "Sokolovská",
-   "o": "Praha",
-   "dr": "komerční objekt",
    "t": "sale"
   },
   "V Kněžívce|—|Praha-západ|50.130|14.280#9pgfg": {
@@ -32192,16 +32112,6 @@
    "dr": "byt",
    "t": "sale"
   },
-  "Zahradní|—|Tábor|49.385|14.772#4q15w": {
-   "od": "2026-11-15",
-   "videno": "2026-11-18",
-   "c": 15780000,
-   "v": 125,
-   "m": "Zahradní",
-   "o": "Tábor",
-   "dr": "dům",
-   "t": "sale"
-  },
   "Praha|—|Praha|50.111|14.647#20xnr": {
    "od": "2026-11-12",
    "videno": "2026-11-18",
@@ -39811,6 +39721,96 @@
    "o": "Hodonín",
    "dr": "orná půda",
    "t": "exekuce"
+  },
+  "Brodek u Konice|—|Prostějov|49.560|16.831#i0ft9u": {
+   "od": "2026-09-14",
+   "videno": "2026-11-18",
+   "c": 59000,
+   "v": 1761,
+   "m": "Brodek u Konice",
+   "o": "Svitavy",
+   "dr": "orná půda",
+   "t": "sale"
+  },
+  "Oselce|—|Plzeň-jih|49.435|13.674#i0fubg": {
+   "od": "2026-09-14",
+   "videno": "2026-11-18",
+   "c": 199000,
+   "v": 4955,
+   "m": "Oselce",
+   "o": "Plzeň-jih",
+   "dr": "orná půda",
+   "t": "sale"
+  },
+  "Brodek u Konice|—|Prostějov|49.559|16.840#4sz0j": {
+   "od": "2026-09-14",
+   "videno": "2026-11-18",
+   "c": 90000,
+   "v": 2138,
+   "m": "Brodek u Konice",
+   "o": "Svitavy",
+   "dr": "orná půda",
+   "t": "sale"
+  },
+  "Brodek u Konice|—|Prostějov|49.561|16.830#4sz0g": {
+   "od": "2026-09-14",
+   "videno": "2026-11-18",
+   "c": 117000,
+   "v": 2777,
+   "m": "Brodek u Konice",
+   "o": "Svitavy",
+   "dr": "orná půda",
+   "t": "sale"
+  },
+  "Brodek u Konice|—|Prostějov|49.550|16.831#4sz0h": {
+   "od": "2026-09-14",
+   "videno": "2026-11-18",
+   "c": 359000,
+   "v": 8490,
+   "m": "Brodek u Konice",
+   "o": "Svitavy",
+   "dr": "orná půda",
+   "t": "sale"
+  },
+  "Mikulovice|—|Znojmo|48.954|16.100#i4475f": {
+   "od": "2026-09-14",
+   "videno": "2026-11-18",
+   "c": 4900000,
+   "v": 51262,
+   "m": "Mikulovice",
+   "o": "Znojmo",
+   "dr": "orná půda",
+   "t": "sale"
+  },
+  "Lesní|—|Mladá Boleslav|50.308|14.911#4twmh": {
+   "od": "2026-11-07",
+   "videno": "2026-11-18",
+   "c": 4850000,
+   "v": 721,
+   "m": "Březová nad Svitavou",
+   "o": "Svitavy",
+   "dr": "dům",
+   "t": "sale"
+  },
+  "Čelákovice|—|Praha-východ|50.158|14.751#9q8tr": {
+   "od": "2026-11-10",
+   "videno": "2026-11-18",
+   "c": 15000000,
+   "v": 463,
+   "m": "Sokolovská",
+   "o": "Praha",
+   "dr": "komerční objekt",
+   "t": "sale"
+  },
+  "Líbeznice|—|Praha-východ|50.198|14.489#4q15w": {
+   "od": "2026-11-15",
+   "videno": "2026-11-18",
+   "c": 15780000,
+   "v": 125,
+   "m": "Zahradní",
+   "o": "Tábor",
+   "dr": "dům",
+   "t": "sale"
   }
  }
 }
