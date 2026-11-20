@@ -79,6 +79,11 @@
    "prokazanych": 25,
    "slepych": 10,
    "nalezu": 1
+  },
+  "2026-11-20": {
+   "prokazanych": 25,
+   "slepych": 11,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -2087,15 +2092,97 @@
    "pomucky": [],
    "otisk": "a811473e7a23",
    "poznamka": ""
+  },
+  "test-nahoru.mjs": {
+   "kdy": "2026-11-20",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/vzorek-pozemku.mjs"
+   ],
+   "otisk": "e4e5e3a138a3",
+   "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/vzorek-pozemku.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
+  },
+  "test-najeti.mjs": {
+   "kdy": "2026-11-20",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "01b3c80b1b4a",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-naklady.mjs": {
+   "kdy": "2026-11-20",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "53fe75999cf8",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-nasad-sql.mjs": {
+   "kdy": "2026-11-20",
+   "hlidá": 2,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácená rovnost (=== na !==)",
+    "a místo nebo (&& na ||)"
+   ],
+   "mlcela": [
+    "obrácená rovnost (=== na !==) v scripts/sql-koncovy-stav.mjs",
+    "zahozená pojistka (if … continue) v scripts/sql-koncovy-stav.mjs",
+    "a místo nebo (&& na ||) v scripts/sql-koncovy-stav.mjs",
+    "posunutá konstanta (+1) v scripts/sql-koncovy-stav.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "5f987db97c81",
+   "poznamka": ""
+  },
+  "test-naseptavac.mjs": {
+   "kdy": "2026-11-20",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/rozbal-hledani.mjs"
+   ],
+   "otisk": "c4f79886ba10",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-19",
+ "updated": "2026-11-20",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "308 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "305 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
@@ -3045,8 +3132,31 @@
     "chytily": [
      "test-inzerat-token.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "mlcely": [
+     "test-nasad-sql.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nasad-sql.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nasad-sql.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nasad-sql.mjs"
+    ],
+    "hlidacu": 2
    }
   },
   "js/pozemek.js": {
@@ -3323,6 +3433,22 @@
      "test-nabidky-statu.mjs"
     ],
     "mlcely": [],
+    "hlidacu": 1
+   }
+  },
+  "scripts/nasad-sql.mjs": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nasad-sql.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nasad-sql.mjs"
+    ],
     "hlidacu": 1
    }
   }
