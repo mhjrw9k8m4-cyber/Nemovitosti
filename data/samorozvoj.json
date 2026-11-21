@@ -84,6 +84,11 @@
    "prokazanych": 25,
    "slepych": 11,
    "nalezu": 1
+  },
+  "2026-11-21": {
+   "prokazanych": 25,
+   "slepych": 12,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -2174,9 +2179,54 @@
    ],
    "otisk": "c4f79886ba10",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-nastroje-v-dosahu.mjs": {
+   "kdy": "2026-11-21",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "f3567f009a28",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-neosobni.mjs": {
+   "kdy": "2026-11-21",
+   "hlidá": 2,
+   "chytila": 2,
+   "nechytila": 2,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácená rovnost (=== na !==)",
+    "a místo nebo (&& na ||)"
+   ],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "be4f0e099e4f",
+   "poznamka": ""
+  },
+  "test-nova-verze.mjs": {
+   "kdy": "2026-11-21",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "c8c34aa0af4b",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-20",
+ "updated": "2026-11-21",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
@@ -3448,6 +3498,38 @@
     "chytily": [],
     "mlcely": [
      "test-nasad-sql.mjs"
+    ],
+    "hlidacu": 1
+   }
+  },
+  "js/neosobni.js": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-neosobni.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-neosobni.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   }
+  },
+  "scripts/hlasic-chyb.mjs": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-neosobni.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-neosobni.mjs"
     ],
     "hlidacu": 1
    }
