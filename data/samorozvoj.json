@@ -89,6 +89,11 @@
    "prokazanych": 25,
    "slepych": 12,
    "nalezu": 1
+  },
+  "2026-11-22": {
+   "prokazanych": 25,
+   "slepych": 13,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -2224,15 +2229,79 @@
    "pomucky": [],
    "otisk": "c8c34aa0af4b",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-nove-okno.mjs": {
+   "kdy": "2026-11-22",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "33791e2e581e",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-nove-pozemky.mjs": {
+   "kdy": "2026-11-22",
+   "hlidá": 4,
+   "chytila": 2,
+   "nechytila": 4,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácená rovnost (=== na !==)",
+    "zahozený filter(Boolean)",
+    "posunutá konstanta (+1)"
+   ],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/generate-parcel-pages.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "365e41b0e2c5",
+   "poznamka": ""
+  },
+  "test-obec.mjs": {
+   "kdy": "2026-11-22",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/rozbal-hledani.mjs"
+   ],
+   "otisk": "8e874faf0d58",
+   "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/rozbal-hledani.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
+  },
+  "test-obrys.mjs": {
+   "kdy": "2026-11-22",
+   "hlidá": 3,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "a54f14ae0428",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-21",
+ "updated": "2026-11-22",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "305 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "304 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
@@ -2290,7 +2359,8 @@
      "test-json-ve-strance.mjs",
      "test-kam-dal.mjs",
      "test-mapa-webu.mjs",
-     "test-nabidka-pro-stroje.mjs"
+     "test-nabidka-pro-stroje.mjs",
+     "test-nove-pozemky.mjs"
     ],
     "hlidacu": 26
    },
@@ -3530,6 +3600,43 @@
     "chytily": [],
     "mlcely": [
      "test-neosobni.mjs"
+    ],
+    "hlidacu": 1
+   }
+  },
+  "scripts/novinky-rez.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [
+     "test-nove-pozemky.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nove-pozemky.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "zahozený filter(Boolean)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nove-pozemky.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-nove-pozemky.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [],
+    "mlcely": [
+     "test-nove-pozemky.mjs"
     ],
     "hlidacu": 1
    }
