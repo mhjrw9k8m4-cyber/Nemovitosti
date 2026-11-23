@@ -94,6 +94,11 @@
    "prokazanych": 25,
    "slepych": 13,
    "nalezu": 1
+  },
+  "2026-11-23": {
+   "prokazanych": 25,
+   "slepych": 14,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -2293,15 +2298,102 @@
    "pomucky": [],
    "otisk": "a54f14ae0428",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-odhad-regiony.mjs": {
+   "kdy": "2026-11-23",
+   "hlidá": 4,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/generate-parcel-pages.mjs",
+    "obrácené porovnání (<= na <) v scripts/generate-parcel-pages.mjs",
+    "obrácená rovnost (=== na !==) v scripts/generate-parcel-pages.mjs",
+    "zahozená pojistka (if … continue) v scripts/generate-parcel-pages.mjs",
+    "a místo nebo (&& na ||) v scripts/generate-parcel-pages.mjs",
+    "posunutá konstanta (+1) v scripts/generate-parcel-pages.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "b922cc213718",
+   "poznamka": ""
+  },
+  "test-odhlaseni.mjs": {
+   "kdy": "2026-11-23",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "a1c934d6c303",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-odkaz-prohlizec.mjs": {
+   "kdy": "2026-11-23",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/rozbal-hledani.mjs"
+   ],
+   "otisk": "a4e166c535a1",
+   "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/rozbal-hledani.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
+  },
+  "test-odkaz.mjs": {
+   "kdy": "2026-11-23",
+   "hlidá": 2,
+   "chytila": 2,
+   "nechytila": 4,
+   "rovnocenne": [],
+   "slepa": [
+    "a místo nebo (&& na ||)"
+   ],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v js/main.js",
+    "obrácené porovnání (<= na <) v js/main.js",
+    "obrácená rovnost (=== na !==) v js/main.js"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "b936fde4b533",
+   "poznamka": ""
+  },
+  "test-odkryte.mjs": {
+   "kdy": "2026-11-23",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/adresa-pozemku.mjs"
+   ],
+   "otisk": "d5912b42b635",
+   "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/adresa-pozemku.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
   }
  },
- "updated": "2026-11-22",
+ "updated": "2026-11-23",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "304 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "303 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
@@ -2311,22 +2403,28 @@
     "chytily": [],
     "mlcely": [
      "test-barvy.mjs",
-     "test-ctvrt.mjs"
-    ]
+     "test-ctvrt.mjs",
+     "test-odkaz.mjs"
+    ],
+    "hlidacu": 24
    },
    "obrácené porovnání (<= na <)": {
     "chytily": [],
     "mlcely": [
      "test-barvy.mjs",
-     "test-ctvrt.mjs"
-    ]
+     "test-ctvrt.mjs",
+     "test-odkaz.mjs"
+    ],
+    "hlidacu": 24
    },
    "obrácená rovnost (=== na !==)": {
     "chytily": [],
     "mlcely": [
      "test-barvy.mjs",
-     "test-ctvrt.mjs"
-    ]
+     "test-ctvrt.mjs",
+     "test-odkaz.mjs"
+    ],
+    "hlidacu": 24
    },
    "zahozená pojistka (if … continue)": {
     "chytily": [],
@@ -2360,7 +2458,8 @@
      "test-kam-dal.mjs",
      "test-mapa-webu.mjs",
      "test-nabidka-pro-stroje.mjs",
-     "test-nove-pozemky.mjs"
+     "test-nove-pozemky.mjs",
+     "test-odhad-regiony.mjs"
     ],
     "hlidacu": 26
    },
@@ -2371,7 +2470,8 @@
      "test-json-ve-strance.mjs",
      "test-kam-dal.mjs",
      "test-mapa-webu.mjs",
-     "test-nabidka-pro-stroje.mjs"
+     "test-nabidka-pro-stroje.mjs",
+     "test-odhad-regiony.mjs"
     ],
     "hlidacu": 26
    },
@@ -2382,7 +2482,8 @@
      "test-json-ve-strance.mjs",
      "test-kam-dal.mjs",
      "test-mapa-webu.mjs",
-     "test-nabidka-pro-stroje.mjs"
+     "test-nabidka-pro-stroje.mjs",
+     "test-odhad-regiony.mjs"
     ],
     "hlidacu": 26
    },
@@ -2393,7 +2494,8 @@
      "test-json-ve-strance.mjs",
      "test-kam-dal.mjs",
      "test-mapa-webu.mjs",
-     "test-nabidka-pro-stroje.mjs"
+     "test-nabidka-pro-stroje.mjs",
+     "test-odhad-regiony.mjs"
     ],
     "hlidacu": 26
    },
@@ -2404,7 +2506,8 @@
      "test-json-ve-strance.mjs",
      "test-kam-dal.mjs",
      "test-mapa-webu.mjs",
-     "test-nabidka-pro-stroje.mjs"
+     "test-nabidka-pro-stroje.mjs",
+     "test-odhad-regiony.mjs"
     ],
     "hlidacu": 26
    },
@@ -2415,7 +2518,8 @@
     "mlcely": [
      "test-json-ve-strance.mjs",
      "test-mapa-webu.mjs",
-     "test-nabidka-pro-stroje.mjs"
+     "test-nabidka-pro-stroje.mjs",
+     "test-odhad-regiony.mjs"
     ],
     "hlidacu": 26
    }
@@ -3638,6 +3742,29 @@
     "mlcely": [
      "test-nove-pozemky.mjs"
     ],
+    "hlidacu": 1
+   }
+  },
+  "js/odkaz.js": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-odkaz.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-odkaz.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-odkaz.mjs"
+    ],
+    "mlcely": [],
     "hlidacu": 1
    }
   }
