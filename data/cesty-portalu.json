@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16",
+ "updated": "2026-11-23",
  "tvaru": 29,
  "zmerenychTvaru": 8,
  "dotazu": 400,
@@ -1038,13 +1038,13 @@
      "skupina": "vstup",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 68 odkazech — bude to rozcestník, ne výpis",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 69 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 29789,
+     "bajtu": 30270,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1763,7 +1763,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 127879,
+     "bajtu": 127823,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1831,7 +1831,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 202029,
+     "bajtu": 202329,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1863,7 +1863,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 82442,
+     "bajtu": 82358,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1879,7 +1879,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 95580,
+     "bajtu": 95664,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1911,7 +1911,7 @@
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 78710,
+     "bajtu": 78626,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -1943,7 +1943,7 @@
      "oPozemku": false,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 73475,
+     "bajtu": 73391,
      "nabidek": 0,
      "cestaCteni": null
     }
@@ -2202,7 +2202,7 @@
      "oPrevodu": true,
      "znaky": {
       "titulek": "",
-      "znaku": 3902,
+      "znaku": 3904,
       "pocty": {
        "dražba": 1
       },
@@ -2214,7 +2214,7 @@
       "ukazka": "http://akis-d9.msw-cloud.com/ daily 1.0 http://akis-d9.msw-cloud.com/prohlaseni-o-pristupnosti 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025 2026-04-27T07:32Z yearly http://akis-d9.msw-cloud.com/ochrana-osobnich-udaju 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/audio 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/videogalerie 2"
      },
      "stav": 200,
-     "bajtu": 7731,
+     "bajtu": 7733,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -2826,13 +2826,13 @@
      "skupina": "vstup",
      "zmereno": true,
      "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 83 odkazech — bude to rozcestník, ne výpis",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 85 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 22565,
+     "bajtu": 22759,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -2992,7 +2992,7 @@
      "oPozemku": false,
      "oPrevodu": false,
      "stav": 200,
-     "bajtu": 20373,
+     "bajtu": 20567,
      "nabidek": 0,
      "cestaCteni": null
     },
@@ -4483,7 +4483,7 @@
    "kontrolaNeexistujici": {
     "adresa": "https://www.verejnedrazby.cz/__takova-cesta-tu-neni-9c3f",
     "stav": 404,
-    "bajtu": 22424
+    "bajtu": 22512
    },
    "cesty": [
     {
@@ -4497,15 +4497,15 @@
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
+     "proc": "přečteno 9 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Online Aukce | Veřejné dražby, Gaute",
-      "znaku": 2945,
+      "znaku": 2943,
       "pocty": {
        "cena": 8,
        "výměra": 18,
        "výběrové řízení": 1,
-       "dražba": 9
+       "dražba": 8
       },
       "odkazu": 46,
       "jsonLd": 0,
@@ -4515,8 +4515,58 @@
       "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
      },
      "stav": 200,
-     "bajtu": 27402,
-     "nabidek": 8,
+     "bajtu": 27387,
+     "nabidek": 9,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 31680000,
+      "vymera": 3013,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/lod/catalog",
+     "jmeno": "OFN katalog (lod)",
+     "skupina": "katalog",
+     "zmereno": true,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22425,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 13990000,
+      "vymera": 2666,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/katalog",
+     "jmeno": "OFN katalog (katalog)",
+     "skupina": "katalog",
+     "zmereno": true,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22434,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -4533,39 +4583,39 @@
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/lod/catalog",
-     "jmeno": "OFN katalog (lod)",
+     "adresa": "https://www.verejnedrazby.cz/api/catalogue",
+     "jmeno": "OFN katalog (api/catalogue)",
      "skupina": "katalog",
-     "zmereno": true,
+     "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22521,
-     "nabidek": 7,
+     "bajtu": 22370,
+     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 4128000,
-      "vymera": 406,
+      "cena": 7500000,
+      "vymera": 2666,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-byvaleho-komplexu-aurum-hotel-53-luzek",
       "dalsiPolicka": [
        "odkud"
       ]
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/katalog",
-     "jmeno": "OFN katalog (katalog)",
+     "adresa": "https://www.verejnedrazby.cz/opendata/katalog",
+     "jmeno": "OFN katalog (opendata/katalog)",
      "skupina": "katalog",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22430,
+     "bajtu": 22514,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -4583,56 +4633,6 @@
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/api/catalogue",
-     "jmeno": "OFN katalog (api/catalogue)",
-     "skupina": "katalog",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22439,
-     "nabidek": 7,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 17473000,
-      "vymera": 1813,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/opendata/katalog",
-     "jmeno": "OFN katalog (opendata/katalog)",
-     "skupina": "katalog",
-     "zmereno": true,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22445,
-     "nabidek": 6,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 17473000,
-      "vymera": 1813,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
      "adresa": "https://www.verejnedrazby.cz/katalog.jsonld",
      "jmeno": "OFN katalog (jsonld)",
      "skupina": "katalog",
@@ -4640,57 +4640,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22383,
-     "nabidek": 6,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 13990000,
-      "vymera": 5239,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/data.json",
-     "jmeno": "DCAT data.json",
-     "skupina": "katalog",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22567,
-     "nabidek": 6,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 19200000,
-      "vymera": 8703,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/api/3/action/package_search?q=pozemky&rows=5",
-     "jmeno": "CKAN hledání",
-     "skupina": "katalog",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22422,
+     "bajtu": 22533,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -4708,6 +4658,56 @@
      }
     },
     {
+     "adresa": "https://www.verejnedrazby.cz/data.json",
+     "jmeno": "DCAT data.json",
+     "skupina": "katalog",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22390,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 31680000,
+      "vymera": 3013,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/api/3/action/package_search?q=pozemky&rows=5",
+     "jmeno": "CKAN hledání",
+     "skupina": "katalog",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22512,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 13990000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
      "adresa": "https://www.verejnedrazby.cz/api/3/action/package_list",
      "jmeno": "CKAN seznam",
      "skupina": "katalog",
@@ -4715,7 +4715,7 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22439,
+     "bajtu": 22567,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -4740,18 +4740,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22523,
-     "nabidek": 6,
+     "bajtu": 22486,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 17473000,
-      "vymera": 52235,
+      "cena": 3300000,
+      "vymera": 90,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4765,8 +4765,8 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22541,
-     "nabidek": 6,
+     "bajtu": 22528,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -4790,18 +4790,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22456,
-     "nabidek": 5,
+     "bajtu": 22507,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 19200000,
-      "vymera": 8703,
+      "cena": 4128000,
+      "vymera": 406,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4815,18 +4815,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22408,
+     "bajtu": 22521,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 13700000,
-      "vymera": 3347,
+      "cena": 4128000,
+      "vymera": 406,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozniho-arealu-uzitna-plocha-3-347-",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4840,18 +4840,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22453,
-     "nabidek": 6,
+     "bajtu": 22427,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 13990000,
-      "vymera": 5239,
+      "cena": 3300000,
+      "vymera": 90,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4865,18 +4865,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22423,
-     "nabidek": 6,
+     "bajtu": 22534,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 19200000,
-      "vymera": 52235,
+      "cena": 3300000,
+      "vymera": 90,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4890,18 +4890,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22396,
+     "bajtu": 22494,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 29900000,
-      "vymera": 11945,
+      "cena": 4128000,
+      "vymera": 406,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/verejna-drazba-areal-sts-prunerov-a-s-uzitna-",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -4918,13 +4918,13 @@
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "přečteno 9 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
+     "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Online Aukce | Veřejné dražby, Gaute",
       "znaku": 2932,
       "pocty": {
        "cena": 8,
-       "výměra": 19,
+       "výměra": 18,
        "výběrové řízení": 1,
        "dražba": 9
       },
@@ -4936,8 +4936,8 @@
       "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
      },
      "stav": 200,
-     "bajtu": 27398,
-     "nabidek": 9,
+     "bajtu": 27380,
+     "nabidek": 8,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -4961,8 +4961,8 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22531,
-     "nabidek": 7,
+     "bajtu": 22403,
+     "nabidek": 5,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -4986,7 +4986,32 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22421,
+     "bajtu": 22464,
+     "nabidek": 5,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 13990000,
+      "vymera": 2666,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/sitemap-index.xml",
+     "jmeno": "Sitemapa (index2)",
+     "skupina": "sitemap",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22512,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -5004,31 +5029,6 @@
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/sitemap-index.xml",
-     "jmeno": "Sitemapa (index2)",
-     "skupina": "sitemap",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22422,
-     "nabidek": 7,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 3300000,
-      "vymera": 90,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
      "adresa": "https://www.verejnedrazby.cz/opendata",
      "jmeno": "Otevřená data (stránka)",
      "skupina": "stranka",
@@ -5036,83 +5036,8 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22417,
-     "nabidek": 5,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 3300000,
-      "vymera": 52235,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/otevrena-data",
-     "jmeno": "Otevřená data (česky)",
-     "skupina": "stranka",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22551,
+     "bajtu": 22405,
      "nabidek": 7,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 7500000,
-      "vymera": 1189,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-byvaleho-komplexu-aurum-hotel-53-luzek",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/nabidka-majetku",
-     "jmeno": "Nabídka majetku",
-     "skupina": "stranka",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22499,
-     "nabidek": 7,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 17473000,
-      "vymera": 1813,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/nabidky",
-     "jmeno": "Nabídky",
-     "skupina": "stranka",
-     "zmereno": true,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22384,
-     "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
@@ -5129,39 +5054,14 @@
      }
     },
     {
-     "adresa": "https://www.verejnedrazby.cz/prodej-majetku",
-     "jmeno": "Prodej majetku",
+     "adresa": "https://www.verejnedrazby.cz/otevrena-data",
+     "jmeno": "Otevřená data (česky)",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22497,
-     "nabidek": 6,
-     "cestaCteni": "signál",
-     "ukazkaNabidky": {
-      "nazev": null,
-      "cena": 17473000,
-      "vymera": 52235,
-      "misto": null,
-      "okres": null,
-      "druh": null,
-      "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/vyrobni-areal-kovovyroby-v-centru-mesta-varns",
-      "dalsiPolicka": [
-       "odkud"
-      ]
-     }
-    },
-    {
-     "adresa": "https://www.verejnedrazby.cz/prodej-nemovitosti",
-     "jmeno": "Prodej nemovitostí",
-     "skupina": "stranka",
-     "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 22522,
+     "bajtu": 22510,
      "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
@@ -5179,6 +5079,106 @@
      }
     },
     {
+     "adresa": "https://www.verejnedrazby.cz/nabidka-majetku",
+     "jmeno": "Nabídka majetku",
+     "skupina": "stranka",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22508,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 3300000,
+      "vymera": 90,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/nabidky",
+     "jmeno": "Nabídky",
+     "skupina": "stranka",
+     "zmereno": true,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22523,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 4128000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/prodej-majetku",
+     "jmeno": "Prodej majetku",
+     "skupina": "stranka",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22411,
+     "nabidek": 5,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 13990000,
+      "vymera": 5239,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
+     "adresa": "https://www.verejnedrazby.cz/prodej-nemovitosti",
+     "jmeno": "Prodej nemovitostí",
+     "skupina": "stranka",
+     "zmereno": false,
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22394,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 19200000,
+      "vymera": 2666,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
+    },
+    {
      "adresa": "https://www.verejnedrazby.cz/uredni-deska",
      "jmeno": "Úřední deska",
      "skupina": "stranka",
@@ -5186,18 +5186,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22464,
+     "bajtu": 22425,
      "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 19200000,
-      "vymera": 52235,
+      "cena": 31680000,
+      "vymera": 3013,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5214,13 +5214,13 @@
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "přečteno 9 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
+     "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Online Aukce | Veřejné dražby, Gaute",
-      "znaku": 2937,
+      "znaku": 2953,
       "pocty": {
        "cena": 8,
-       "výměra": 19,
+       "výměra": 18,
        "výběrové řízení": 1,
        "dražba": 9
       },
@@ -5232,18 +5232,18 @@
       "ukazka": "Online Aukce | Veřejné dražby, Gaute Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Vyhledat Přihlásit se Menu Přihlášení do systému Jméno Heslo Přihlásit se Zapomenuté heslo Registrace Vyhledávaní Vyhledat domů aukce-dražby chci prodat reference realitní kancelář kontakt registrace Aktuální aukce – dražby Pro prodej nemovitostí, automobilů, strojů, pohledáve"
      },
      "stav": 200,
-     "bajtu": 27408,
-     "nabidek": 9,
+     "bajtu": 27430,
+     "nabidek": 8,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 3300000,
-      "vymera": 90,
+      "cena": 19200000,
+      "vymera": 8703,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5257,18 +5257,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22416,
-     "nabidek": 6,
+     "bajtu": 22409,
+     "nabidek": 7,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 29900000,
-      "vymera": 11945,
+      "cena": 13990000,
+      "vymera": 5239,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/verejna-drazba-areal-sts-prunerov-a-s-uzitna-",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5282,18 +5282,18 @@
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 22425,
+     "bajtu": 22435,
      "nabidek": 6,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": null,
-      "cena": 13990000,
-      "vymera": 5239,
+      "cena": 19200000,
+      "vymera": 8703,
       "misto": null,
       "okres": null,
       "druh": null,
       "kat": null,
-      "url": "https://www.verejnedrazby.cz/aukce/prodej-souboru-8-budov-staveb-ve-vyrobne-skla",
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
       "dalsiPolicka": [
        "odkud"
       ]
@@ -5326,27 +5326,27 @@
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "přečteno 8 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
+     "proc": "přečteno 9 nabídek, ale jen ze signálů v textu a BEZ místa, okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do okresu by se taková nabídka nedostala; patří sem předpis pro čtení, ne řádek do registru (§447)",
      "znaky": {
       "titulek": "Elektronické dražby | Nabídka dražeb",
-      "znaku": 21243,
+      "znaku": 22264,
       "pocty": {
-       "cena": 21,
+       "cena": 26,
        "výměra": 34,
-       "katastr": 3,
+       "katastr": 2,
        "výběrové řízení": 8,
-       "dražba": 17
+       "dražba": 16
       },
       "odkazu": 52,
       "jsonLd": 0,
       "itemprop": 0,
       "vypadaNaPrihlaseni": true,
       "vypadaNaPrazdno": false,
-      "ukazka": "Elektronické dražby | Nabídka dražeb --> Menu info@gavlas.cz 221 666 666 Nabídka dražeb Jak dražit? Chci prodat Obchodní podmínky GDPR Registrace Přihlášení --> OBCHODNÍ PALÁC SPARKASSE v centru Karlových Varů, u Vřídelní kolonády Typ objektu vše Byt (724) Rodinný dům (183) Rekreační objekt (25) Činžovní dům (16) Komerční nemovitost (168) Pozemek (57) Ostatní (7) Obchodní závody (podniky) (1) Movi"
+      "ukazka": "Elektronické dražby | Nabídka dražeb --> Menu info@gavlas.cz 221 666 666 Nabídka dražeb Jak dražit? Chci prodat Obchodní podmínky GDPR Registrace Přihlášení --> OBCHODNÍ PALÁC SPARKASSE v centru Karlových Varů, u Vřídelní kolonády Typ objektu vše Byt (723) Rodinný dům (183) Rekreační objekt (25) Činžovní dům (16) Komerční nemovitost (169) Pozemek (57) Ostatní (7) Obchodní závody (podniky) (1) Movi"
      },
      "stav": 200,
-     "bajtu": 68630,
-     "nabidek": 8,
+     "bajtu": 68258,
+     "nabidek": 9,
      "cestaCteni": "signál",
      "ukazkaNabidky": {
       "nazev": "více",
@@ -5719,6 +5719,7 @@
   "2026-11-04": 0,
   "2026-11-05": 1,
   "2026-11-09": 0,
-  "2026-11-16": 0
+  "2026-11-16": 0,
+  "2026-11-23": 0
  }
 }
