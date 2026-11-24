@@ -24402,16 +24402,6 @@
    "dr": "chata",
    "t": "sale"
   },
-  "Na Borku|—|Semily|50.617|15.235#1xxxf": {
-   "od": "2026-11-07",
-   "videno": "2026-11-24",
-   "c": 1399000,
-   "v": 40,
-   "m": "Na Borku",
-   "o": "Semily",
-   "dr": "byt",
-   "t": "sale"
-  },
   "Rychnov nad Kněžnou|—|Rychnov nad Kněžnou|50.166|16.274#9mf57": {
    "od": "2026-11-10",
    "videno": "2026-11-24",
@@ -25590,16 +25580,6 @@
    "m": "Česká Třebová",
    "o": "Ústí nad Orlicí",
    "dr": "byt",
-   "t": "sale"
-  },
-  "Ke Koupališti|—|Praha|50.001|14.672#5h3vt": {
-   "od": "2026-11-07",
-   "videno": "2026-11-24",
-   "c": 9990000,
-   "v": 207,
-   "m": "Ke Koupališti",
-   "o": "Praha",
-   "dr": "dům",
    "t": "sale"
   },
   "Jihlava|—|Jihlava|49.393|15.591#kmjl": {
@@ -40321,6 +40301,26 @@
    "o": "Hodonín",
    "dr": "orná půda",
    "t": "exekuce"
+  },
+  "Jirkov|—|Chomutov|50.503|13.447#1xxxf": {
+   "od": "2026-11-07",
+   "videno": "2026-11-24",
+   "c": 1399000,
+   "v": 40,
+   "m": "Na Borku",
+   "o": "Semily",
+   "dr": "byt",
+   "t": "sale"
+  },
+  "Jirkov|—|Chomutov|50.497|13.451#5h3vt": {
+   "od": "2026-11-07",
+   "videno": "2026-11-24",
+   "c": 9990000,
+   "v": 207,
+   "m": "Ke Koupališti",
+   "o": "Praha",
+   "dr": "dům",
+   "t": "sale"
   }
  }
 }
