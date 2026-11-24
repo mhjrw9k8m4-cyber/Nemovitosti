@@ -99,6 +99,11 @@
    "prokazanych": 25,
    "slepych": 14,
    "nalezu": 1
+  },
+  "2026-11-24": {
+   "prokazanych": 25,
+   "slepych": 14,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -2385,15 +2390,29 @@
    ],
    "otisk": "d5912b42b635",
    "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/adresa-pozemku.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
+  },
+  "test-odlozene-skripty.mjs": {
+   "kdy": "2026-11-24",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "04a70790d708",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-23",
+ "updated": "2026-11-24",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "303 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "302 z 338 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
