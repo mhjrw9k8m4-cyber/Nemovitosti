@@ -109,6 +109,11 @@
    "prokazanych": 25,
    "slepych": 14,
    "nalezu": 1
+  },
+  "2026-11-26": {
+   "prokazanych": 25,
+   "slepych": 16,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -2479,9 +2484,64 @@
    "pomucky": [],
    "otisk": "18e67b35fccd",
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-ohlas-nalez.mjs": {
+   "kdy": "2026-11-26",
+   "hlidá": 3,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácené porovnání (>= na >)",
+    "a místo nebo (&& na ||)"
+   ],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/zkus-portal.mjs",
+    "obrácená rovnost (=== na !==) v scripts/zkus-portal.mjs",
+    "zahozená pojistka (if … continue) v scripts/zkus-portal.mjs",
+    "a místo nebo (&& na ||) v scripts/zkus-portal.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "688ae804f051",
+   "poznamka": ""
+  },
+  "test-ohlas-selhani.mjs": {
+   "kdy": "2026-11-26",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 2,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácené porovnání (>= na >)",
+    "a místo nebo (&& na ||)"
+   ],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "ab0aebabc515",
+   "poznamka": ""
+  },
+  "test-ohlaseni.mjs": {
+   "kdy": "2026-11-26",
+   "hlidá": 2,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/vzorek-pozemku.mjs"
+   ],
+   "otisk": "44bc64386a39",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-25",
+ "updated": "2026-11-26",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
@@ -3859,6 +3919,68 @@
      "test-odkaz.mjs"
     ],
     "mlcely": [],
+    "hlidacu": 1
+   }
+  },
+  "scripts/ohlas-nalez.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-nalez.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-nalez.mjs"
+    ],
+    "hlidacu": 1
+   }
+  },
+  "scripts/zkus-portal.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-nalez.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-nalez.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-nalez.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-nalez.mjs"
+    ],
+    "hlidacu": 2
+   }
+  },
+  "scripts/ohlas-selhani.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-selhani.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ohlas-selhani.mjs"
+    ],
     "hlidacu": 1
    }
   }
