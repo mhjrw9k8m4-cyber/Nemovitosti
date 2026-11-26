@@ -39242,16 +39242,6 @@
    "dr": "orná půda",
    "t": "drazba"
   },
-  "Vykmanov u Měděnce|41/3|Chomutov|50.400|13.046#1rrj5m9": {
-   "od": "2026-11-05",
-   "videno": "2026-11-26",
-   "c": 1710000,
-   "v": 900,
-   "m": "Vykmanov u Měděnce",
-   "o": "Chomutov",
-   "dr": "trvalý travní porost",
-   "t": "drazba"
-  },
   "Vykmanov u Měděnce|—|Chomutov|50.396|13.047#1rrj3a1": {
    "od": "2026-11-13",
    "videno": "2026-11-26",
@@ -39961,6 +39951,16 @@
    "o": "Hodonín",
    "dr": "orná půda",
    "t": "exekuce"
+  },
+  "Perštejn|41/3|Chomutov|50.397|13.075#1rrj5m9": {
+   "od": "2026-11-05",
+   "videno": "2026-11-26",
+   "c": 1710000,
+   "v": 900,
+   "m": "Vykmanov u Měděnce",
+   "o": "Chomutov",
+   "dr": "trvalý travní porost",
+   "t": "drazba"
   }
  }
 }
