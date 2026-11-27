@@ -114,6 +114,11 @@
    "prokazanych": 25,
    "slepych": 16,
    "nalezu": 1
+  },
+  "2026-11-27": {
+   "prokazanych": 26,
+   "slepych": 16,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -2539,9 +2544,86 @@
    ],
    "otisk": "44bc64386a39",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-ohledej.mjs": {
+   "kdy": "2026-11-27",
+   "hlidá": 1,
+   "chytila": 6,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "ccfec61297d0",
+   "poznamka": ""
+  },
+  "test-okoli-dlazdice.mjs": {
+   "kdy": "2026-11-27",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "f017f462d0da",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-okoli-jinde.mjs": {
+   "kdy": "2026-11-27",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "0cc60dcc7e63",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-okoli-okresu.mjs": {
+   "kdy": "2026-11-27",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/generate-region-pages.mjs",
+    "obrácené porovnání (<= na <) v scripts/generate-region-pages.mjs",
+    "obrácená rovnost (=== na !==) v scripts/generate-region-pages.mjs",
+    "zahozená pojistka (if … continue) v scripts/generate-region-pages.mjs",
+    "zahozený filter(Boolean) v scripts/generate-region-pages.mjs",
+    "a místo nebo (&& na ||) v scripts/generate-region-pages.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "7a4220ab8538",
+   "poznamka": ""
+  },
+  "test-okoli-rozvrzeni.mjs": {
+   "kdy": "2026-11-27",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "85bec566a0e5",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   }
  },
- "updated": "2026-11-26",
+ "updated": "2026-11-27",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
@@ -2946,16 +3028,50 @@
   },
   "scripts/ohledej.mjs": {
    "obrácené porovnání (>= na >)": {
-    "chytily": [],
+    "chytily": [
+     "test-ohledej.mjs"
+    ],
     "mlcely": [
      "test-cti-prohlizecem.mjs"
-    ]
+    ],
+    "hlidacu": 1
    },
    "obrácené porovnání (<= na <)": {
-    "chytily": [],
+    "chytily": [
+     "test-ohledej.mjs"
+    ],
     "mlcely": [
      "test-cti-prohlizecem.mjs"
-    ]
+    ],
+    "hlidacu": 1
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-ohledej.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [
+     "test-ohledej.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-ohledej.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-ohledej.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
    }
   },
   "scripts/generate-data-rezy.mjs": {
@@ -3982,6 +4098,50 @@
      "test-ohlas-selhani.mjs"
     ],
     "hlidacu": 1
+   }
+  },
+  "scripts/generate-region-pages.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-okoli-okresu.mjs"
+    ],
+    "hlidacu": 6
+   },
+   "obrácené porovnání (<= na <)": {
+    "chytily": [],
+    "mlcely": [
+     "test-okoli-okresu.mjs"
+    ],
+    "hlidacu": 6
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-okoli-okresu.mjs"
+    ],
+    "hlidacu": 6
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-okoli-okresu.mjs"
+    ],
+    "hlidacu": 6
+   },
+   "zahozený filter(Boolean)": {
+    "chytily": [],
+    "mlcely": [
+     "test-okoli-okresu.mjs"
+    ],
+    "hlidacu": 6
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-okoli-okresu.mjs"
+    ],
+    "hlidacu": 6
    }
   }
  }
